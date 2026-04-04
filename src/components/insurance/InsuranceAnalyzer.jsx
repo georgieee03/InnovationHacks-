@@ -1,4 +1,5 @@
 import { useCallback, useContext, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AppContext } from '../../context/AppContext';
 import { extractTextFromPDF } from '../../services/pdfParser';
 import { analyzePolicyWithLLM } from '../../services/llmService';
@@ -8,6 +9,12 @@ import localRecommendations from '../../data/coverageRecommendations.json';
 import PolicyUpload from './PolicyUpload';
 import PolicySummary from './PolicySummary';
 import GapAnalysis from './GapAnalysis';
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+};
 
 function getFallbackRecommendations(businessType) {
   return localRecommendations[businessType]?.recommendedPolicies ?? [];
@@ -82,28 +89,59 @@ export default function InsuranceAnalyzer() {
   }, [handleFileSelect]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-heading font-bold text-text-primary">Insurance Analyzer</h2>
-        <p className="mt-1 text-text-secondary">Upload your policy to find coverage gaps.</p>
-      </div>
+    <AnimatePresence mode="wait">
+      <div className="space-y-6">
+        <motion.div {...fadeInUp} transition={{ duration: 0.4 }}>
+          <h2 className="text-2xl font-heading font-bold text-text-primary">Insurance Analyzer</h2>
+          <p className="mt-1 text-text-secondary">Upload your policy to find coverage gaps</p>
+        </motion.div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
-          <PolicyUpload onFileSelect={handleFileSelect} isAnalyzing={isAnalyzing} isComplete={isComplete} />
-        </div>
-        {!isComplete && !isAnalyzing && (
-          <button
-            onClick={() => void handleLoadDemo()}
-            className="whitespace-nowrap rounded-lg bg-primary px-4 py-2 text-sm text-white transition hover:bg-primary/90"
-          >
-            Load Demo Policy
-          </button>
-        )}
-      </div>
+        <motion.div
+          {...fadeInUp}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="flex items-center gap-4"
+        >
+          <div className="flex-1">
+            <PolicyUpload onFileSelect={handleFileSelect} isAnalyzing={isAnalyzing} isComplete={isComplete} />
+          </div>
+          {!isComplete && !isAnalyzing && (
+            <button
+              onClick={() => void handleLoadDemo()}
+              className="whitespace-nowrap rounded-lg bg-primary px-4 py-2 text-sm text-white transition hover:bg-primary/90"
+            >
+              Load Demo Policy
+            </button>
+          )}
+        </motion.div>
 
-      {policySummary && <PolicySummary summary={policySummary} />}
-      {gapAnalysis && <GapAnalysis gaps={gapAnalysis} />}
-    </div>
+        <AnimatePresence>
+          {policySummary && (
+            <motion.div
+              key="policy-summary"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <PolicySummary summary={policySummary} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {gapAnalysis && (
+            <motion.div
+              key="gap-analysis"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <GapAnalysis gaps={gapAnalysis} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </AnimatePresence>
   );
 }

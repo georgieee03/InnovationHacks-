@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 function formatPremium(value) {
@@ -19,7 +20,12 @@ export default function PolicySummary({ summary }) {
   const uncoveredCoverages = (summary.coverages ?? []).filter((coverage) => coverage.covered === false);
 
   return (
-    <div className="rounded-xl border border-gray-100 bg-card p-5 shadow-sm">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="rounded-xl border border-gray-100 bg-card p-5 shadow-sm"
+    >
       <h3 className="mb-4 text-lg font-heading font-semibold text-text-primary">Policy Summary</h3>
 
       <div className="mb-4 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
@@ -44,7 +50,13 @@ export default function PolicySummary({ summary }) {
       <h4 className="mb-2 text-sm font-heading font-semibold text-text-primary">Current Coverages</h4>
       <div className="mb-4 space-y-2">
         {activeCoverages.map((coverage, index) => (
-          <div key={`${coverage.type}-${index}`} className="rounded-lg bg-bg-main p-3">
+          <motion.div
+            key={`${coverage.type}-${index}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 * index }}
+            className="rounded-lg bg-bg-main p-3"
+          >
             <div className="flex items-start justify-between">
               <p className="text-sm font-medium text-text-primary">{coverage.name || coverage.type}</p>
               <span className="rounded-full bg-covered/10 px-2 py-0.5 text-xs text-covered">Active</span>
@@ -53,7 +65,7 @@ export default function PolicySummary({ summary }) {
               Limit: {coverage.limit || 'N/A'} | Deductible: {coverage.deductible || 'N/A'}
             </p>
             <p className="mt-0.5 text-xs text-text-secondary">{coverage.notes || coverage.details || 'No additional notes.'}</p>
-          </div>
+          </motion.div>
         ))}
         {activeCoverages.length === 0 && (
           <p className="text-sm text-text-secondary">No active coverages were extracted from this policy.</p>
@@ -78,6 +90,6 @@ export default function PolicySummary({ summary }) {
           {summary.plainEnglishSummary}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

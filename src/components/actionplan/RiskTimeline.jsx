@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion';
+
 export default function RiskTimeline({ gaps }) {
   if (!gaps?.length) return null;
 
@@ -15,18 +17,29 @@ export default function RiskTimeline({ gaps }) {
         <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
         <div className="space-y-4">
           {sorted.map((item, i) => (
-            <div key={item.id} className="flex items-start gap-4 relative">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold z-10 ${
-                item.priority === 'critical' ? 'bg-gap' :
-                item.priority === 'recommended' ? 'bg-underinsured' : 'bg-primary'
-              }`}>
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 * i }}
+              className="flex items-start gap-4 relative"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 * i + 0.1 }}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold z-10 ${
+                  item.priority === 'critical' ? 'bg-gap' :
+                  item.priority === 'recommended' ? 'bg-underinsured' : 'bg-primary'
+                }`}
+              >
                 {i + 1}
-              </div>
+              </motion.div>
               <div className="flex-1 pb-2">
                 <p className="font-medium text-text-primary">{item.name}</p>
                 <p className="text-sm text-text-secondary">{item.statusLabel}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

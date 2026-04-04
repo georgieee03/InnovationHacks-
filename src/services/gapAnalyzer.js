@@ -69,6 +69,16 @@ function isExcluded(policySummary, recommendation) {
   ));
 }
 
+function comparePriority(a, b) {
+  const order = { critical: 0, recommended: 1, conditional: 2 };
+  return (order[a] ?? 3) - (order[b] ?? 3);
+}
+
+function compareStatus(a, b) {
+  const order = { gap: 0, underinsured: 1, covered: 2, 'not-applicable': 3 };
+  return (order[a] ?? 4) - (order[b] ?? 4);
+}
+
 export function analyzeGaps(policySummary, recommendations, riskFactors, financialMetrics) {
   if (!policySummary) {
     return [];
@@ -77,7 +87,7 @@ export function analyzeGaps(policySummary, recommendations, riskFactors, financi
   const riskKeys = Object.keys(riskFactors?.risks ?? {});
   const normalizedRecommendations = (recommendations ?? []).map(normalizeRecommendation);
 
-  return normalizedRecommendations.map((recommendation) => {
+  const results = normalizedRecommendations.map((recommendation) => {
     if (recommendation.locationDependent && recommendation.triggerRiskFactors.length > 0) {
       const hasRelevantRisk = recommendation.triggerRiskFactors.some((riskKey) => riskKeys.includes(riskKey));
 
@@ -146,12 +156,20 @@ export function analyzeGaps(policySummary, recommendations, riskFactors, financi
           : null,
     };
   });
+
+  return results.sort((a, b) => compareStatus(a.status, b.status) || comparePriority(a.priority, b.priority));
 }
 
 export function computeProtectionScore(results, financialMetrics) {
+  const applicableResults = (results ?? []).filter((result) => result.status !== 'not-applicable');
+
+  if (applicableResults.length === 0) {
+    return 100;
+  }
+
   let score = 100;
 
-  for (const result of results ?? []) {
+  for (const result of applicableResults) {
     if (result.status === 'gap') {
       score -= result.priority === 'critical' ? 20 : result.priority === 'recommended' ? 10 : 5;
     }
@@ -171,9 +189,9 @@ export function computeProtectionScore(results, financialMetrics) {
 }
 
 export function getProtectionGrade(score) {
-  if (score >= 90) return 'A';
-  if (score >= 80) return 'B';
-  if (score >= 70) return 'C';
-  if (score >= 60) return 'D';
-  return 'F';
+  if (score >= 90) return { grade: 'A', color: '#10b981', label: 'Excellent' };
+  if (score >= 80) return { grade: 'B', color: '#10b981', label: 'Good' };
+  if (score >= 70) return { grade: 'C', color: '#f59e0b', label: 'Fair' };
+  if (score >= 60) return { grade: 'D', color: '#f59e0b', label: 'Poor' };
+  return { grade: 'F', color: '#ef4444', label: 'Critical' };
 }

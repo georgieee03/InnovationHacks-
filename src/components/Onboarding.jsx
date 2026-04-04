@@ -1,4 +1,5 @@
-import { useContext, useState, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { AppContext } from '../context/AppContext';
 import { api } from '../services/apiClient';
@@ -102,8 +103,18 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl"
+      >
         <div className="mb-2 flex items-center gap-2">
           <Shield className="h-8 w-8 text-primary" />
           <h1 className="text-2xl font-heading font-bold text-text-primary">Welcome to SafeGuard</h1>
@@ -213,7 +224,7 @@ export default function Onboarding() {
             {loading ? 'Loading demo...' : "Load Demo - Maria's Bakery (Houston, TX)"}
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

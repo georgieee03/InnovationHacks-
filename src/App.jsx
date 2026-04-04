@@ -1,4 +1,5 @@
 import { Component, useContext } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AppProvider, AppContext } from './context/AppContext';
 import Sidebar from './components/Sidebar';
 import Onboarding from './components/Onboarding';
@@ -6,6 +7,18 @@ import TabNavigation from './components/TabNavigation';
 import FinancialOverview from './components/financial/FinancialOverview';
 import InsuranceAnalyzer from './components/insurance/InsuranceAnalyzer';
 import ActionPlan from './components/actionplan/ActionPlan';
+import Calculators from './components/calculators/Calculators';
+import RiskSimulator from './components/simulator/RiskSimulator';
+import Challenges from './components/gamification/Challenges';
+import HealthReport from './components/report/HealthReport';
+import ChatBot from './components/chat/ChatBot';
+import Education from './components/education/Education';
+
+const tabVariants = {
+  initial: { opacity: 0, x: 20 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -20 },
+};
 
 class AppErrorBoundary extends Component {
   constructor(props) {
@@ -59,9 +72,27 @@ function Dashboard() {
               <p className="text-text-secondary">Preparing your dashboard...</p>
             </div>
           ) : null}
-          {activeTab === 'financial' && <FinancialOverview />}
-          {activeTab === 'insurance' && <InsuranceAnalyzer />}
-          {activeTab === 'actionplan' && <ActionPlan />}
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              variants={tabVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+            >
+              {activeTab === 'financial' && <FinancialOverview />}
+              {activeTab === 'insurance' && <InsuranceAnalyzer />}
+              {activeTab === 'actionplan' && <ActionPlan />}
+              {activeTab === 'calculators' && <Calculators />}
+              {activeTab === 'simulator' && <RiskSimulator />}
+              {activeTab === 'challenges' && <Challenges />}
+              {activeTab === 'report' && <HealthReport />}
+              {activeTab === 'chat' && <ChatBot />}
+              {activeTab === 'learn' && <Education />}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
     </div>

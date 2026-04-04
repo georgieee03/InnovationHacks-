@@ -1,4 +1,5 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { motion } from 'framer-motion';
 import { CATEGORY_COLORS, CATEGORY_LABELS } from '../../utils/constants';
 import { formatCurrency } from '../../utils/formatCurrency';
 
@@ -12,7 +13,12 @@ export default function SpendingChart({ data }) {
   }));
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-gray-100 p-5">
+    <motion.div
+      className="bg-card rounded-xl shadow-sm border border-gray-100 p-5"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">Spending by Category</h3>
       <ResponsiveContainer width="100%" height={280}>
         <PieChart>
@@ -26,6 +32,6 @@ export default function SpendingChart({ data }) {
           <Legend />
         </PieChart>
       </ResponsiveContainer>
-    </div>
+    </motion.div>
   );
 }
