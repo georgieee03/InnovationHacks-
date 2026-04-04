@@ -11,6 +11,8 @@ import Calculators from './components/calculators/Calculators';
 import RiskSimulator from './components/simulator/RiskSimulator';
 import Challenges from './components/gamification/Challenges';
 import HealthReport from './components/report/HealthReport';
+import ChatBot from './components/chat/ChatBot';
+import Education from './components/education/Education';
 
 const tabVariants = {
   initial: { opacity: 0, x: 20 },
@@ -47,6 +49,8 @@ function Dashboard() {
               {activeTab === 'simulator' && <RiskSimulator />}
               {activeTab === 'challenges' && <Challenges />}
               {activeTab === 'report' && <HealthReport />}
+              {activeTab === 'chat' && <ChatBot />}
+              {activeTab === 'learn' && <Education />}
             </motion.div>
           </AnimatePresence>
         </div>

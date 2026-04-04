@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { BarChart3, Shield, ClipboardCheck, Calculator, AlertTriangle, Trophy, FileText } from 'lucide-react';
+import { BarChart3, Shield, ClipboardCheck, Calculator, AlertTriangle, Trophy, FileText, MessageCircle, GraduationCap } from 'lucide-react';
 import { AppContext } from '../context/AppContext';
 
 const TABS = [
@@ -10,6 +10,8 @@ const TABS = [
   { id: 'simulator', label: 'Risk Simulator', icon: AlertTriangle },
   { id: 'challenges', label: 'Challenges', icon: Trophy },
   { id: 'report', label: 'Health Report', icon: FileText },
+  { id: 'chat', label: 'Chat', icon: MessageCircle },
+  { id: 'learn', label: 'Learn', icon: GraduationCap },
 ];
 
 export default function TabNavigation() {
