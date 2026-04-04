@@ -24,7 +24,7 @@ function getFinancialCrossRef(item, financialMetrics) {
   return null;
 }
 
-export default function RecommendationCard({ item, financialMetrics, delay = 0 }) {
+export default function RecommendationCard({ item, financialMetrics, delay = 0, onGetQuote }) {
   const config = PRIORITY_CONFIG[item.priority] || PRIORITY_CONFIG.recommended;
   const Icon = config.icon;
   const avgCost = item.estimatedAnnualPremium
@@ -76,7 +76,10 @@ export default function RecommendationCard({ item, financialMetrics, delay = 0 }
           {item.urgencyNote && <p className="mt-2 text-sm text-gap">{item.urgencyNote}</p>}
 
           {isActionable && (
-            <button className="mt-3 rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-primary/90">
+            <button
+              onClick={() => onGetQuote?.(item)}
+              className="mt-3 rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-primary/90"
+            >
               Get Quote
             </button>
           )}
