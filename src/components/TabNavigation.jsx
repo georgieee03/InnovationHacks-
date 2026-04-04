@@ -1,16 +1,13 @@
 import { useContext } from 'react';
-import { BarChart3, Shield, ClipboardCheck, Calculator, AlertTriangle, Trophy, FileText, MessageCircle, GraduationCap } from 'lucide-react';
+import { BarChart3, Shield, Calculator, Trophy, FileText, GraduationCap } from 'lucide-react';
 import { AppContext } from '../context/AppContext';
 
 const TABS = [
   { id: 'financial', label: 'Financial Overview', icon: BarChart3 },
-  { id: 'insurance', label: 'Insurance Analyzer', icon: Shield },
-  { id: 'actionplan', label: 'Action Plan', icon: ClipboardCheck },
-  { id: 'calculators', label: 'Calculators', icon: Calculator },
-  { id: 'simulator', label: 'Risk Simulator', icon: AlertTriangle },
+  { id: 'insurance', label: 'Insurance & Action Plan', icon: Shield },
+  { id: 'calculators', label: 'Calculators & Risk', icon: Calculator },
   { id: 'challenges', label: 'Challenges', icon: Trophy },
   { id: 'report', label: 'Health Report', icon: FileText },
-  { id: 'chat', label: 'Chat', icon: MessageCircle },
   { id: 'learn', label: 'Learn', icon: GraduationCap },
 ];
 
@@ -18,19 +15,16 @@ export default function TabNavigation() {
   const { activeTab, setActiveTab } = useContext(AppContext);
 
   return (
-    <div className="flex border-b border-gray-200 bg-white px-6 overflow-x-auto">
+    <div className="relative flex overflow-x-auto border-b border-white/10 bg-bg-secondary/50 px-6 backdrop-blur-xl scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
       {TABS.map(({ id, label, icon: Icon }) => (
-        <button
-          key={id}
-          onClick={() => setActiveTab(id)}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition whitespace-nowrap
+        <button key={id} onClick={() => setActiveTab(id)}
+          className={`group relative z-10 flex items-center gap-2.5 whitespace-nowrap border-b-2 px-5 py-3.5 text-sm font-normal tracking-[-0.01em] transition-all duration-300
             ${activeTab === id
-              ? 'border-primary text-primary'
-              : 'border-transparent text-text-secondary hover:text-text-primary hover:border-gray-300'
-            }`}
-        >
-          <Icon className="w-4 h-4" />
-          {label}
+              ? 'border-primary bg-primary/5 text-primary'
+              : 'border-transparent text-text-secondary hover:border-white/20 hover:bg-white/5 hover:text-text-primary'
+            }`}>
+          <Icon className={`h-4 w-4 transition-transform duration-300 ${activeTab === id ? 'scale-110' : 'group-hover:scale-105'}`} />
+          <span>{label}</span>
         </button>
       ))}
     </div>

@@ -5,6 +5,8 @@ import { computeFinancialMetrics } from '../services/financialCalculator';
 
 export const AppContext = createContext(null);
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 export function AppProvider({ children }) {
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [businessInfo, setBusinessInfo] = useState(null);
@@ -15,6 +17,36 @@ export function AppProvider({ children }) {
   const [policySummary, setPolicySummary] = useState(null);
   const [gapAnalysis, setGapAnalysis] = useState(null);
   const [activeTab, setActiveTab] = useState('financial');
+  const [plaidConnected, setPlaidConnected] = useState(false);
+
+  const recalcMetrics = useCallback((txns, accts, rf) => {
+    const metrics = computeFinancialMetrics(txns, accts, rf);
+    setFinancialMetrics(metrics);
+  }, []);
+
+  const loadPlaidData = useCallback(async () => {
+    try {
+      const [acctRes, txnRes] = await Promise.all([
+        fetch(`${API_BASE}/api/plaid/accounts?user_id=default-user`),
+        fetch(`${API_BASE}/api/plaid/transactions?user_id=default-user&days=90`),
+      ]);
+      const acctData = await acctRes.json();
+      const txnData = await txnRes.json();
+
+      if (acctData.accounts?.length) {
+        setAccounts(acctData.accounts);
+        const txns = txnData.transactions || [];
+        if (txns.length) setTransactions(txns);
+        recalcMetrics(
+          txns.length ? txns : transactions,
+          acctData.accounts,
+          riskFactors
+        );
+      }
+    } catch (err) {
+      console.error('Failed to load Plaid data:', err);
+    }
+  }, [riskFactors, transactions, recalcMetrics]);
 
   const onboard = useCallback((info) => {
     setBusinessInfo(info);
@@ -46,6 +78,7 @@ export function AppProvider({ children }) {
       isOnboarded, businessInfo, transactions, accounts,
       financialMetrics, riskFactors, activeTab, setActiveTab,
       policySummary, setPolicySummary, gapAnalysis, setGapAnalysis,
+      plaidConnected, setPlaidConnected, loadPlaidData,
       onboard, loadDemo,
     }}>
       {children}
