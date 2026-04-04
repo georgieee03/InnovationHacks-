@@ -67,3 +67,21 @@ export function analyzeGaps(policySummary, businessType, riskFactors) {
     return { ...rec, status: 'gap', statusLabel: 'Not Covered' };
   });
 }
+
+export function computeProtectionScore(gapResults) {
+  if (!gapResults || gapResults.length === 0) return 0;
+  const total = gapResults.filter(g => g.status !== 'not-applicable').length;
+  if (total === 0) return 100;
+  const covered = gapResults.filter(g => g.status === 'covered').length;
+  const underinsured = gapResults.filter(g => g.status === 'underinsured').length;
+  const score = ((covered + (underinsured * 0.5)) / total) * 100;
+  return Math.round(score);
+}
+
+export function getProtectionGrade(score) {
+  if (score >= 90) return { grade: 'A', color: '#10b981', label: 'Excellent' };
+  if (score >= 80) return { grade: 'B', color: '#10b981', label: 'Good' };
+  if (score >= 70) return { grade: 'C', color: '#f59e0b', label: 'Fair' };
+  if (score >= 60) return { grade: 'D', color: '#f59e0b', label: 'Poor' };
+  return { grade: 'F', color: '#ef4444', label: 'Critical' };
+}

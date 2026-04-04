@@ -9,7 +9,7 @@ import TransactionList from './TransactionList';
 import EmergencyFund from './EmergencyFund';
 
 export default function FinancialOverview() {
-  const { financialMetrics, accounts, businessInfo } = useContext(AppContext);
+  const { financialMetrics, accounts, businessInfo, riskFactors } = useContext(AppContext);
 
   if (!financialMetrics) return null;
 
@@ -41,7 +41,7 @@ export default function FinancialOverview() {
         <SpendingChart data={financialMetrics.spendingByCategory} />
       </div>
 
-      <EmergencyFund metrics={financialMetrics} />
+      <EmergencyFund metrics={financialMetrics} riskFactors={riskFactors} businessInfo={businessInfo} />
 
       <TransactionList transactions={financialMetrics.recentTransactions} />
     </div>

@@ -16,17 +16,26 @@ export default function PolicyCard({ policy }) {
     ? Math.round((policy.estimatedAnnualPremium.low + policy.estimatedAnnualPremium.high) / 2)
     : null;
 
+  const isGap = policy.status === 'gap';
+  const showLocationBadge = policy.locationDependent && isGap;
+
   return (
-    <div className={`bg-card rounded-xl shadow-sm border p-5 ${
-      policy.status === 'gap' ? 'border-gap/30' :
-      policy.status === 'underinsured' ? 'border-underinsured/30' :
-      'border-gray-100'
+    <div className={`rounded-xl shadow-sm border p-5 ${
+      isGap ? 'bg-gap/5 border-gap/30' :
+      policy.status === 'underinsured' ? 'bg-card border-underinsured/30' :
+      'bg-card border-gray-100'
     }`}>
       <div className="flex items-start justify-between mb-2">
         <h4 className="font-heading font-semibold text-text-primary">{policy.name}</h4>
         <StatusBadge status={badgeStatus} label={policy.statusLabel} />
       </div>
       <p className="text-sm text-text-secondary mb-3">{policy.description}</p>
+
+      {showLocationBadge && (
+        <span className="inline-block text-xs px-2 py-0.5 mb-3 rounded-full bg-gap/10 text-gap font-medium">
+          📍 Flood Zone
+        </span>
+      )}
 
       <div className="space-y-1 text-sm">
         <div className="flex justify-between">
@@ -49,7 +58,7 @@ export default function PolicyCard({ policy }) {
         )}
       </div>
 
-      {policy.status === 'gap' && policy.priority === 'critical' && (
+      {isGap && policy.priority === 'critical' && (
         <div className="mt-3 p-2 bg-gap/5 rounded-lg">
           <p className="text-xs text-gap font-medium">⚠️ {policy.whyItMatters}</p>
         </div>
