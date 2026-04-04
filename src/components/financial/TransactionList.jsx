@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatCurrency } from '../../utils/formatCurrency';
-import { CATEGORY_COLORS, CATEGORY_LABELS } from '../../utils/constants';
+import { CATEGORY_COLORS, formatCategoryLabel } from '../../utils/constants';
 
 const DEFAULT_VISIBLE = 20;
 
@@ -20,51 +20,62 @@ export default function TransactionList({ transactions }) {
   const [searchText, setSearchText] = useState('');
   const [showAll, setShowAll] = useState(false);
 
-  if (!transactions?.length) return null;
-
   const filtered = useMemo(() => {
-    return transactions.filter((txn) => {
+    return (transactions ?? []).filter((txn) => {
       const matchesCategory = categoryFilter === 'all' || txn.category === categoryFilter;
       const matchesSearch = !searchText || txn.description.toLowerCase().includes(searchText.toLowerCase());
       return matchesCategory && matchesSearch;
     });
   }, [transactions, categoryFilter, searchText]);
+  const availableCategories = useMemo(() => {
+    return [...new Set((transactions ?? []).map((txn) => txn.category).filter(Boolean))].sort();
+  }, [transactions]);
+
+  if (!transactions?.length) return null;
 
   const visible = showAll ? filtered : filtered.slice(0, DEFAULT_VISIBLE);
   const hasMore = filtered.length > DEFAULT_VISIBLE;
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-gray-100 p-5">
-      <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">Recent Transactions</h3>
+    <div className="glass-card p-5">
+      <h3 className="mb-4 text-2xl font-heading font-light tracking-[-0.02em] text-text-primary">Recent Transactions</h3>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <select
           value={categoryFilter}
-          onChange={(e) => { setCategoryFilter(e.target.value); setShowAll(false); }}
-          className="rounded-lg border border-gray-200 bg-bg-main text-text-primary text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+          onChange={(e) => {
+            setCategoryFilter(e.target.value);
+            setShowAll(false);
+          }}
+          className="control-input focus-ring-brand rounded-lg px-3 py-2 text-sm text-text-primary transition-all duration-200"
         >
-          <option value="all">All Categories</option>
-          {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-            <option key={key} value={key}>{label}</option>
+          <option value="all" className="bg-bg-main">All Categories</option>
+          {availableCategories.map((category) => (
+            <option key={category} value={category} className="bg-bg-main">
+              {formatCategoryLabel(category)}
+            </option>
           ))}
         </select>
         <input
           type="text"
-          placeholder="Search transactions…"
+          placeholder="Search transactions..."
           value={searchText}
-          onChange={(e) => { setSearchText(e.target.value); setShowAll(false); }}
-          className="rounded-lg border border-gray-200 bg-bg-main text-text-primary text-sm px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-primary"
+          onChange={(e) => {
+            setSearchText(e.target.value);
+            setShowAll(false);
+          }}
+          className="control-input focus-ring-brand flex-1 rounded-lg px-3 py-2 text-sm text-text-primary transition-all duration-200 placeholder-text-muted"
         />
       </div>
 
-      <div className="overflow-auto max-h-96">
+      <div className="max-h-96 overflow-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-text-secondary border-b border-gray-100">
-              <th className="pb-2 font-medium">Date</th>
-              <th className="pb-2 font-medium">Description</th>
-              <th className="pb-2 font-medium">Category</th>
-              <th className="pb-2 font-medium text-right">Amount</th>
+            <tr className="border-b border-white/10 text-left text-text-secondary">
+              <th className="pb-2 font-normal uppercase tracking-[0.04em]">Date</th>
+              <th className="pb-2 font-normal uppercase tracking-[0.04em]">Description</th>
+              <th className="pb-2 font-normal uppercase tracking-[0.04em]">Category</th>
+              <th className="pb-2 text-right font-normal uppercase tracking-[0.04em]">Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -78,18 +89,19 @@ export default function TransactionList({ transactions }) {
                   animate="visible"
                   exit="exit"
                   layout
-                  className="border-b border-gray-50 hover:bg-bg-main"
+                  className="surface-row border-b border-white/5"
                 >
                   <td className="py-2.5 text-text-secondary">{txn.date}</td>
-                  <td className="py-2.5 text-text-primary font-medium">{txn.description}</td>
+                  <td className="py-2.5 font-normal text-text-primary">{txn.description}</td>
                   <td className="py-2.5">
                     <span className="inline-flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[txn.category] || '#94a3b8' }} />
-                      {CATEGORY_LABELS[txn.category] || txn.category}
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[txn.category] || '#94a3b8' }} />
+                      {formatCategoryLabel(txn.category)}
                     </span>
                   </td>
-                  <td className={`py-2.5 text-right font-medium ${txn.amount >= 0 ? 'text-covered' : 'text-text-primary'}`}>
-                    {txn.amount >= 0 ? '+' : ''}{formatCurrency(txn.amount)}
+                  <td className={`py-2.5 text-right font-normal ${txn.amount >= 0 ? 'text-covered' : 'text-text-primary'}`}>
+                    {txn.amount >= 0 ? '+' : ''}
+                    {formatCurrency(txn.amount)}
                   </td>
                 </motion.tr>
               ))}
@@ -99,13 +111,13 @@ export default function TransactionList({ transactions }) {
       </div>
 
       {filtered.length === 0 && (
-        <p className="text-sm text-text-secondary text-center py-4">No transactions match your filters.</p>
+        <p className="py-4 text-center text-sm text-text-secondary">No transactions match your filters.</p>
       )}
 
       {hasMore && !showAll && (
         <button
           onClick={() => setShowAll(true)}
-          className="mt-3 w-full text-sm text-primary hover:text-primary/80 font-medium py-2 rounded-lg border border-gray-200 hover:bg-bg-main transition-colors"
+          className="surface-panel focus-ring-brand mt-3 w-full rounded-lg py-2 text-sm font-normal text-primary transition-all duration-200 hover:border-primary/30 hover:text-primary/80"
         >
           Show all transactions ({filtered.length})
         </button>
@@ -114,7 +126,7 @@ export default function TransactionList({ transactions }) {
       {showAll && hasMore && (
         <button
           onClick={() => setShowAll(false)}
-          className="mt-3 w-full text-sm text-text-secondary hover:text-text-primary font-medium py-2 rounded-lg border border-gray-200 hover:bg-bg-main transition-colors"
+          className="surface-panel focus-ring-brand mt-3 w-full rounded-lg py-2 text-sm font-normal text-text-secondary transition-all duration-200 hover:text-text-primary"
         >
           Show fewer
         </button>

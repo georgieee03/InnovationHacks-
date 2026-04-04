@@ -11,10 +11,10 @@ export default function RiskTimeline({ gaps }) {
   if (!sorted.length) return null;
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-gray-100 p-5">
-      <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">Priority Action Items</h3>
+    <div className="glass-card p-5">
+      <h3 className="text-2xl font-heading font-light tracking-[-0.02em] text-text-primary mb-4">Priority Action Items</h3>
       <div className="relative">
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
+        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-white/10" />
         <div className="space-y-4">
           {sorted.map((item, i) => (
             <motion.div
@@ -28,7 +28,7 @@ export default function RiskTimeline({ gaps }) {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 * i + 0.1 }}
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold z-10 ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-normal z-10 ${
                   item.priority === 'critical' ? 'bg-gap' :
                   item.priority === 'recommended' ? 'bg-underinsured' : 'bg-primary'
                 }`}
@@ -36,8 +36,8 @@ export default function RiskTimeline({ gaps }) {
                 {i + 1}
               </motion.div>
               <div className="flex-1 pb-2">
-                <p className="font-medium text-text-primary">{item.name}</p>
-                <p className="text-sm text-text-secondary">{item.statusLabel}</p>
+                <p className="font-normal text-text-primary">{item.name}</p>
+                <p className="text-sm font-light text-text-secondary">{item.statusLabel}</p>
               </div>
             </motion.div>
           ))}

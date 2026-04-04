@@ -7,56 +7,56 @@ export default function PolicySummary({ summary }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="bg-card rounded-xl shadow-sm border border-gray-100 p-5"
+      transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+      className="glass-card p-5"
     >
-      <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">Policy Summary</h3>
+      <h3 className="mb-4 text-2xl font-heading font-light tracking-[-0.02em] text-text-primary">Policy Summary</h3>
 
-      <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+      <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
         <div>
           <p className="text-text-secondary">Policy Number</p>
-          <p className="font-medium text-text-primary">{summary.policyNumber}</p>
+          <p className="font-normal text-text-primary">{summary.policyNumber}</p>
         </div>
         <div>
           <p className="text-text-secondary">Insurer</p>
-          <p className="font-medium text-text-primary">{summary.insurer}</p>
+          <p className="font-normal text-text-primary">{summary.insurer}</p>
         </div>
         <div>
           <p className="text-text-secondary">Effective</p>
-          <p className="font-medium text-text-primary">{summary.effectiveDate} – {summary.expirationDate}</p>
+          <p className="font-normal text-text-primary">{summary.effectiveDate} to {summary.expirationDate}</p>
         </div>
         <div>
           <p className="text-text-secondary">Monthly Premium</p>
-          <p className="font-medium text-text-primary">{summary.monthlyPremium}</p>
+          <p className="font-normal text-text-primary">{summary.monthlyPremium}</p>
         </div>
       </div>
 
-      <h4 className="font-heading font-semibold text-text-primary text-sm mb-2">Current Coverages</h4>
-      <div className="space-y-2 mb-4">
+      <h4 className="mb-2 text-sm font-heading font-normal tracking-[-0.02em] text-text-primary">Current Coverages</h4>
+      <div className="mb-4 space-y-2">
         {summary.coverages?.map((cov, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 * i }}
-            className="p-3 bg-bg-main rounded-lg"
+            className="surface-panel rounded-lg p-3"
           >
-            <div className="flex justify-between items-start">
-              <p className="font-medium text-text-primary text-sm">{cov.type}</p>
-              <span className="text-xs bg-covered/10 text-covered px-2 py-0.5 rounded-full">Active</span>
+            <div className="flex items-start justify-between">
+              <p className="text-sm font-normal text-text-primary">{cov.type}</p>
+              <span className="rounded-full border border-covered/30 bg-covered/20 px-2 py-0.5 text-xs text-covered">Active</span>
             </div>
-            <p className="text-xs text-text-secondary mt-1">Limit: {cov.limit} · Deductible: {cov.deductible}</p>
-            <p className="text-xs text-text-secondary mt-0.5">{cov.details}</p>
+            <p className="mt-1 text-xs font-light text-text-secondary">Limit: {cov.limit} - Deductible: {cov.deductible}</p>
+            <p className="readable-copy mt-0.5 text-xs font-light">{cov.details}</p>
           </motion.div>
         ))}
       </div>
 
       {summary.exclusions?.length > 0 && (
         <>
-          <h4 className="font-heading font-semibold text-text-primary text-sm mb-2">Exclusions</h4>
+          <h4 className="mb-2 text-sm font-heading font-normal tracking-[-0.02em] text-text-primary">Exclusions</h4>
           <div className="flex flex-wrap gap-1.5">
             {summary.exclusions.map((ex, i) => (
-              <span key={i} className="text-xs bg-gap/10 text-gap px-2 py-1 rounded-full">{ex}</span>
+              <span key={i} className="rounded-full border border-gap/30 bg-gap/20 px-2 py-1 text-xs text-gap">{ex}</span>
             ))}
           </div>
         </>

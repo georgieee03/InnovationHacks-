@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect, useContext } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Fragment, useContext, useEffect, useRef, useState } from 'react';
 import { Send, Bot, User, Sparkles } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 
@@ -10,63 +9,125 @@ const QUICK_QUESTIONS = [
   "What's my biggest risk?",
 ];
 
+function formatCurrencyLocal(value) {
+  return value.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  });
+}
+
+function renderInline(text, keyPrefix) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={`${keyPrefix}-strong-${index}`} className="font-normal text-text-primary">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+
+    return <Fragment key={`${keyPrefix}-text-${index}`}>{part}</Fragment>;
+  });
+}
+
+function MessageBody({ text }) {
+  const normalized = text
+    .replace(/\r\n/g, '\n')
+    .replace(/\u2022/g, '-')
+    .replace(/\u2013|\u2014/g, '-');
+
+  const blocks = normalized.split(/\n{2,}/).filter(Boolean);
+
+  return (
+    <div className="space-y-3">
+      {blocks.map((block, blockIndex) => {
+        const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
+        const isList = lines.length > 0 && lines.every((line) => /^[-*]\s+/.test(line));
+
+        if (isList) {
+          return (
+            <ul key={`list-${blockIndex}`} className="list-disc space-y-2 pl-5 text-sm leading-7">
+              {lines.map((line, lineIndex) => (
+                <li key={`item-${blockIndex}-${lineIndex}`}>{renderInline(line.replace(/^[-*]\s+/, ''), `list-${blockIndex}-${lineIndex}`)}</li>
+              ))}
+            </ul>
+          );
+        }
+
+        return (
+          <p key={`paragraph-${blockIndex}`} className="text-sm leading-7 text-inherit">
+            {lines.map((line, lineIndex) => (
+              <Fragment key={`line-${blockIndex}-${lineIndex}`}>
+                {renderInline(line, `paragraph-${blockIndex}-${lineIndex}`)}
+                {lineIndex < lines.length - 1 && <br />}
+              </Fragment>
+            ))}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+function getGapItems(gapAnalysis) {
+  return Array.isArray(gapAnalysis) ? gapAnalysis : [];
+}
+
 function getSmartFallback(question, context) {
   const q = question.toLowerCase();
   const { businessInfo, financialMetrics, gapAnalysis, riskFactors } = context;
   const name = businessInfo?.name || 'your business';
+  const gaps = getGapItems(gapAnalysis);
+  const locationRisks = Object.values(riskFactors?.risks || {});
 
   if (q.includes('insurance') || q.includes('need') || q.includes('coverage type')) {
-    return `Great question! For ${name}, I'd recommend looking into these key coverage types:\n\n` +
-      `• **General Liability** — protects against third-party claims for bodily injury or property damage.\n` +
-      `• **Property Insurance** — covers your physical assets like equipment and inventory.\n` +
-      `• **Workers' Compensation** — required in most states if you have employees.\n` +
-      `• **Business Interruption** — replaces lost income if a covered event forces you to close temporarily.\n\n` +
-      `The right mix depends on your industry, location, and size. Check the Insurance Analyzer tab for a personalized breakdown.`;
+    const topNeeds = gaps
+      .filter((item) => item.status === 'gap' || item.status === 'underinsured')
+      .slice(0, 4)
+      .map((item) => `- ${item.name}: ${item.statusLabel}`);
+
+    if (topNeeds.length > 0) {
+      return `For ${name}, the first policies to focus on are:\n\n${topNeeds.join('\n')}\n\nStart with the critical gaps first, then fill in recommended protection after that.`;
+    }
+
+    return `For ${name}, start with the basics:\n\n- General liability for customer and third-party claims\n- Property coverage for equipment, inventory, and buildout\n- Workers compensation if you have employees\n- Business interruption for forced closures\n\nThe exact mix depends on your industry, location, and current policy details.`;
   }
 
   if (q.includes('gap') || q.includes('missing') || q.includes('underinsured')) {
-    if (gapAnalysis && gapAnalysis.gaps && gapAnalysis.gaps.length > 0) {
-      const gapList = gapAnalysis.gaps.slice(0, 3).map(g => `• ${g.type}: ${g.recommendation || 'Consider adding this coverage'}`).join('\n');
-      return `Based on your gap analysis, here are the areas that need attention:\n\n${gapList}\n\n` +
-        `I'd prioritize addressing these gaps to strengthen your coverage. Visit the Insurance Analyzer for full details.`;
+    const importantGaps = gaps
+      .filter((item) => item.status === 'gap' || item.status === 'underinsured')
+      .slice(0, 3)
+      .map((item) => `- ${item.name}: ${item.statusLabel}`);
+
+    if (importantGaps.length > 0) {
+      return `Here are the biggest coverage issues showing up right now:\n\n${importantGaps.join('\n')}\n\nI would address the critical items before the recommended ones.`;
     }
-    return `To identify your coverage gaps, I'd need to analyze your current policies against your risk profile. ` +
-      `Head over to the Insurance Analyzer tab and upload your policy documents — I'll highlight exactly where you're exposed.`;
+
+    return 'I do not have enough policy detail yet to point to exact gaps. Run the Insurance Analyzer so I can compare your current coverage against the recommended stack.';
   }
 
   if (q.includes('save') || q.includes('emergency') || q.includes('fund') || q.includes('money')) {
-    const monthlyExpenses = financialMetrics?.monthlyExpenses || financialMetrics?.averageMonthlyExpenses;
-    if (monthlyExpenses) {
-      const target3 = (monthlyExpenses * 3).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-      const target6 = (monthlyExpenses * 6).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-      return `Based on your financials, I'd recommend an emergency fund of **${target3} to ${target6}** (3-6 months of expenses).\n\n` +
-        `Start by setting aside a fixed percentage of monthly revenue. Even 5-10% adds up quickly. ` +
-        `Check the Financial Overview tab to track your progress toward this goal.`;
+    const monthlyExpenses = financialMetrics?.averageMonthlyExpenses || 0;
+    const target3 = monthlyExpenses ? formatCurrencyLocal(monthlyExpenses * 3) : null;
+    const target6 = monthlyExpenses ? formatCurrencyLocal(monthlyExpenses * 6) : null;
+
+    if (target3 && target6) {
+      return `Based on your current numbers, a practical reserve target is ${target3} to ${target6}.\n\n- The low end covers a shorter disruption\n- The high end gives you more room for recovery and payroll pressure\n- Build it by setting a fixed monthly transfer and treating it like a bill`;
     }
-    return `The standard recommendation is to save 3-6 months of operating expenses as an emergency fund. ` +
-      `This gives you a buffer for unexpected events like equipment failure, natural disasters, or slow seasons.\n\n` +
-      `Start small — even setting aside 5% of monthly revenue builds a meaningful cushion over time.`;
+
+    return 'A solid starting point is 3 to 6 months of operating expenses. The riskier your location and the longer your recovery window, the closer you should aim to the high end.';
   }
 
   if (q.includes('risk') || q.includes('danger') || q.includes('threat') || q.includes('biggest')) {
-    if (riskFactors) {
-      const topRisks = [];
-      if (riskFactors.flood_risk && riskFactors.flood_risk !== 'low') topRisks.push(`Flood risk (${riskFactors.flood_risk})`);
-      if (riskFactors.hurricane_risk && riskFactors.hurricane_risk !== 'low') topRisks.push(`Hurricane risk (${riskFactors.hurricane_risk})`);
-      if (riskFactors.crime_index && riskFactors.crime_index > 50) topRisks.push(`Elevated crime index (${riskFactors.crime_index})`);
-      if (topRisks.length > 0) {
-        return `Based on your location, here are your top risk factors:\n\n${topRisks.map(r => `• ${r}`).join('\n')}\n\n` +
-          `These should inform your insurance priorities. The Risk Simulator tab lets you model how these scenarios could impact your finances.`;
-      }
+    if (locationRisks.length > 0) {
+      return `Your main location risks right now are:\n\n${locationRisks.slice(0, 3).map((risk) => `- ${risk.label}`).join('\n')}\n\nThose should shape both your insurance priorities and your reserve target.`;
     }
-    return `Your biggest risks typically depend on your location, industry, and business size. Common threats include:\n\n` +
-      `• Natural disasters (floods, storms, fires)\n• Liability claims from customers or employees\n• Equipment breakdown or theft\n• Business interruption from unexpected events\n\n` +
-      `Use the Risk Simulator to model specific scenarios for your situation.`;
+
+    return 'Your biggest risks usually come from three areas: property damage, liability claims, and downtime that burns cash while revenue stops.';
   }
 
-  return `That's a great question! While I'm best at answering questions about insurance, risk management, and financial planning for small businesses, ` +
-    `I'll do my best to help.\n\nFor ${name}, I'd suggest exploring the different tabs in SafeGuard — ` +
-    `the Financial Overview, Insurance Analyzer, and Risk Simulator can give you detailed, personalized insights.`;
+  return `I can help with insurance, coverage gaps, reserve planning, and scenario analysis for ${name}. Ask about what is missing, what to prioritize next, or how much cash buffer you need.`;
 }
 
 async function callClaudeAPI(messages, systemPrompt) {
@@ -74,7 +135,7 @@ async function callClaudeAPI(messages, systemPrompt) {
   if (!apiKey) return null;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -86,14 +147,16 @@ async function callClaudeAPI(messages, systemPrompt) {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1024,
         system: systemPrompt,
-        messages: messages.map(m => ({
-          role: m.role === 'user' ? 'user' : 'assistant',
-          content: m.text,
+        messages: messages.map((message) => ({
+          role: message.role === 'user' ? 'user' : 'assistant',
+          content: message.text,
         })),
       }),
     });
-    if (!res.ok) return null;
-    const data = await res.json();
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
     return data.content?.[0]?.text || null;
   } catch {
     return null;
@@ -102,158 +165,191 @@ async function callClaudeAPI(messages, systemPrompt) {
 
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1 px-4 py-3">
-      {[0, 1, 2].map(i => (
-        <motion.div
-          key={i}
-          className="w-2 h-2 rounded-full bg-text-secondary"
-          animate={{ y: [0, -6, 0] }}
-          transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
-        />
-      ))}
+    <div className="flex items-center gap-2 px-4 py-3">
+      <span className="h-2 w-2 rounded-full bg-text-secondary animate-pulse-subtle" />
+      <span className="h-2 w-2 rounded-full bg-text-secondary animate-pulse-subtle" style={{ animationDelay: '120ms' }} />
+      <span className="h-2 w-2 rounded-full bg-text-secondary animate-pulse-subtle" style={{ animationDelay: '240ms' }} />
     </div>
   );
 }
 
 export default function ChatBot() {
   const { businessInfo, financialMetrics, gapAnalysis, riskFactors } = useContext(AppContext);
+  const nextMessageId = useRef(1);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
   const [messages, setMessages] = useState([
     {
-      id: 'welcome',
+      id: 'msg-0',
       role: 'bot',
-      text: `Hi! I'm your SafeGuard AI assistant. I can help you understand insurance, identify risks, and plan for your business's financial resilience. What would you like to know?`,
+      text: "Hi. I'm your SafeGuard assistant. I can explain coverage gaps, reserves, and risk scenarios using your business data.",
     },
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const buildSystemPrompt = () => {
-    let prompt = `You are SafeGuard AI, a friendly and knowledgeable business insurance advisor. You help small business owners understand their insurance needs, coverage gaps, and financial resilience strategies. Keep responses concise, practical, and encouraging. Use markdown formatting for lists and emphasis.`;
-    if (businessInfo) prompt += `\n\nBusiness context: ${businessInfo.name}, type: ${businessInfo.type}, location: ${businessInfo.city}, ${businessInfo.state} (${businessInfo.zip}), employees: ${businessInfo.employees}, monthly revenue: $${businessInfo.monthlyRevenue}.`;
-    if (riskFactors) prompt += `\nRisk factors: ${JSON.stringify(riskFactors)}`;
-    if (gapAnalysis) prompt += `\nGap analysis: ${JSON.stringify(gapAnalysis)}`;
-    return prompt;
-  };
+  function createMessageId() {
+    const id = `msg-${nextMessageId.current}`;
+    nextMessageId.current += 1;
+    return id;
+  }
 
-  const sendMessage = async (text) => {
-    if (!text.trim()) return;
-    const userMsg = { id: Date.now().toString(), role: 'user', text: text.trim() };
-    const newMessages = [...messages, userMsg];
+  function buildSystemPrompt() {
+    let prompt = 'You are SafeGuard AI, a concise business insurance and resilience advisor. Give practical, readable answers with short paragraphs and bullet lists when useful.';
+
+    if (businessInfo) {
+      prompt += `\nBusiness: ${businessInfo.name}, type ${businessInfo.type}, location ${businessInfo.city}, ${businessInfo.state} ${businessInfo.zip}, employees ${businessInfo.employees}, monthly revenue ${businessInfo.monthlyRevenue}.`;
+    }
+
+    if (riskFactors) {
+      prompt += `\nLocation risk factors: ${JSON.stringify(riskFactors)}.`;
+    }
+
+    if (gapAnalysis) {
+      prompt += `\nGap analysis: ${JSON.stringify(gapAnalysis)}.`;
+    }
+
+    if (financialMetrics) {
+      prompt += `\nFinancial metrics: ${JSON.stringify(financialMetrics)}.`;
+    }
+
+    return prompt;
+  }
+
+  async function sendMessage(text) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    const userMessage = {
+      id: createMessageId(),
+      role: 'user',
+      text: trimmed,
+    };
+
+    const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput('');
     setIsTyping(true);
 
-    let response = await callClaudeAPI(
-      newMessages.filter(m => m.id !== 'welcome'),
-      buildSystemPrompt()
-    );
+    let response = await callClaudeAPI(newMessages.slice(1), buildSystemPrompt());
 
     if (!response) {
-      response = getSmartFallback(text, { businessInfo, financialMetrics, gapAnalysis, riskFactors });
+      response = getSmartFallback(trimmed, { businessInfo, financialMetrics, gapAnalysis, riskFactors });
     }
 
-    // Simulate a small delay for the fallback to feel natural
-    await new Promise(r => setTimeout(r, response ? 400 : 800));
+    await new Promise((resolve) => setTimeout(resolve, 250));
 
-    setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'bot', text: response }]);
+    setMessages((current) => [
+      ...current,
+      {
+        id: createMessageId(),
+        role: 'bot',
+        text: response,
+      },
+    ]);
     setIsTyping(false);
     inputRef.current?.focus();
-  };
+  }
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  function handleSubmit(event) {
+    event.preventDefault();
     sendMessage(input);
-  };
+  }
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-10rem)]">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <Sparkles className="w-5 h-5 text-primary" />
+    <div className="mx-auto flex h-[calc(100vh-10rem)] max-w-4xl flex-col gap-4">
+      <section className="glass-card p-5">
+        <div className="flex items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+            <Sparkles className="h-5 w-5 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-2xl font-heading font-light tracking-[-0.02em] text-text-primary">SafeGuard AI Assistant</h2>
+            <p className="mt-1 text-sm font-light text-text-secondary">
+              Ask about missing coverage, reserve planning, or how a specific event would hit your business.
+            </p>
+            {businessInfo && (
+              <p className="mt-2 text-xs font-normal uppercase tracking-[0.05em] text-text-secondary">
+                Context loaded for {businessInfo.name}
+              </p>
+            )}
+          </div>
         </div>
-        <div>
-          <h2 className="text-lg font-heading font-bold text-text-primary">SafeGuard AI Assistant</h2>
-          <p className="text-sm text-text-secondary">Ask me anything about insurance & risk management</p>
-        </div>
-      </div>
+      </section>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-3 pr-2 pb-2">
-        <AnimatePresence initial={false}>
-          {messages.map((msg) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`flex items-start gap-2 max-w-[80%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  msg.role === 'user' ? 'bg-primary text-white' : 'bg-gray-200 text-text-secondary'
+      <section className="glass-card flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex-1 space-y-4 overflow-y-auto p-4 md:p-5">
+          {messages.map((message) => (
+            <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`flex max-w-[88%] items-start gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                  message.role === 'user' ? 'bg-primary text-white shadow-[0_10px_22px_rgba(6,182,212,0.22)]' : 'surface-panel text-text-secondary'
                 }`}>
-                  {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                  {message.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                 </div>
-                <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-                  msg.role === 'user'
-                    ? 'bg-primary text-white'
-                    : 'bg-white/80 backdrop-blur-sm border border-gray-200/60 text-text-primary shadow-sm'
+                <div className={`rounded-2xl border px-4 py-3 ${
+                  message.role === 'user'
+                    ? 'border-primary/30 bg-primary/15 text-text-primary shadow-[0_14px_30px_rgba(6,182,212,0.12)]'
+                    : 'surface-panel text-text-secondary'
                 }`}>
-                  {msg.text}
+                  <MessageBody text={message.text} />
                 </div>
               </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-        {isTyping && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-            <div className="bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl shadow-sm">
-              <TypingIndicator />
             </div>
-          </motion.div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+          ))}
 
-      {/* Quick Questions */}
-      <div className="flex flex-wrap gap-2 py-3">
-        {QUICK_QUESTIONS.map((q) => (
-          <button
-            key={q}
-            onClick={() => sendMessage(q)}
-            disabled={isTyping}
-            className="text-xs px-3 py-1.5 rounded-full border border-primary/30 text-primary hover:bg-primary/5 transition disabled:opacity-50"
-          >
-            {q}
-          </button>
-        ))}
-      </div>
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="surface-panel rounded-2xl">
+                <TypingIndicator />
+              </div>
+            </div>
+          )}
 
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about insurance, risks, or financial planning..."
-          disabled={isTyping}
-          className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary disabled:opacity-50"
-        />
-        <button
-          type="submit"
-          disabled={!input.trim() || isTyping}
-          className="px-4 py-3 rounded-xl bg-primary text-white hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Send className="w-4 h-4" />
-        </button>
-      </form>
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="border-t border-white/10 px-4 py-3 md:px-5">
+          <div className="mb-3 flex flex-wrap gap-2">
+            {QUICK_QUESTIONS.map((question) => (
+              <button
+                key={question}
+                type="button"
+                onClick={() => sendMessage(question)}
+                disabled={isTyping}
+                className="surface-chip focus-ring-brand rounded-full px-3 py-1.5 text-xs font-normal text-text-secondary transition-all duration-200 hover:border-primary/30 hover:text-text-primary disabled:opacity-50"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex gap-3">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              placeholder="Ask about insurance, reserves, or scenario impact..."
+              aria-label="Ask SafeGuard assistant a question"
+              disabled={isTyping}
+              className="control-input focus-ring-brand flex-1 rounded-xl px-4 py-3 text-sm text-text-primary placeholder-text-muted transition-all duration-200 disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              aria-label="Send message"
+              disabled={!input.trim() || isTyping}
+              className="focus-ring-brand inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-white shadow-[0_16px_30px_rgba(6,182,212,0.18)] transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_18px_34px_rgba(6,182,212,0.24)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </form>
+        </div>
+      </section>
     </div>
   );
 }
