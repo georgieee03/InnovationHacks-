@@ -26,6 +26,7 @@ export default function StatValue({
   const colorClass = COLOR_VARIANTS[color] || COLOR_VARIANTS.neutral;
   const sizeClass = SIZE_CLASSES[size] || SIZE_CLASSES.lg;
   const shouldUseReflective = reflective && !(theme === 'light' && size === 'sm');
+  const reflectiveModeClass = theme === 'light' ? 'reflective-force-dark-style' : '';
 
   if (!shouldUseReflective) {
     return (
@@ -37,7 +38,7 @@ export default function StatValue({
 
   return (
     <span
-      className={`text-reflective reflective-hover inline-block font-heading font-light leading-none tracking-[-0.04em] ${colorClass} ${sizeClass} ${className}`}
+      className={`text-reflective reflective-hover inline-block font-heading font-light leading-none tracking-[-0.04em] ${reflectiveModeClass} ${colorClass} ${sizeClass} ${className}`}
       data-value={value}
       data-size={size}
       data-tone={color}

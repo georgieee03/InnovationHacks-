@@ -24,24 +24,24 @@ export default function CashFlowChart({ data }) {
     ? {
         income: '#059669',
         expense: '#dc2626',
-        primary: '#0891b2',
+        primary: '#00CF31',
         grid: 'rgba(15, 23, 42, 0.08)',
         axisText: '#52525b',
         tooltipBackground: 'rgba(255, 255, 255, 0.96)',
         tooltipBorder: 'rgba(15, 23, 42, 0.1)',
         tooltipText: '#0a0a0b',
-        cursorFill: 'rgba(8, 145, 178, 0.05)',
+        cursorFill: 'rgba(0, 207, 49, 0.06)',
         legend: '#52525b',
         zeroLine: 'rgba(15, 23, 42, 0.16)',
         dotStroke: '#ffffff',
         activeDotStroke: '#0a0a0b',
-        glow: 'rgba(8, 145, 178, 0.12)',
+        glow: 'rgba(0, 207, 49, 0.14)',
         tooltipShadow: '0 18px 34px rgba(15, 23, 42, 0.12)',
       }
     : {
         income: '#10b981',
         expense: '#ef4444',
-        primary: '#06b6d4',
+        primary: '#00CF31',
         grid: 'rgba(255, 255, 255, 0.06)',
         axisText: '#71717a',
         tooltipBackground: 'rgba(17, 17, 19, 0.96)',
@@ -52,7 +52,7 @@ export default function CashFlowChart({ data }) {
         zeroLine: 'rgba(255,255,255,0.16)',
         dotStroke: '#111113',
         activeDotStroke: '#fafafa',
-        glow: 'rgba(6, 182, 212, 0.16)',
+        glow: 'rgba(0, 207, 49, 0.18)',
         tooltipShadow: '0 18px 34px rgba(0, 0, 0, 0.35)',
       };
 

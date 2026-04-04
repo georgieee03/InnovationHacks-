@@ -31,8 +31,8 @@ export default function EnhancedInput({
           className="absolute inset-0 rounded-lg pointer-events-none"
           animate={{
             boxShadow: isFocused
-              ? '0 0 0 3px rgba(6, 182, 212, 0.2), 0 0 20px rgba(6, 182, 212, 0.3)'
-              : '0 0 0 0px rgba(6, 182, 212, 0)',
+              ? '0 0 0 3px rgba(0, 207, 49, 0.22), 0 0 20px rgba(0, 207, 49, 0.32)'
+              : '0 0 0 0px rgba(0, 207, 49, 0)',
           }}
           transition={{ duration: 0.2 }}
         />

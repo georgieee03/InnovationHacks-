@@ -27,8 +27,8 @@ export default function MetricCard({ title, value, subtitle, trend, color, delay
   const cardRef = useRef(null);
   const tilt = useCardTilt(cardRef, 6);
   const hoverShadow = theme === 'light'
-    ? '0 24px 44px rgba(15, 23, 42, 0.12), 0 0 28px rgba(8, 145, 178, 0.08)'
-    : '0 26px 55px rgba(0, 0, 0, 0.34), 0 0 30px rgba(6, 182, 212, 0.12)';
+    ? '0 24px 44px rgba(15, 23, 42, 0.12), 0 0 28px rgba(0, 207, 49, 0.1)'
+    : '0 26px 55px rgba(0, 0, 0, 0.34), 0 0 30px rgba(0, 207, 49, 0.14)';
 
   // Extract numeric value if it's a string with currency/percentage
   const numericValue = useMemo(() => {
