@@ -1,17 +1,27 @@
-import { useState, useContext, useCallback } from 'react';
+import { useCallback, useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
 import { extractTextFromPDF } from '../../services/pdfParser';
 import { analyzePolicyWithLLM } from '../../services/llmService';
-import { analyzeGaps } from '../../services/gapAnalyzer';
+import { api } from '../../services/apiClient';
+import { analyzeGaps, computeProtectionScore } from '../../services/gapAnalyzer';
+import localRecommendations from '../../data/coverageRecommendations.json';
 import PolicyUpload from './PolicyUpload';
 import PolicySummary from './PolicySummary';
 import GapAnalysis from './GapAnalysis';
 
+function getFallbackRecommendations(businessType) {
+  return localRecommendations[businessType]?.recommendedPolicies ?? [];
+}
+
 export default function InsuranceAnalyzer() {
   const {
-    businessInfo, riskFactors,
-    policySummary, setPolicySummary,
-    gapAnalysis, setGapAnalysis,
+    businessInfo,
+    riskFactors,
+    financialMetrics,
+    policySummary,
+    setPolicySummary,
+    gapAnalysis,
+    setGapAnalysis,
   } = useContext(AppContext);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -19,30 +29,54 @@ export default function InsuranceAnalyzer() {
 
   const handleFileSelect = useCallback(async (file) => {
     setIsAnalyzing(true);
+    setIsComplete(false);
+
     try {
       const policyText = await extractTextFromPDF(file);
-      const summary = await analyzePolicyWithLLM(policyText, businessInfo);
+      const summary = await analyzePolicyWithLLM(policyText, businessInfo?.id);
       setPolicySummary(summary);
 
-      const gaps = analyzeGaps(summary, businessInfo?.type, riskFactors);
+      let recommendations;
+      try {
+        recommendations = await api.getRecommendations(businessInfo?.type);
+      } catch (error) {
+        console.warn('Recommendations API failed, using local fallback:', error);
+        recommendations = getFallbackRecommendations(businessInfo?.type);
+      }
+
+      const gaps = analyzeGaps(summary, recommendations, riskFactors, financialMetrics);
       setGapAnalysis(gaps);
+
+      if (businessInfo?.id) {
+        const protectionScore = computeProtectionScore(gaps, financialMetrics);
+        api.saveGapAnalysis({
+          businessId: businessInfo.id,
+          policyAnalysisId: summary.policyAnalysisId ?? null,
+          results: gaps,
+          protectionScore,
+        }).catch((error) => {
+          console.warn('Gap analysis save failed:', error);
+        });
+      }
+
       setIsComplete(true);
-    } catch (err) {
-      console.error('Analysis failed:', err);
+    } catch (error) {
+      console.error('Analysis failed:', error);
     } finally {
       setIsAnalyzing(false);
     }
-  }, [businessInfo, riskFactors, setPolicySummary, setGapAnalysis]);
+  }, [businessInfo, financialMetrics, riskFactors, setGapAnalysis, setPolicySummary]);
 
   const handleLoadDemo = useCallback(async () => {
     setIsAnalyzing(true);
+
     try {
-      const resp = await fetch('/demo-policies/marias-bakery-policy.pdf');
-      const blob = await resp.blob();
+      const response = await fetch('/demo-policies/marias-bakery-policy.pdf');
+      const blob = await response.blob();
       const file = new File([blob], 'marias-bakery-policy.pdf', { type: 'application/pdf' });
       await handleFileSelect(file);
-    } catch (err) {
-      console.error('Demo load failed:', err);
+    } catch (error) {
+      console.error('Demo load failed:', error);
       setIsAnalyzing(false);
     }
   }, [handleFileSelect]);
@@ -51,7 +85,7 @@ export default function InsuranceAnalyzer() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-heading font-bold text-text-primary">Insurance Analyzer</h2>
-        <p className="text-text-secondary mt-1">Upload your policy to find coverage gaps</p>
+        <p className="mt-1 text-text-secondary">Upload your policy to find coverage gaps.</p>
       </div>
 
       <div className="flex items-center gap-4">
@@ -59,8 +93,10 @@ export default function InsuranceAnalyzer() {
           <PolicyUpload onFileSelect={handleFileSelect} isAnalyzing={isAnalyzing} isComplete={isComplete} />
         </div>
         {!isComplete && !isAnalyzing && (
-          <button onClick={handleLoadDemo}
-            className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition whitespace-nowrap">
+          <button
+            onClick={() => void handleLoadDemo()}
+            className="whitespace-nowrap rounded-lg bg-primary px-4 py-2 text-sm text-white transition hover:bg-primary/90"
+          >
             Load Demo Policy
           </button>
         )}

@@ -1,6 +1,6 @@
 [
-  { "id": "restaurant", "label": "Restaurant / Bakery / Food Service", "icon": "🍽️" },
-  { "id": "retail", "label": "Retail Store", "icon": "🛍️" },
-  { "id": "salon", "label": "Salon / Barbershop", "icon": "💈" },
-  { "id": "contractor", "label": "Contractor / Trades", "icon": "🔨" }
+  { "id": "restaurant", "label": "Restaurant / Bakery / Food Service", "icon": "???" },
+  { "id": "retail", "label": "Retail Store", "icon": "???" },
+  { "id": "salon", "label": "Salon / Barbershop", "icon": "??" },
+  { "id": "contractor", "label": "Contractor / Trades", "icon": "??" }
 ]
