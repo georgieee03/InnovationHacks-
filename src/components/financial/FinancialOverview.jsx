@@ -31,13 +31,13 @@ export default function FinancialOverview() {
     <AnimatePresence>
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-heading font-bold text-text-primary">Financial Overview</h2>
-          <p className="text-text-secondary mt-1">
+          <h2 className="text-3xl font-heading font-bold text-text-primary">Financial Overview</h2>
+          <p className="text-sm text-text-secondary mt-1.5">
             {businessInfo?.name} — Nov 2025 to Feb 2026
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <MetricCard title="Total Balance" value={formatCurrency(financialMetrics.totalBalance)} color="text-primary" delay={0} />
           <MetricCard title="Avg Monthly Revenue" value={formatCurrency(financialMetrics.averageMonthlyIncome)} color="text-covered" trend="up" delay={0.1} />
           <MetricCard title="Avg Monthly Expenses" value={formatCurrency(financialMetrics.averageMonthlyExpenses)} color="text-text-primary" delay={0.15} />

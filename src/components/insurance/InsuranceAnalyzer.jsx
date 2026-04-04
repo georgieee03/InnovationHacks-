@@ -61,8 +61,8 @@ export default function InsuranceAnalyzer() {
           {...fadeInUp}
           transition={{ duration: 0.4 }}
         >
-          <h2 className="text-2xl font-heading font-bold text-text-primary">Insurance Analyzer</h2>
-          <p className="text-text-secondary mt-1">Upload your policy to find coverage gaps</p>
+          <h2 className="text-3xl font-heading font-bold text-text-primary">Insurance Analyzer</h2>
+          <p className="text-sm text-text-secondary mt-1.5">Upload your policy to find coverage gaps</p>
         </motion.div>
 
         <motion.div

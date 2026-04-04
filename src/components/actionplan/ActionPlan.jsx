@@ -30,7 +30,7 @@ export default function ActionPlan() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-heading font-bold text-text-primary">Action Plan</h2>
+          <h2 className="text-3xl font-heading font-bold text-text-primary">Action Plan</h2>
         </div>
         <div className="bg-card rounded-xl shadow-sm border border-gray-100 p-12 text-center">
           <p className="text-text-secondary mb-4">
@@ -38,7 +38,7 @@ export default function ActionPlan() {
           </p>
           <button
             onClick={() => setActiveTab('insurance')}
-            className="px-5 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            className="px-5 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 transition-all duration-200"
           >
             Go to Insurance Analyzer
           </button>
@@ -58,8 +58,8 @@ export default function ActionPlan() {
         {...fadeInUp}
         transition={{ duration: 0.4 }}
       >
-        <h2 className="text-2xl font-heading font-bold text-text-primary">Action Plan</h2>
-        <p className="text-text-secondary mt-1">
+        <h2 className="text-3xl font-heading font-bold text-text-primary">Action Plan</h2>
+        <p className="text-sm text-text-secondary mt-1.5">
           {actionItems.length > 0
             ? `${actionItems.length} items need your attention`
             : 'Your coverage looks solid — no critical gaps found'}
@@ -69,8 +69,8 @@ export default function ActionPlan() {
       {/* Protection Score Gauge */}
       <motion.div
         {...fadeInUp}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="bg-card rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center"
+        transition={{ duration: 0.6, delay: 0.1, ease: [0.4, 0, 0.2, 1] }}
+        className="glass-card p-6 flex flex-col items-center"
       >
         <svg width="200" height="200" viewBox="0 0 200 200">
           <circle

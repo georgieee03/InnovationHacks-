@@ -34,18 +34,18 @@ export default function TransactionList({ transactions }) {
   const hasMore = filtered.length > DEFAULT_VISIBLE;
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-gray-100 p-5">
+    <div className="glass-card p-5">
       <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">Recent Transactions</h3>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <select
           value={categoryFilter}
           onChange={(e) => { setCategoryFilter(e.target.value); setShowAll(false); }}
-          className="rounded-lg border border-gray-200 bg-bg-main text-text-primary text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+          className="rounded-lg border border-white/10 bg-white/5 text-text-primary text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
         >
-          <option value="all">All Categories</option>
+          <option value="all" className="bg-bg-main">All Categories</option>
           {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-            <option key={key} value={key}>{label}</option>
+            <option key={key} value={key} className="bg-bg-main">{label}</option>
           ))}
         </select>
         <input
@@ -53,14 +53,14 @@ export default function TransactionList({ transactions }) {
           placeholder="Search transactions…"
           value={searchText}
           onChange={(e) => { setSearchText(e.target.value); setShowAll(false); }}
-          className="rounded-lg border border-gray-200 bg-bg-main text-text-primary text-sm px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-primary"
+          className="rounded-lg border border-white/10 bg-white/5 text-text-primary placeholder-text-muted text-sm px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
         />
       </div>
 
       <div className="overflow-auto max-h-96">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-text-secondary border-b border-gray-100">
+            <tr className="text-left text-text-secondary border-b border-white/10">
               <th className="pb-2 font-medium">Date</th>
               <th className="pb-2 font-medium">Description</th>
               <th className="pb-2 font-medium">Category</th>
@@ -78,7 +78,7 @@ export default function TransactionList({ transactions }) {
                   animate="visible"
                   exit="exit"
                   layout
-                  className="border-b border-gray-50 hover:bg-bg-main"
+                  className="border-b border-white/5 hover:bg-white/5 transition-colors duration-200"
                 >
                   <td className="py-2.5 text-text-secondary">{txn.date}</td>
                   <td className="py-2.5 text-text-primary font-medium">{txn.description}</td>
@@ -105,7 +105,7 @@ export default function TransactionList({ transactions }) {
       {hasMore && !showAll && (
         <button
           onClick={() => setShowAll(true)}
-          className="mt-3 w-full text-sm text-primary hover:text-primary/80 font-medium py-2 rounded-lg border border-gray-200 hover:bg-bg-main transition-colors"
+          className="mt-3 w-full text-sm text-primary hover:text-primary/80 font-medium py-2 rounded-lg border border-white/10 hover:bg-white/5 hover:border-primary/30 transition-all duration-200"
         >
           Show all transactions ({filtered.length})
         </button>
@@ -114,7 +114,7 @@ export default function TransactionList({ transactions }) {
       {showAll && hasMore && (
         <button
           onClick={() => setShowAll(false)}
-          className="mt-3 w-full text-sm text-text-secondary hover:text-text-primary font-medium py-2 rounded-lg border border-gray-200 hover:bg-bg-main transition-colors"
+          className="mt-3 w-full text-sm text-text-secondary hover:text-text-primary font-medium py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-all duration-200"
         >
           Show fewer
         </button>

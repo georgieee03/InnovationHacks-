@@ -16,18 +16,21 @@ export default function EmergencyFund({ metrics, riskFactors, businessInfo }) {
     : null;
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-gray-100 p-5">
+    <div className="glass-card p-5">
       <h3 className="text-lg font-heading font-semibold text-text-primary mb-1">Emergency Fund</h3>
       <p className="text-sm text-text-secondary mb-4">
         Recommended: {formatCurrency(metrics.recommendedEmergencyFund)} (based on {metrics.monthsOfRunway < 3 ? 'high' : 'moderate'} risk location)
       </p>
 
-      <div className="w-full bg-gray-200 rounded-full h-4 mb-3">
+      <div className="w-full bg-white/5 rounded-full h-4 mb-3 overflow-hidden">
         <motion.div
           className={`h-4 rounded-full ${barColor}`}
           initial={{ width: 0 }}
           animate={{ width: `${Math.min(100, pct)}%` }}
-          transition={{ duration: 1, ease: 'easeOut' }}
+          transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
+          style={{
+            boxShadow: pct >= 66 ? '0 0 20px rgba(16, 185, 129, 0.4)' : pct >= 33 ? '0 0 20px rgba(245, 158, 11, 0.4)' : '0 0 20px rgba(239, 68, 68, 0.4)'
+          }}
         />
       </div>
 
@@ -50,10 +53,10 @@ export default function EmergencyFund({ metrics, riskFactors, businessInfo }) {
 
       {metrics.emergencyFundGap > 0 && (
         <motion.div
-          className="mt-4 rounded-lg bg-underinsured/10 border border-underinsured/30 p-4"
+          className="mt-4 rounded-lg bg-underinsured/10 border border-underinsured/30 p-4 backdrop-blur-sm"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.5 }}
+          transition={{ duration: 0.5, delay: 0.6, ease: [0.4, 0, 0.2, 1] }}
         >
           <p className="text-sm text-underinsured font-medium">
             You need an additional {formatCurrency(metrics.emergencyFundGap)} to reach the recommended level. Consider saving {monthlySaving}/month to reach your goal in 6 months.

@@ -10,10 +10,12 @@ export default function Sidebar() {
   const typeInfo = businessTypes.find((t) => t.id === businessInfo?.type);
 
   return (
-    <aside className="w-64 min-h-screen bg-sidebar text-white flex flex-col fixed left-0 top-0 z-10">
+    <aside className="w-64 min-h-screen bg-sidebar text-white flex flex-col fixed left-0 top-0 z-20 border-r border-white/10">
       {/* Logo */}
       <div className="flex items-center gap-2 px-5 py-6 border-b border-white/10">
-        <Shield className="w-7 h-7 text-primary" />
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Shield className="w-6 h-6 text-primary" />
+        </div>
         <span className="text-xl font-heading font-bold">SafeGuard</span>
       </div>
 
@@ -39,7 +41,7 @@ export default function Sidebar() {
                 {Object.entries(riskFactors.risks).map(([key, risk]) => (
                   <div
                     key={key}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-hover"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-hover border border-white/5 hover:border-white/10 transition-all duration-200"
                   >
                     <span
                       className="w-2 h-2 rounded-full flex-shrink-0"

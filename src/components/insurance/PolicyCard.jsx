@@ -24,12 +24,12 @@ export default function PolicyCard({ policy, delay = 0 }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay }}
-      whileHover={{ y: -2, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}
-      className={`rounded-xl shadow-sm border p-5 ${
-        isGap ? 'bg-gap/5 border-gap/30' :
-        policy.status === 'underinsured' ? 'bg-card border-underinsured/30' :
-        'bg-card border-gray-100'
+      transition={{ duration: 0.5, delay, ease: [0.4, 0, 0.2, 1] }}
+      whileHover={{ y: -4, scale: 1.01 }}
+      className={`glass-card p-5 ${
+        isGap ? 'border-gap/40' :
+        policy.status === 'underinsured' ? 'border-underinsured/40' :
+        'border-white/10'
       }`}
     >
       <div className="flex items-start justify-between mb-2">
@@ -39,7 +39,7 @@ export default function PolicyCard({ policy, delay = 0 }) {
       <p className="text-sm text-text-secondary mb-3">{policy.description}</p>
 
       {showLocationBadge && (
-        <span className="inline-block text-xs px-2 py-0.5 mb-3 rounded-full bg-gap/10 text-gap font-medium">
+        <span className="inline-block text-xs px-2 py-0.5 mb-3 rounded-full bg-gap/20 text-gap font-medium border border-gap/30">
           📍 Flood Zone
         </span>
       )}
@@ -66,7 +66,7 @@ export default function PolicyCard({ policy, delay = 0 }) {
       </div>
 
       {isGap && policy.priority === 'critical' && (
-        <div className="mt-3 p-2 bg-gap/5 rounded-lg">
+        <div className="mt-3 p-2 bg-gap/10 rounded-lg border border-gap/20">
           <p className="text-xs text-gap font-medium">⚠️ {policy.whyItMatters}</p>
         </div>
       )}

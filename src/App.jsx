@@ -13,6 +13,8 @@ import Challenges from './components/gamification/Challenges';
 import HealthReport from './components/report/HealthReport';
 import ChatBot from './components/chat/ChatBot';
 import Education from './components/education/Education';
+import CursorSpotlight from './components/shared/CursorSpotlight';
+import ParticleGrid from './components/shared/ParticleGrid';
 
 const tabVariants = {
   initial: { opacity: 0, x: 20 },
@@ -28,34 +30,42 @@ function Dashboard() {
   }
 
   return (
-    <div className="flex min-h-screen bg-bg-main">
-      <Sidebar />
-      <main className="flex-1 ml-64">
-        <TabNavigation />
-        <div className="p-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              variants={tabVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
-            >
-              {activeTab === 'financial' && <FinancialOverview />}
-              {activeTab === 'insurance' && <InsuranceAnalyzer />}
-              {activeTab === 'actionplan' && <ActionPlan />}
-              {activeTab === 'calculators' && <Calculators />}
-              {activeTab === 'simulator' && <RiskSimulator />}
-              {activeTab === 'challenges' && <Challenges />}
-              {activeTab === 'report' && <HealthReport />}
-              {activeTab === 'chat' && <ChatBot />}
-              {activeTab === 'learn' && <Education />}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </main>
-    </div>
+    <>
+      {/* Animated Background Layers */}
+      <div className="animated-bg" />
+      <ParticleGrid />
+      <div className="noise-overlay" />
+      <CursorSpotlight />
+      
+      <div className="flex min-h-screen relative z-10 max-w-full overflow-x-hidden">
+        <Sidebar />
+        <main className="flex-1 ml-64 max-w-[calc(100vw-16rem)]">
+          <TabNavigation />
+          <div className="p-6 max-w-full">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                variants={tabVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              >
+                {activeTab === 'financial' && <FinancialOverview />}
+                {activeTab === 'insurance' && <InsuranceAnalyzer />}
+                {activeTab === 'actionplan' && <ActionPlan />}
+                {activeTab === 'calculators' && <Calculators />}
+                {activeTab === 'simulator' && <RiskSimulator />}
+                {activeTab === 'challenges' && <Challenges />}
+                {activeTab === 'report' && <HealthReport />}
+                {activeTab === 'chat' && <ChatBot />}
+                {activeTab === 'learn' && <Education />}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </main>
+      </div>
+    </>
   );
 }
 

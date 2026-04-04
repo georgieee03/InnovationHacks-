@@ -11,10 +11,10 @@ export default function RiskTimeline({ gaps }) {
   if (!sorted.length) return null;
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-gray-100 p-5">
+    <div className="glass-card p-5">
       <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">Priority Action Items</h3>
       <div className="relative">
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
+        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-white/10" />
         <div className="space-y-4">
           {sorted.map((item, i) => (
             <motion.div
