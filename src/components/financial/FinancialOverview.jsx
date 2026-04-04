@@ -32,17 +32,22 @@ export default function FinancialOverview() {
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-heading font-bold text-text-primary">Financial Overview</h2>
-          <p className="text-text-secondary mt-1">
-            {businessInfo?.name} — Nov 2025 to Feb 2026
+          <p className="mt-1 text-text-secondary">
+            {businessInfo?.name} - Nov 2025 to Feb 2026
           </p>
+          {businessInfo?.monthlyRevenue > 0 && (
+            <p className="mt-2 text-sm text-text-secondary">
+              Onboarding revenue estimate: <span className="font-medium text-text-primary">{formatCurrency(businessInfo.monthlyRevenue)}/month</span>
+            </p>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard title="Total Balance" value={formatCurrency(financialMetrics.totalBalance)} color="text-primary" delay={0} />
-          <MetricCard title="Avg Monthly Revenue" value={formatCurrency(financialMetrics.averageMonthlyIncome)} color="text-covered" trend="up" delay={0.1} />
+          <MetricCard title="Avg Monthly Revenue" value={formatCurrency(financialMetrics.averageMonthlyIncome)} color="text-covered" trend="up" subtitle="From transaction data" delay={0.1} />
           <MetricCard title="Avg Monthly Expenses" value={formatCurrency(financialMetrics.averageMonthlyExpenses)} color="text-text-primary" delay={0.15} />
           <MetricCard title="Monthly Runway" value={`${financialMetrics.monthsOfRunway} months`} color={runwayColor}
-            subtitle={financialMetrics.monthsOfRunway < 3 ? 'Critical — below 3 months' : undefined} delay={0.2} />
+            subtitle={financialMetrics.monthsOfRunway < 3 ? 'Critical - below 3 months' : undefined} delay={0.2} />
         </div>
 
         <motion.div
@@ -60,7 +65,7 @@ export default function FinancialOverview() {
           animate="visible"
           variants={sectionVariants}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <CashFlowChart data={financialMetrics.monthlyBreakdown} />
             <SpendingChart data={financialMetrics.spendingByCategory} />
           </div>

@@ -2,6 +2,7 @@ import { useContext } from 'react';
 import { Shield } from 'lucide-react';
 import { AppContext } from '../context/AppContext';
 import { RISK_LEVEL_COLORS } from '../utils/constants';
+import { formatCurrency } from '../utils/formatCurrency';
 import businessTypes from '../data/businessTypes.json';
 
 export default function Sidebar() {
@@ -10,39 +11,41 @@ export default function Sidebar() {
   const typeInfo = businessTypes.find((t) => t.id === businessInfo?.type);
 
   return (
-    <aside className="w-64 min-h-screen bg-sidebar text-white flex flex-col fixed left-0 top-0 z-10">
-      {/* Logo */}
-      <div className="flex items-center gap-2 px-5 py-6 border-b border-white/10">
-        <Shield className="w-7 h-7 text-primary" />
+    <aside className="fixed left-0 top-0 z-10 flex min-h-screen w-64 flex-col bg-sidebar text-white">
+      <div className="flex items-center gap-2 border-b border-white/10 px-5 py-6">
+        <Shield className="h-7 w-7 text-primary" />
         <span className="text-xl font-heading font-bold">SafeGuard</span>
       </div>
 
       {isOnboarded && businessInfo && (
         <>
-          {/* Business Info */}
-          <div className="px-5 py-5 border-b border-white/10">
-            <p className="text-sm text-gray-400 uppercase tracking-wider mb-2">Business</p>
-            <p className="font-semibold text-lg">{businessInfo.name}</p>
+          <div className="border-b border-white/10 px-5 py-5">
+            <p className="mb-2 text-sm uppercase tracking-wider text-gray-400">Business</p>
+            <p className="text-lg font-semibold">{businessInfo.name}</p>
             {typeInfo && (
-              <p className="text-sm text-gray-300 mt-1">{typeInfo.icon} {typeInfo.label}</p>
+              <p className="mt-1 text-sm text-gray-300">{typeInfo.icon} {typeInfo.label}</p>
             )}
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="mt-1 text-sm text-gray-400">
               {businessInfo.city}, {businessInfo.state} {businessInfo.zip}
             </p>
+            {businessInfo.monthlyRevenue > 0 && (
+              <p className="mt-3 text-sm text-gray-300">
+                Revenue estimate: <span className="font-medium text-white">{formatCurrency(businessInfo.monthlyRevenue)}/mo</span>
+              </p>
+            )}
           </div>
 
-          {/* Risk Factors */}
           {riskFactors && (
             <div className="px-5 py-5">
-              <p className="text-sm text-gray-400 uppercase tracking-wider mb-3">Location Risks</p>
+              <p className="mb-3 text-sm uppercase tracking-wider text-gray-400">Location Risks</p>
               <div className="flex flex-col gap-2">
                 {Object.entries(riskFactors.risks).map(([key, risk]) => (
                   <div
                     key={key}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-hover"
+                    className="flex items-center gap-2 rounded-lg bg-sidebar-hover px-3 py-2"
                   >
                     <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      className="h-2 w-2 flex-shrink-0 rounded-full"
                       style={{ backgroundColor: RISK_LEVEL_COLORS[risk.level] }}
                     />
                     <span className="text-sm text-gray-200">{risk.label}</span>

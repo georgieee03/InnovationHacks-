@@ -2,12 +2,19 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileText, CheckCircle } from 'lucide-react';
 
+function isPdfFile(file) {
+  return Boolean(file) && (
+    file.type === 'application/pdf' ||
+    file.name?.toLowerCase().endsWith('.pdf')
+  );
+}
+
 export default function PolicyUpload({ onFileSelect, isAnalyzing, isComplete }) {
   const [dragOver, setDragOver] = useState(false);
   const [fileName, setFileName] = useState(null);
 
   const handleFile = useCallback((file) => {
-    if (file && file.type === 'application/pdf') {
+    if (isPdfFile(file)) {
       setFileName(file.name);
       onFileSelect(file);
     }
@@ -29,9 +36,9 @@ export default function PolicyUpload({ onFileSelect, isAnalyzing, isComplete }) 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-        className="flex items-center gap-3 p-4 bg-covered/5 border border-covered/20 rounded-xl"
+        className="flex items-center gap-3 rounded-xl border border-covered/20 bg-covered/5 p-4"
       >
-        <CheckCircle className="w-5 h-5 text-covered" />
+        <CheckCircle className="h-5 w-5 text-covered" />
         <div>
           <p className="text-sm font-medium text-text-primary">{fileName}</p>
           <p className="text-xs text-covered">Analysis complete</p>
@@ -47,11 +54,11 @@ export default function PolicyUpload({ onFileSelect, isAnalyzing, isComplete }) 
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
       onDrop={onDrop}
-      className={`relative border-2 border-dashed rounded-xl p-8 text-center transition cursor-pointer
+      className={`relative cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition
         ${dragOver ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary/50'}`}
     >
-      <input type="file" accept=".pdf" onChange={onInput}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+      <input type="file" accept=".pdf,application/pdf" onChange={onInput}
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
       <AnimatePresence mode="wait">
         {isAnalyzing ? (
           <motion.div
@@ -65,7 +72,7 @@ export default function PolicyUpload({ onFileSelect, isAnalyzing, isComplete }) 
               animate={{ scale: [1, 1.08, 1] }}
               transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <div className="w-8 h-8 border-3 border-primary/20 border-t-primary rounded-full animate-spin" />
+              <div className="h-8 w-8 animate-spin rounded-full border-3 border-primary/20 border-t-primary" />
             </motion.div>
             <p className="text-sm text-text-secondary">Analyzing policy...</p>
           </motion.div>
@@ -77,14 +84,14 @@ export default function PolicyUpload({ onFileSelect, isAnalyzing, isComplete }) 
             exit={{ opacity: 0 }}
           >
             {fileName ? (
-              <FileText className="w-10 h-10 text-primary mx-auto mb-2" />
+              <FileText className="mx-auto mb-2 h-10 w-10 text-primary" />
             ) : (
-              <Upload className="w-10 h-10 text-text-secondary mx-auto mb-2" />
+              <Upload className="mx-auto mb-2 h-10 w-10 text-text-secondary" />
             )}
             <p className="text-sm font-medium text-text-primary">
               {fileName || 'Drop your insurance policy PDF here'}
             </p>
-            <p className="text-xs text-text-secondary mt-1">or click to browse</p>
+            <p className="mt-1 text-xs text-text-secondary">or click to browse</p>
           </motion.div>
         )}
       </AnimatePresence>

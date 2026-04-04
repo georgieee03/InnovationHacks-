@@ -1,17 +1,38 @@
 import * as pdfjsLib from 'pdfjs-dist';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+function readTextFromItems(items) {
+  return items
+    .map((item) => (typeof item?.str === 'string' ? item.str : ''))
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 export async function extractTextFromPDF(file) {
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pdf = await pdfjsLib.getDocument({
+    data: arrayBuffer,
+    disableWorker: true,
+    useWorkerFetch: false,
+    isEvalSupported: false,
+  }).promise;
 
   let fullText = '';
-  for (let i = 1; i <= pdf.numPages; i++) {
+
+  for (let i = 1; i <= pdf.numPages; i += 1) {
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
-    const pageText = textContent.items.map(item => item.str).join(' ');
-    fullText += pageText + '\n\n';
+    const pageText = readTextFromItems(textContent.items);
+    if (pageText) {
+      fullText += `${pageText}\n\n`;
+    }
   }
-  return fullText;
+
+  const normalized = fullText.trim();
+
+  if (!normalized) {
+    throw new Error('This PDF did not contain readable text. Try a text-based PDF instead of a scanned image.');
+  }
+
+  return normalized;
 }
