@@ -10,39 +10,57 @@ const QUICK_QUESTIONS = [
 ];
 
 function formatCurrencyLocal(value) {
-  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+  return value.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  });
 }
 
 function renderInline(text, keyPrefix) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
     if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={`${keyPrefix}-strong-${index}`} className="font-normal text-text-primary">{part.slice(2, -2)}</strong>;
+      return (
+        <strong key={`${keyPrefix}-strong-${index}`} className="font-normal text-text-primary">
+          {part.slice(2, -2)}
+        </strong>
+      );
     }
+
     return <Fragment key={`${keyPrefix}-text-${index}`}>{part}</Fragment>;
   });
 }
 
 function MessageBody({ text }) {
-  const normalized = text.replace(/\r\n/g, '\n').replace(/\u2022/g, '-').replace(/\u2013|\u2014/g, '-');
+  const normalized = text
+    .replace(/\r\n/g, '\n')
+    .replace(/\u2022/g, '-')
+    .replace(/\u2013|\u2014/g, '-');
+
   const blocks = normalized.split(/\n{2,}/).filter(Boolean);
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {blocks.map((block, blockIndex) => {
-        const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
-        const isList = lines.length > 0 && lines.every((l) => /^[-*]\s+/.test(l));
+        const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
+        const isList = lines.length > 0 && lines.every((line) => /^[-*]\s+/.test(line));
+
         if (isList) {
           return (
-            <ul key={`list-${blockIndex}`} className="list-disc space-y-1 pl-4 text-xs leading-5">
-              {lines.map((line, li) => <li key={`item-${blockIndex}-${li}`}>{renderInline(line.replace(/^[-*]\s+/, ''), `list-${blockIndex}-${li}`)}</li>)}
+            <ul key={`list-${blockIndex}`} className="list-disc space-y-2 pl-5 text-sm leading-7">
+              {lines.map((line, lineIndex) => (
+                <li key={`item-${blockIndex}-${lineIndex}`}>{renderInline(line.replace(/^[-*]\s+/, ''), `list-${blockIndex}-${lineIndex}`)}</li>
+              ))}
             </ul>
           );
         }
+
         return (
-          <p key={`p-${blockIndex}`} className="text-xs leading-5 text-inherit">
-            {lines.map((line, li) => (
-              <Fragment key={`line-${blockIndex}-${li}`}>
-                {renderInline(line, `p-${blockIndex}-${li}`)}
-                {li < lines.length - 1 && <br />}
+          <p key={`paragraph-${blockIndex}`} className="text-sm leading-7 text-inherit">
+            {lines.map((line, lineIndex) => (
+              <Fragment key={`line-${blockIndex}-${lineIndex}`}>
+                {renderInline(line, `paragraph-${blockIndex}-${lineIndex}`)}
+                {lineIndex < lines.length - 1 && <br />}
               </Fragment>
             ))}
           </p>
@@ -52,144 +70,286 @@ function MessageBody({ text }) {
   );
 }
 
+function getGapItems(gapAnalysis) {
+  return Array.isArray(gapAnalysis) ? gapAnalysis : [];
+}
+
 function getSmartFallback(question, context) {
   const q = question.toLowerCase();
   const { businessInfo, financialMetrics, gapAnalysis, riskFactors } = context;
   const name = businessInfo?.name || 'your business';
-  const gaps = Array.isArray(gapAnalysis) ? gapAnalysis : [];
+  const gaps = getGapItems(gapAnalysis);
   const locationRisks = Object.values(riskFactors?.risks || {});
 
   if (q.includes('insurance') || q.includes('need') || q.includes('coverage type')) {
-    const topNeeds = gaps.filter((i) => i.status === 'gap' || i.status === 'underinsured').slice(0, 4).map((i) => `- ${i.name}: ${i.statusLabel}`);
-    if (topNeeds.length > 0) return `For ${name}, focus on:\n\n${topNeeds.join('\n')}\n\nStart with critical gaps first.`;
-    return `For ${name}, start with general liability, property coverage, workers comp, and business interruption.`;
+    const topNeeds = gaps
+      .filter((item) => item.status === 'gap' || item.status === 'underinsured')
+      .slice(0, 4)
+      .map((item) => `- ${item.name}: ${item.statusLabel}`);
+
+    if (topNeeds.length > 0) {
+      return `For ${name}, the first policies to focus on are:\n\n${topNeeds.join('\n')}\n\nStart with the critical gaps first, then fill in recommended protection after that.`;
+    }
+
+    return `For ${name}, start with the basics:\n\n- General liability for customer and third-party claims\n- Property coverage for equipment, inventory, and buildout\n- Workers compensation if you have employees\n- Business interruption for forced closures\n\nThe exact mix depends on your industry, location, and current policy details.`;
   }
+
   if (q.includes('gap') || q.includes('missing') || q.includes('underinsured')) {
-    const importantGaps = gaps.filter((i) => i.status === 'gap' || i.status === 'underinsured').slice(0, 3).map((i) => `- ${i.name}: ${i.statusLabel}`);
-    if (importantGaps.length > 0) return `Biggest coverage issues:\n\n${importantGaps.join('\n')}\n\nAddress critical items first.`;
-    return 'Run the Insurance Analyzer to identify exact gaps.';
+    const importantGaps = gaps
+      .filter((item) => item.status === 'gap' || item.status === 'underinsured')
+      .slice(0, 3)
+      .map((item) => `- ${item.name}: ${item.statusLabel}`);
+
+    if (importantGaps.length > 0) {
+      return `Here are the biggest coverage issues showing up right now:\n\n${importantGaps.join('\n')}\n\nI would address the critical items before the recommended ones.`;
+    }
+
+    return 'I do not have enough policy detail yet to point to exact gaps. Run the Insurance Analyzer so I can compare your current coverage against the recommended stack.';
   }
+
   if (q.includes('save') || q.includes('emergency') || q.includes('fund') || q.includes('money')) {
-    const me = financialMetrics?.averageMonthlyExpenses || 0;
-    if (me) return `Reserve target: ${formatCurrencyLocal(me * 3)} to ${formatCurrencyLocal(me * 6)}.\n\nBuild it by setting a fixed monthly transfer.`;
-    return '3 to 6 months of operating expenses is a solid starting point.';
+    const monthlyExpenses = financialMetrics?.averageMonthlyExpenses || 0;
+    const target3 = monthlyExpenses ? formatCurrencyLocal(monthlyExpenses * 3) : null;
+    const target6 = monthlyExpenses ? formatCurrencyLocal(monthlyExpenses * 6) : null;
+
+    if (target3 && target6) {
+      return `Based on your current numbers, a practical reserve target is ${target3} to ${target6}.\n\n- The low end covers a shorter disruption\n- The high end gives you more room for recovery and payroll pressure\n- Build it by setting a fixed monthly transfer and treating it like a bill`;
+    }
+
+    return 'A solid starting point is 3 to 6 months of operating expenses. The riskier your location and the longer your recovery window, the closer you should aim to the high end.';
   }
+
   if (q.includes('risk') || q.includes('danger') || q.includes('threat') || q.includes('biggest')) {
-    if (locationRisks.length > 0) return `Top location risks:\n\n${locationRisks.slice(0, 3).map((r) => `- ${r.label}`).join('\n')}`;
-    return 'Biggest risks usually come from property damage, liability claims, and downtime.';
+    if (locationRisks.length > 0) {
+      return `Your main location risks right now are:\n\n${locationRisks.slice(0, 3).map((risk) => `- ${risk.label}`).join('\n')}\n\nThose should shape both your insurance priorities and your reserve target.`;
+    }
+
+    return 'Your biggest risks usually come from three areas: property damage, liability claims, and downtime that burns cash while revenue stops.';
   }
-  return `I can help with insurance, coverage gaps, reserve planning, and scenario analysis for ${name}.`;
+
+  return `I can help with insurance, coverage gaps, reserve planning, and scenario analysis for ${name}. Ask about what is missing, what to prioritize next, or how much cash buffer you need.`;
 }
 
 async function callClaudeAPI(messages, systemPrompt) {
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
   if (!apiKey) return null;
+
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1024, system: systemPrompt, messages: messages.map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text })) }),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: messages.map((message) => ({
+          role: message.role === 'user' ? 'user' : 'assistant',
+          content: message.text,
+        })),
+      }),
     });
-    if (!res.ok) return null;
-    const data = await res.json();
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
     return data.content?.[0]?.text || null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-2 px-3 py-2">
-      <span className="h-1.5 w-1.5 rounded-full bg-text-secondary animate-pulse-subtle" />
-      <span className="h-1.5 w-1.5 rounded-full bg-text-secondary animate-pulse-subtle" style={{ animationDelay: '120ms' }} />
-      <span className="h-1.5 w-1.5 rounded-full bg-text-secondary animate-pulse-subtle" style={{ animationDelay: '240ms' }} />
+    <div className="flex items-center gap-2 px-4 py-3">
+      <span className="h-2 w-2 rounded-full bg-text-secondary animate-pulse-subtle" />
+      <span className="h-2 w-2 rounded-full bg-text-secondary animate-pulse-subtle" style={{ animationDelay: '120ms' }} />
+      <span className="h-2 w-2 rounded-full bg-text-secondary animate-pulse-subtle" style={{ animationDelay: '240ms' }} />
     </div>
   );
 }
 
 export default function ChatBot() {
   const { businessInfo, financialMetrics, gapAnalysis, riskFactors } = useContext(AppContext);
-  const nextId = useRef(1);
-  const endRef = useRef(null);
+  const nextMessageId = useRef(1);
+  const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
-  const [messages, setMessages] = useState([{ id: 'msg-0', role: 'bot', text: "Hi. I'm your SafeGuard assistant. Ask about coverage, reserves, or risk scenarios." }]);
+  const [messages, setMessages] = useState([
+    {
+      id: 'msg-0',
+      role: 'bot',
+      text: "Hi. I'm your SafeGuard assistant. I can explain coverage gaps, reserves, and risk scenarios using your business data.",
+    },
+  ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isTyping]);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isTyping]);
 
-  function createId() { const id = `msg-${nextId.current}`; nextId.current += 1; return id; }
+  function createMessageId() {
+    const id = `msg-${nextMessageId.current}`;
+    nextMessageId.current += 1;
+    return id;
+  }
 
   function buildSystemPrompt() {
-    let p = 'You are SafeGuard AI, a concise business insurance advisor. Keep answers short and practical.';
-    if (businessInfo) p += `\nBusiness: ${businessInfo.name}, type ${businessInfo.type}, ${businessInfo.city} ${businessInfo.state}, employees ${businessInfo.employees}.`;
-    if (riskFactors) p += `\nRisks: ${JSON.stringify(riskFactors)}.`;
-    if (gapAnalysis) p += `\nGaps: ${JSON.stringify(gapAnalysis)}.`;
-    return p;
+    let prompt = 'You are SafeGuard AI, a concise business insurance and resilience advisor. Give practical, readable answers with short paragraphs and bullet lists when useful.';
+
+    if (businessInfo) {
+      prompt += `\nBusiness: ${businessInfo.name}, type ${businessInfo.type}, location ${businessInfo.city}, ${businessInfo.state} ${businessInfo.zip}, employees ${businessInfo.employees}, monthly revenue ${businessInfo.monthlyRevenue}.`;
+    }
+
+    if (riskFactors) {
+      prompt += `\nLocation risk factors: ${JSON.stringify(riskFactors)}.`;
+    }
+
+    if (gapAnalysis) {
+      prompt += `\nGap analysis: ${JSON.stringify(gapAnalysis)}.`;
+    }
+
+    if (financialMetrics) {
+      prompt += `\nFinancial metrics: ${JSON.stringify(financialMetrics)}.`;
+    }
+
+    return prompt;
   }
 
   async function sendMessage(text) {
     const trimmed = text.trim();
     if (!trimmed) return;
-    const userMsg = { id: createId(), role: 'user', text: trimmed };
-    const newMsgs = [...messages, userMsg];
-    setMessages(newMsgs);
+
+    const userMessage = {
+      id: createMessageId(),
+      role: 'user',
+      text: trimmed,
+    };
+
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput('');
     setIsTyping(true);
-    let response = await callClaudeAPI(newMsgs.slice(1), buildSystemPrompt());
-    if (!response) response = getSmartFallback(trimmed, { businessInfo, financialMetrics, gapAnalysis, riskFactors });
-    await new Promise((r) => setTimeout(r, 250));
-    setMessages((cur) => [...cur, { id: createId(), role: 'bot', text: response }]);
+
+    let response = await callClaudeAPI(newMessages.slice(1), buildSystemPrompt());
+
+    if (!response) {
+      response = getSmartFallback(trimmed, { businessInfo, financialMetrics, gapAnalysis, riskFactors });
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    setMessages((current) => [
+      ...current,
+      {
+        id: createMessageId(),
+        role: 'bot',
+        text: response,
+      },
+    ]);
     setIsTyping(false);
     inputRef.current?.focus();
   }
 
-  return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-          <Sparkles className="h-4 w-4 text-primary" />
-        </div>
-        <div>
-          <p className="text-sm font-normal text-text-primary">SafeGuard AI</p>
-          <p className="text-[11px] font-light text-text-secondary">Insurance & risk advisor</p>
-        </div>
-      </div>
+  function handleSubmit(event) {
+    event.preventDefault();
+    sendMessage(input);
+  }
 
-      <div className="flex-1 space-y-3 overflow-y-auto p-3">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`flex max-w-[85%] items-start gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-              <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${msg.role === 'user' ? 'bg-primary text-white' : 'bg-white/10 text-text-secondary'}`}>
-                {msg.role === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
-              </div>
-              <div className={`rounded-xl border px-3 py-2 ${msg.role === 'user' ? 'border-primary/30 bg-primary/15 text-text-primary' : 'border-white/10 bg-bg-secondary/70 text-text-secondary'}`}>
-                <MessageBody text={msg.text} />
+  return (
+    <div className="mx-auto flex h-[calc(100vh-10rem)] max-w-4xl flex-col gap-4">
+      <section className="glass-card p-5">
+        <div className="flex items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+            <Sparkles className="h-5 w-5 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-2xl font-heading font-light tracking-[-0.02em] text-text-primary">SafeGuard AI Assistant</h2>
+            <p className="mt-1 text-sm font-light text-text-secondary">
+              Ask about missing coverage, reserve planning, or how a specific event would hit your business.
+            </p>
+            {businessInfo && (
+              <p className="mt-2 text-xs font-normal uppercase tracking-[0.05em] text-text-secondary">
+                Context loaded for {businessInfo.name}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="glass-card flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex-1 space-y-4 overflow-y-auto p-4 md:p-5">
+          {messages.map((message) => (
+            <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`flex max-w-[88%] items-start gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                  message.role === 'user' ? 'bg-primary text-white shadow-[0_10px_22px_rgba(6,182,212,0.22)]' : 'surface-panel text-text-secondary'
+                }`}>
+                  {message.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                </div>
+                <div className={`rounded-2xl border px-4 py-3 ${
+                  message.role === 'user'
+                    ? 'border-primary/30 bg-primary/15 text-text-primary shadow-[0_14px_30px_rgba(6,182,212,0.12)]'
+                    : 'surface-panel text-text-secondary'
+                }`}>
+                  <MessageBody text={message.text} />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-        {isTyping && <div className="flex justify-start"><div className="rounded-xl border border-white/10 bg-bg-secondary/70"><TypingIndicator /></div></div>}
-        <div ref={endRef} />
-      </div>
-
-      <div className="border-t border-white/10 px-3 py-2">
-        <div className="mb-2 flex flex-wrap gap-1">
-          {QUICK_QUESTIONS.map((q) => (
-            <button key={q} onClick={() => sendMessage(q)} disabled={isTyping}
-              className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-normal text-text-secondary transition hover:border-primary/30 hover:text-text-primary disabled:opacity-50">
-              {q}
-            </button>
           ))}
+
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="surface-panel rounded-2xl">
+                <TypingIndicator />
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); sendMessage(input); }} className="flex gap-2">
-          <input ref={inputRef} type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask anything..."
-            disabled={isTyping} className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-text-primary placeholder-text-muted focus:border-primary focus:outline-none disabled:opacity-50" />
-          <button type="submit" disabled={!input.trim() || isTyping}
-            className="rounded-lg bg-primary px-3 py-2 text-white transition hover:bg-primary/90 disabled:opacity-50">
-            <Send className="h-3.5 w-3.5" />
-          </button>
-        </form>
-      </div>
+
+        <div className="border-t border-white/10 px-4 py-3 md:px-5">
+          <div className="mb-3 flex flex-wrap gap-2">
+            {QUICK_QUESTIONS.map((question) => (
+              <button
+                key={question}
+                type="button"
+                onClick={() => sendMessage(question)}
+                disabled={isTyping}
+                className="surface-chip focus-ring-brand rounded-full px-3 py-1.5 text-xs font-normal text-text-secondary transition-all duration-200 hover:border-primary/30 hover:text-text-primary disabled:opacity-50"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex gap-3">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              placeholder="Ask about insurance, reserves, or scenario impact..."
+              aria-label="Ask SafeGuard assistant a question"
+              disabled={isTyping}
+              className="control-input focus-ring-brand flex-1 rounded-xl px-4 py-3 text-sm text-text-primary placeholder-text-muted transition-all duration-200 disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              aria-label="Send message"
+              disabled={!input.trim() || isTyping}
+              className="focus-ring-brand inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-white shadow-[0_16px_30px_rgba(6,182,212,0.18)] transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_18px_34px_rgba(6,182,212,0.24)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </form>
+        </div>
+      </section>
     </div>
   );
 }

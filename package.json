@@ -8,8 +8,7 @@
     "server": "node server/index.js",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "seed": "node db/seed.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
@@ -22,6 +21,7 @@
     "plaid": "^41.4.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-intersection-observer": "^10.0.3",
     "react-plaid-link": "^4.1.1",
     "recharts": "^3.8.1"
   },

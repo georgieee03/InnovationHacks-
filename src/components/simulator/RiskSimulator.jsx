@@ -98,6 +98,33 @@ const STATUS_STYLES = {
   },
 };
 
+const SELECTED_SCENARIO_STYLE = {
+  '--surface-panel-border-color': 'rgba(6, 182, 212, 0.35)',
+  '--surface-panel-strong-background': 'linear-gradient(180deg, rgba(6, 182, 212, 0.18) 0%, rgba(6, 182, 212, 0.08) 38%, rgba(255, 255, 255, 0.04) 100%), rgba(255, 255, 255, 0.05)',
+  '--surface-panel-strong-shadow-color': '0 18px 34px rgba(6, 182, 212, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -1px 0 rgba(255, 255, 255, 0.03)',
+};
+
+const COVERAGE_SURFACE_STYLES = {
+  covered: {
+    '--surface-panel-border-color': 'rgba(16, 185, 129, 0.26)',
+    '--surface-panel-background': 'linear-gradient(180deg, rgba(16, 185, 129, 0.16) 0%, rgba(16, 185, 129, 0.07) 42%, rgba(255, 255, 255, 0.04) 100%), rgba(255, 255, 255, 0.04)',
+    '--surface-panel-strong-background': 'linear-gradient(180deg, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0.08) 42%, rgba(255, 255, 255, 0.04) 100%), rgba(255, 255, 255, 0.05)',
+  },
+  underinsured: {
+    '--surface-panel-border-color': 'rgba(245, 158, 11, 0.26)',
+    '--surface-panel-background': 'linear-gradient(180deg, rgba(245, 158, 11, 0.16) 0%, rgba(245, 158, 11, 0.07) 42%, rgba(255, 255, 255, 0.04) 100%), rgba(255, 255, 255, 0.04)',
+    '--surface-panel-strong-background': 'linear-gradient(180deg, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0.08) 42%, rgba(255, 255, 255, 0.04) 100%), rgba(255, 255, 255, 0.05)',
+  },
+  gap: {
+    '--surface-panel-border-color': 'rgba(239, 68, 68, 0.24)',
+    '--surface-panel-background': 'linear-gradient(180deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.06) 42%, rgba(255, 255, 255, 0.04) 100%), rgba(255, 255, 255, 0.04)',
+    '--surface-panel-strong-background': 'linear-gradient(180deg, rgba(239, 68, 68, 0.17) 0%, rgba(239, 68, 68, 0.08) 42%, rgba(255, 255, 255, 0.04) 100%), rgba(255, 255, 255, 0.05)',
+  },
+  'not-applicable': {
+    '--surface-panel-border-color': 'var(--color-border-default)',
+  },
+};
+
 function findCoverageMatch(gapAnalysis, coverageId) {
   const items = Array.isArray(gapAnalysis) ? gapAnalysis : [];
 
@@ -124,7 +151,7 @@ function getScenarioCoverage(gapAnalysis, coverageId) {
 
 function SummaryTile({ title, value, tone, helper }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="surface-panel rounded-2xl p-4">
       <p className="text-[11px] font-normal uppercase tracking-[0.05em] text-text-secondary">{title}</p>
       <div className="mt-3">
         <StatValue value={value} color={tone} size="md" />
@@ -151,6 +178,7 @@ export default function RiskSimulator() {
   const shortfall = Math.max(0, outOfPocket - reserves);
   const bufferAfterEvent = Math.max(0, reserves - outOfPocket);
   const hasGapAnalysis = Array.isArray(gapAnalysis) && gapAnalysis.length > 0;
+  const coverageSurfaceStyle = COVERAGE_SURFACE_STYLES[coverage.status] || COVERAGE_SURFACE_STYLES.gap;
 
   return (
     <div className="space-y-6">
@@ -185,10 +213,11 @@ export default function RiskSimulator() {
                 key={item.id}
                 type="button"
                 onClick={() => setSelectedId(item.id)}
+                style={selected ? SELECTED_SCENARIO_STYLE : undefined}
                 className={`rounded-2xl border p-4 text-left transition-all duration-200 ${
                   selected
-                    ? 'border-primary/35 bg-primary/10 shadow-[0_0_0_1px_rgba(6,182,212,0.12)]'
-                    : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/7'
+                    ? 'surface-panel-strong focus-ring-brand border-primary/35 shadow-[0_0_0_1px_rgba(6,182,212,0.12)]'
+                    : 'surface-panel focus-ring-brand hover:border-white/20'
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -196,7 +225,7 @@ export default function RiskSimulator() {
                     <p className="text-[11px] font-normal uppercase tracking-[0.05em] text-text-secondary">{item.category}</p>
                     <p className="mt-2 text-lg font-normal tracking-[-0.02em] text-text-primary">{item.label}</p>
                   </div>
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${selected ? 'bg-primary/15 text-primary' : 'bg-white/5 text-text-secondary'}`}>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${selected ? 'bg-primary/15 text-primary shadow-[0_12px_24px_rgba(6,182,212,0.14)]' : 'surface-chip text-text-secondary'}`}>
                     <Icon className="h-5 w-5" />
                   </div>
                 </div>
@@ -215,7 +244,7 @@ export default function RiskSimulator() {
               <h3 className="mt-2 text-2xl font-heading font-light tracking-[-0.02em] text-text-primary">{scenario.label}</h3>
               <p className="mt-2 max-w-2xl text-sm font-light leading-7 text-text-secondary">{scenario.description}</p>
             </div>
-            <div className={`rounded-2xl border px-4 py-3 ${coverage.style.cardClass}`}>
+            <div style={coverageSurfaceStyle} className="surface-panel rounded-2xl border px-4 py-3">
               <p className="text-[11px] font-normal uppercase tracking-[0.05em] text-text-secondary">Coverage status</p>
               <p className={`mt-2 text-sm font-normal ${coverage.style.textClass}`}>{coverage.style.label}</p>
             </div>
@@ -227,12 +256,12 @@ export default function RiskSimulator() {
             <SummaryTile title="Uninsured hit" value={formatCurrency(outOfPocket)} tone={outOfPocket > 0 ? 'danger' : 'success'} helper={outOfPocket > 0 ? 'Direct cash exposure' : 'Fully absorbed'} />
           </div>
 
-          <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="surface-panel mt-6 rounded-2xl p-4">
             <div className="flex items-center justify-between gap-4">
               <p className="text-sm font-normal text-text-primary">Coverage breakdown</p>
               <p className="text-sm font-light text-text-secondary">{coveredPct.toFixed(0)}% covered</p>
             </div>
-            <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-white/5">
+            <div className="surface-progress-track mt-3 h-3 w-full overflow-hidden rounded-full">
               <div className="h-full bg-covered transition-all duration-300" style={{ width: `${coveredPct}%` }} />
             </div>
             <div className="mt-3 flex flex-wrap gap-4 text-xs font-light text-text-secondary">
@@ -243,7 +272,7 @@ export default function RiskSimulator() {
         </section>
 
         <div className="space-y-6">
-          <section className={`glass-card p-5 ${coverage.style.cardClass}`}>
+          <section style={coverageSurfaceStyle} className="surface-panel-strong rounded-2xl p-5">
             <p className="text-xs font-normal uppercase tracking-[0.05em] text-text-secondary">Policy read</p>
             <div className="mt-3 flex items-center gap-3">
               {outOfPocket > 0 ? <ShieldOff className={`h-5 w-5 ${coverage.style.textClass}`} /> : <ShieldCheck className={`h-5 w-5 ${coverage.style.textClass}`} />}
@@ -266,13 +295,13 @@ export default function RiskSimulator() {
               <p className="text-lg font-normal tracking-[-0.02em] text-text-primary">Current reserves: {formatCurrency(reserves)}</p>
             </div>
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="surface-panel rounded-2xl p-4">
                 <p className="text-[11px] font-normal uppercase tracking-[0.05em] text-text-secondary">Shortfall</p>
                 <div className="mt-3">
                   <StatValue value={formatCurrency(shortfall)} color={shortfall > 0 ? 'danger' : 'success'} size="sm" />
                 </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="surface-panel rounded-2xl p-4">
                 <p className="text-[11px] font-normal uppercase tracking-[0.05em] text-text-secondary">Buffer after event</p>
                 <div className="mt-3">
                   <StatValue value={formatCurrency(bufferAfterEvent)} color={bufferAfterEvent > 0 ? 'success' : 'neutral'} size="sm" />

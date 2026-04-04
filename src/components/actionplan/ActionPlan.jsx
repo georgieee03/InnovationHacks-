@@ -7,12 +7,15 @@ import RecommendationCard from './RecommendationCard';
 import RiskTimeline from './RiskTimeline';
 import SavingsProjection from './SavingsProjection';
 
+const MotionDiv = motion.div;
+const MotionCircle = motion.circle;
+
 const CIRCUMFERENCE = 2 * Math.PI * 90;
 
 function getGradeDescription(grade) {
   switch (grade) {
     case 'A':
-      return 'Excellent protection · your business is well covered across all major risk areas.';
+      return 'Excellent protection - your business is well covered across all major risk areas.';
     case 'B':
       return 'Good protection with minor gaps that should be addressed soon.';
     case 'C':
@@ -56,27 +59,27 @@ export default function ActionPlan() {
   const score = computeProtectionScore(gapAnalysis);
   const gradeInfo = getProtectionGrade(score);
   const dashOffset = CIRCUMFERENCE * (1 - score / 100);
-  const actionItems = gapAnalysis.filter((g) => g.status === 'gap' || g.status === 'underinsured');
+  const actionItems = gapAnalysis.filter((gap) => gap.status === 'gap' || gap.status === 'underinsured');
   const scoreColor = score >= 80 ? 'success' : score >= 60 ? 'primary' : score >= 40 ? 'warning' : 'danger';
 
   return (
     <div className="space-y-6">
-      <motion.div {...fadeInUp} transition={{ duration: 0.4 }}>
+      <MotionDiv {...fadeInUp} transition={{ duration: 0.4 }}>
         <h2 className="text-4xl font-heading font-thin tracking-[-0.03em] text-text-primary">Action Plan</h2>
         <p className="mt-1.5 text-sm font-light text-text-secondary">
-          {actionItems.length > 0 ? `${actionItems.length} items need your attention` : 'Your coverage looks solid · no critical gaps found'}
+          {actionItems.length > 0 ? `${actionItems.length} items need your attention` : 'Your coverage looks solid - no critical gaps found'}
         </p>
-      </motion.div>
+      </MotionDiv>
 
-      <motion.div
+      <MotionDiv
         {...fadeInUp}
         transition={{ duration: 0.6, delay: 0.1, ease: [0.4, 0, 0.2, 1] }}
         className="glass-card flex flex-col items-center p-6"
       >
         <div className="relative flex h-[200px] w-[200px] items-center justify-center">
           <svg width="200" height="200" viewBox="0 0 200 200" aria-hidden="true">
-            <circle cx="100" cy="100" r="90" fill="none" stroke="#e2e8f0" strokeWidth="12" />
-            <motion.circle
+            <circle cx="100" cy="100" r="90" fill="none" stroke="#27272a" strokeWidth="12" />
+            <MotionCircle
               cx="100"
               cy="100"
               r="90"
@@ -101,26 +104,26 @@ export default function ActionPlan() {
         <p className="mt-3 max-w-md text-center text-sm font-light text-text-secondary">
           {getGradeDescription(gradeInfo.grade)}
         </p>
-      </motion.div>
+      </MotionDiv>
 
-      <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.3 }}>
+      <MotionDiv {...fadeInUp} transition={{ duration: 0.4, delay: 0.3 }}>
         <RiskTimeline gaps={gapAnalysis} />
-      </motion.div>
+      </MotionDiv>
 
       {actionItems.length > 0 && (
-        <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.4 }}>
+        <MotionDiv {...fadeInUp} transition={{ duration: 0.4, delay: 0.4 }}>
           <h3 className="mb-3 text-2xl font-heading font-light tracking-[-0.02em] text-text-primary">Recommendations</h3>
           <div className="space-y-3">
-            {actionItems.map((item, i) => (
-              <RecommendationCard key={item.id} item={item} financialMetrics={financialMetrics} delay={0.05 * i} />
+            {actionItems.map((item, index) => (
+              <RecommendationCard key={item.id} item={item} financialMetrics={financialMetrics} delay={0.05 * index} />
             ))}
           </div>
-        </motion.div>
+        </MotionDiv>
       )}
 
-      <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.5 }}>
+      <MotionDiv {...fadeInUp} transition={{ duration: 0.4, delay: 0.5 }}>
         <SavingsProjection metrics={financialMetrics} />
-      </motion.div>
+      </MotionDiv>
     </div>
   );
 }

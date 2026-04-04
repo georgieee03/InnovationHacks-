@@ -29,11 +29,23 @@ Return JSON in this exact structure:
 Check for all listed coverage types and mark uncovered ones with "covered": false.`;
 
 router.post('/analyze-policy', async (req, res) => {
-  const { policyText, businessId } = req.body || {};
+  const { policyText, businessId, allowDemoFallback = false } = req.body || {};
   if (!policyText) return res.status(400).json({ error: 'Missing policyText' });
 
+  if (!looksLikeInsurancePolicy(policyText)) {
+    return res.status(422).json({
+      error: 'The uploaded document does not appear to be a business insurance policy. Upload a declarations page or policy document with coverage, premium, insured, and policy details.',
+    });
+  }
+
   const groqApiKey = process.env.GROQ_API_KEY;
-  if (!groqApiKey) return res.json(getDemoFallback());
+  if (!groqApiKey) {
+    if (allowDemoFallback) {
+      return res.json(getDemoFallback());
+    }
+
+    return res.status(503).json({ error: 'Policy analysis is unavailable right now.' });
+  }
 
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -55,7 +67,11 @@ router.post('/analyze-policy', async (req, res) => {
 
     if (!response.ok) {
       console.error('Groq API error:', response.status, await response.text());
-      return res.json(getDemoFallback());
+      if (allowDemoFallback) {
+        return res.json(getDemoFallback());
+      }
+
+      return res.status(502).json({ error: 'Policy analysis failed. Please try again.' });
     }
 
     const data = await response.json();
@@ -74,10 +90,22 @@ router.post('/analyze-policy', async (req, res) => {
       policyAnalysisId = saved[0]?.id;
     }
 
+    if (!isStructuredPolicySummary(parsed)) {
+      if (allowDemoFallback) {
+        return res.json(getDemoFallback());
+      }
+
+      return res.status(422).json({ error: 'The uploaded document could not be recognized as an insurance policy.' });
+    }
+
     return res.json({ ...parsed, policyAnalysisId });
   } catch (error) {
     console.error('Policy analysis error:', error);
-    return res.json(getDemoFallback());
+    if (allowDemoFallback) {
+      return res.json(getDemoFallback());
+    }
+
+    return res.status(502).json({ error: 'Policy analysis failed. Please upload a text-based insurance policy and try again.' });
   }
 });
 
@@ -116,6 +144,43 @@ function getDemoFallback() {
     monthlyPremium: 285,
     plainEnglishSummary: "Your policy covers general liability, commercial property, and workers' comp. No coverage for flood, business interruption, cyber, or equipment breakdown.",
   };
+}
+
+function looksLikeInsurancePolicy(policyText) {
+  const text = String(policyText || '').toLowerCase();
+  const signalPatterns = [
+    /\bpolicy number\b/,
+    /\bnamed insured\b/,
+    /\binsurer\b/,
+    /\bcarrier\b/,
+    /\beffective date\b/,
+    /\bexpiration date\b/,
+    /\bpolicy period\b/,
+    /\bpremium\b/,
+    /\bdeductible\b/,
+    /\bcoverage\b/,
+    /\blimit\b/,
+    /\bliability\b/,
+    /\bdeclarations\b/,
+    /\bper occurrence\b/,
+    /\baggregate\b/,
+    /\bworkers'? compensation\b/,
+    /\bcommercial property\b/,
+    /\bgeneral liability\b/,
+  ];
+
+  const matches = signalPatterns.filter((pattern) => pattern.test(text)).length;
+  return matches >= 3;
+}
+
+function isStructuredPolicySummary(parsed) {
+  return Boolean(
+    parsed &&
+    typeof parsed === 'object' &&
+    (parsed.policyNumber || parsed.insurer || parsed.namedInsured) &&
+    Array.isArray(parsed.coverages) &&
+    parsed.coverages.length > 0
+  );
 }
 
 export default router;

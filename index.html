@@ -4,9 +4,26 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        const storageKey = 'safeguard-theme';
+        const root = document.documentElement;
+
+        try {
+          const storedTheme = localStorage.getItem(storageKey);
+          const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          const theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : systemTheme;
+          root.setAttribute('data-theme', theme);
+          root.style.colorScheme = theme;
+        } catch {
+          root.setAttribute('data-theme', 'dark');
+          root.style.colorScheme = 'dark';
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
     <title>SafeGuard</title>
   </head>
   <body>

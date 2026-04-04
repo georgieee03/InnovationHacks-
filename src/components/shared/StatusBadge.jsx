@@ -4,7 +4,11 @@ const STATUS_STYLES = {
   gap: 'bg-gap/10 text-gap border-gap/30',
 };
 
-const DEFAULT_LABELS = { covered: 'Covered', underinsured: 'Underinsured', gap: 'Gap' };
+const DEFAULT_LABELS = {
+  covered: 'Covered',
+  underinsured: 'Underinsured',
+  gap: 'Gap',
+};
 
 export default function StatusBadge({ status, label, pulse = false }) {
   return (
