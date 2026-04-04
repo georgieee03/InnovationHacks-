@@ -47,14 +47,14 @@ export default function RecommendationCard({ item, financialMetrics, delay = 0 }
         <div className="flex-1">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <h4 className="font-heading font-semibold text-text-primary">{item.name}</h4>
+              <h4 className="font-heading font-normal tracking-[-0.02em] text-text-primary">{item.name}</h4>
               {item.locationDependent && (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-text-secondary">
                   📍 Location Risk
                 </span>
               )}
             </div>
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${config.color} ${config.bg}`}>
+            <span className={`text-xs font-normal px-2 py-0.5 rounded-full ${config.color} ${config.bg}`}>
               {item.statusLabel || config.label}
             </span>
           </div>
@@ -69,12 +69,12 @@ export default function RecommendationCard({ item, financialMetrics, delay = 0 }
           {avgCost && (
             <p className="text-sm mt-2">
               <span className="text-text-secondary">Estimated cost: </span>
-              <span className="font-medium text-text-primary">{formatCurrency(avgCost)}/mo</span>
+              <span className="font-normal text-text-primary">{formatCurrency(avgCost)}/mo</span>
             </p>
           )}
 
           {isActionable && (
-            <button className="mt-3 px-4 py-1.5 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 transition-all duration-200">
+            <button className="mt-3 px-4 py-1.5 text-sm font-normal rounded-lg bg-primary text-white hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 transition-all duration-200">
               Get Quote
             </button>
           )}

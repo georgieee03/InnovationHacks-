@@ -1,155 +1,21 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { formatCurrency } from '../../utils/formatCurrency';
+import StatValue from '../shared/StatValue';
 
-const TABS = ['Emergency Fund', 'Business Interruption', 'Insurance Estimator'];
+const TABS = [
+  { id: 'emergency', label: 'Emergency Fund' },
+  { id: 'interruption', label: 'Business Interruption' },
+  { id: 'insurance', label: 'Insurance Estimator' },
+];
 
-function PillTabs({ active, onChange }) {
-  return (
-    <div className="flex gap-1 p-1 bg-gray-100 rounded-full w-fit mb-6">
-      {TABS.map((tab) => (
-        <button
-          key={tab}
-          onClick={() => onChange(tab)}
-          className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
-            active === tab
-              ? 'bg-primary text-white shadow-sm'
-              : 'text-text-secondary hover:text-text-primary'
-          }`}
-        >
-          {tab}
-        </button>
-      ))}
-    </div>
-  );
-}
+const INPUT_CLASS =
+  'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-text-primary placeholder-text-muted transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30';
 
-function EmergencyFundCalc() {
-  const [monthly, setMonthly] = useState('');
-  const [multiplier, setMultiplier] = useState(3);
-  const [savings, setSavings] = useState('');
-
-  const monthlyVal = parseFloat(monthly) || 0;
-  const savingsVal = parseFloat(savings) || 0;
-  const target = monthlyVal * multiplier;
-  const gap = Math.max(0, target - savingsVal);
-  const pct = target > 0 ? Math.min(100, (savingsVal / target) * 100) : 0;
-  const need6 = gap > 0 ? gap / 6 : 0;
-  const need12 = gap > 0 ? gap / 12 : 0;
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl shadow-md p-6">
-      <h3 className="text-lg font-semibold text-text-primary mb-4">Emergency Fund Calculator</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="block text-sm text-text-secondary mb-1">Monthly Expenses</label>
-          <input type="number" value={monthly} onChange={(e) => setMonthly(e.target.value)} placeholder="0" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-        </div>
-        <div>
-          <label className="block text-sm text-text-secondary mb-1">Risk Multiplier</label>
-          <select value={multiplier} onChange={(e) => setMultiplier(Number(e.target.value))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-            {[3, 4, 5, 6].map((m) => <option key={m} value={m}>{m} months</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm text-text-secondary mb-1">Current Savings</label>
-          <input type="number" value={savings} onChange={(e) => setSavings(e.target.value)} placeholder="0" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-        </div>
-      </div>
-
-      {monthlyVal > 0 && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-text-secondary mb-1">Recommended Fund</p>
-              <p className="text-xl font-bold text-primary">{formatCurrency(target)}</p>
-            </div>
-            <div className="bg-red-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-text-secondary mb-1">Current Gap</p>
-              <p className="text-xl font-bold text-gap">{formatCurrency(gap)}</p>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-text-secondary mb-1">Monthly to Save (6mo / 12mo)</p>
-              <p className="text-lg font-bold text-covered">{formatCurrency(need6)} / {formatCurrency(need12)}</p>
-            </div>
-          </div>
-          <div>
-            <div className="flex justify-between text-xs text-text-secondary mb-1">
-              <span>Progress</span>
-              <span>{pct.toFixed(1)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} className="h-3 rounded-full bg-primary" />
-            </div>
-          </div>
-        </div>
-      )}
-    </motion.div>
-  );
-}
-
-function BusinessInterruptionCalc() {
-  const [revenue, setRevenue] = useState('');
-  const [fixed, setFixed] = useState('');
-  const [days, setDays] = useState('');
-
-  const revVal = parseFloat(revenue) || 0;
-  const fixVal = parseFloat(fixed) || 0;
-  const daysVal = parseFloat(days) || 0;
-
-  const dailyRevenue = revVal / 30;
-  const dailyFixed = fixVal / 30;
-  const revLost = dailyRevenue * daysVal;
-  const fixedDuring = dailyFixed * daysVal;
-  const totalImpact = revLost + fixedDuring;
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl shadow-md p-6">
-      <h3 className="text-lg font-semibold text-text-primary mb-4">Business Interruption Cost Calculator</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="block text-sm text-text-secondary mb-1">Monthly Revenue</label>
-          <input type="number" value={revenue} onChange={(e) => setRevenue(e.target.value)} placeholder="0" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-        </div>
-        <div>
-          <label className="block text-sm text-text-secondary mb-1">Monthly Fixed Costs</label>
-          <input type="number" value={fixed} onChange={(e) => setFixed(e.target.value)} placeholder="0" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-        </div>
-        <div>
-          <label className="block text-sm text-text-secondary mb-1">Estimated Closure Days</label>
-          <input type="number" value={days} onChange={(e) => setDays(e.target.value)} placeholder="0" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-        </div>
-      </div>
-
-      {daysVal > 0 && (revVal > 0 || fixVal > 0) && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-red-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-text-secondary mb-1">Revenue Lost</p>
-              <p className="text-xl font-bold text-gap">{formatCurrency(revLost)}</p>
-            </div>
-            <div className="bg-yellow-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-text-secondary mb-1">Fixed Costs During Closure</p>
-              <p className="text-xl font-bold text-underinsured">{formatCurrency(fixedDuring)}</p>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-text-secondary mb-1">Total Financial Impact</p>
-              <p className="text-xl font-bold text-primary">{formatCurrency(totalImpact)}</p>
-            </div>
-          </div>
-          <div className="flex gap-1 h-6 rounded-full overflow-hidden">
-            <motion.div initial={{ width: 0 }} animate={{ width: `${totalImpact > 0 ? (revLost / totalImpact) * 100 : 0}%` }} transition={{ duration: 0.6 }} className="bg-gap" title="Revenue Lost" />
-            <motion.div initial={{ width: 0 }} animate={{ width: `${totalImpact > 0 ? (fixedDuring / totalImpact) * 100 : 0}%` }} transition={{ duration: 0.6 }} className="bg-underinsured" title="Fixed Costs" />
-          </div>
-          <div className="flex gap-4 text-xs text-text-secondary">
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gap inline-block" /> Revenue Lost</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-underinsured inline-block" /> Fixed Costs</span>
-          </div>
-        </div>
-      )}
-    </motion.div>
-  );
-}
+const TIER_STYLES = {
+  essential: 'border-white/10 bg-white/5',
+  recommended: 'border-primary/25 bg-primary/10',
+  comprehensive: 'border-covered/25 bg-covered/10',
+};
 
 const TIERS = {
   restaurant: {
@@ -169,16 +35,189 @@ const TIERS = {
   },
   contractor: {
     essential: { range: [2000, 3800], includes: ['General Liability', 'Workers Comp', 'Commercial Auto'] },
-    recommended: { range: [3800, 6500], includes: ['General Liability', 'Workers Comp', 'Commercial Auto', 'Professional Liability', 'Tools & Equipment'] },
-    comprehensive: { range: [6500, 10000], includes: ['General Liability', 'Workers Comp', 'Commercial Auto', 'Professional Liability', 'Tools & Equipment', 'Umbrella Policy', 'Cyber Liability'] },
+    recommended: { range: [3800, 6500], includes: ['General Liability', 'Workers Comp', 'Commercial Auto', 'Professional Liability', 'Tools and Equipment'] },
+    comprehensive: { range: [6500, 10000], includes: ['General Liability', 'Workers Comp', 'Commercial Auto', 'Professional Liability', 'Tools and Equipment', 'Umbrella Policy', 'Cyber Liability'] },
   },
 };
 
-const TIER_LABELS = [
-  { key: 'essential', label: 'Essential', color: 'bg-blue-50 border-blue-200' },
-  { key: 'recommended', label: 'Recommended', color: 'bg-green-50 border-green-200' },
-  { key: 'comprehensive', label: 'Comprehensive', color: 'bg-purple-50 border-purple-200' },
-];
+function PillTabs({ active, onChange }) {
+  return (
+    <div className="mb-6 inline-flex flex-wrap gap-2 rounded-full border border-white/10 bg-white/5 p-1">
+      {TABS.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          onClick={() => onChange(tab.id)}
+          className={`rounded-full px-4 py-2 text-sm font-normal tracking-[-0.01em] transition-all duration-200 ${
+            active === tab.id
+              ? 'bg-primary text-white shadow-sm'
+              : 'text-text-secondary hover:bg-white/5 hover:text-text-primary'
+          }`}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CalculatorShell({ title, description, children }) {
+  return (
+    <section className="glass-card p-6 md:p-7">
+      <div className="mb-6">
+        <h3 className="text-2xl font-heading font-light tracking-[-0.02em] text-text-primary">{title}</h3>
+        <p className="mt-2 max-w-2xl text-sm font-light text-text-secondary">{description}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function ResultTile({ title, value, tone = 'neutral', helper }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <p className="text-[11px] font-normal uppercase tracking-[0.05em] text-text-secondary">{title}</p>
+      <div className="mt-3">
+        <StatValue value={value} color={tone} size="md" />
+      </div>
+      {helper && <p className="mt-2 text-xs font-light text-text-secondary">{helper}</p>}
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <div>
+      <label className="mb-2 block text-xs font-normal text-text-secondary">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function EmergencyFundCalc() {
+  const [monthly, setMonthly] = useState('');
+  const [multiplier, setMultiplier] = useState(3);
+  const [savings, setSavings] = useState('');
+
+  const monthlyVal = parseFloat(monthly) || 0;
+  const savingsVal = parseFloat(savings) || 0;
+  const target = monthlyVal * multiplier;
+  const gap = Math.max(0, target - savingsVal);
+  const pct = target > 0 ? Math.min(100, (savingsVal / target) * 100) : 0;
+  const need6 = gap > 0 ? gap / 6 : 0;
+  const need12 = gap > 0 ? gap / 12 : 0;
+
+  return (
+    <CalculatorShell
+      title="Emergency Fund Calculator"
+      description="Estimate the reserve target you need to absorb a disruption and see how quickly you can close the gap."
+    >
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Field label="Monthly Expenses">
+          <input type="number" value={monthly} onChange={(e) => setMonthly(e.target.value)} placeholder="0" className={INPUT_CLASS} />
+        </Field>
+        <Field label="Risk Multiplier">
+          <select value={multiplier} onChange={(e) => setMultiplier(Number(e.target.value))} className={INPUT_CLASS}>
+            {[3, 4, 5, 6].map((value) => (
+              <option key={value} value={value} className="bg-bg-main">
+                {value} months
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Current Savings">
+          <input type="number" value={savings} onChange={(e) => setSavings(e.target.value)} placeholder="0" className={INPUT_CLASS} />
+        </Field>
+      </div>
+
+      {monthlyVal > 0 && (
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <ResultTile title="Target Reserve" value={formatCurrency(target)} tone="primary" helper={`${multiplier} months of expenses`} />
+            <ResultTile title="Current Gap" value={formatCurrency(gap)} tone={gap > 0 ? 'danger' : 'success'} helper={gap > 0 ? 'Still uncovered' : 'Target reached'} />
+            <ResultTile title="Monthly Save Rate" value={`${formatCurrency(need6)} / ${formatCurrency(need12)}`} tone="success" helper="6 month plan / 12 month plan" />
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm font-normal text-text-primary">Reserve progress</p>
+              <p className="text-sm font-light text-text-secondary">{pct.toFixed(1)}%</p>
+            </div>
+            <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-white/5">
+              <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${pct}%` }} />
+            </div>
+            <p className="mt-3 text-sm font-light text-text-secondary">
+              {gap > 0
+                ? `Closing the gap at ${formatCurrency(need12)} per month gives you a 12 month path to target.`
+                : 'Your current savings already cover the modeled reserve target.'}
+            </p>
+          </div>
+        </div>
+      )}
+    </CalculatorShell>
+  );
+}
+
+function BusinessInterruptionCalc() {
+  const [revenue, setRevenue] = useState('');
+  const [fixed, setFixed] = useState('');
+  const [days, setDays] = useState('');
+
+  const revVal = parseFloat(revenue) || 0;
+  const fixVal = parseFloat(fixed) || 0;
+  const daysVal = parseFloat(days) || 0;
+  const dailyRevenue = revVal / 30;
+  const dailyFixed = fixVal / 30;
+  const revLost = dailyRevenue * daysVal;
+  const fixedDuring = dailyFixed * daysVal;
+  const totalImpact = revLost + fixedDuring;
+
+  return (
+    <CalculatorShell
+      title="Business Interruption Cost Calculator"
+      description="Model how much a forced closure could cost once lost sales and ongoing fixed expenses stack up."
+    >
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Field label="Monthly Revenue">
+          <input type="number" value={revenue} onChange={(e) => setRevenue(e.target.value)} placeholder="0" className={INPUT_CLASS} />
+        </Field>
+        <Field label="Monthly Fixed Costs">
+          <input type="number" value={fixed} onChange={(e) => setFixed(e.target.value)} placeholder="0" className={INPUT_CLASS} />
+        </Field>
+        <Field label="Closure Days">
+          <input type="number" value={days} onChange={(e) => setDays(e.target.value)} placeholder="0" className={INPUT_CLASS} />
+        </Field>
+      </div>
+
+      {daysVal > 0 && (revVal > 0 || fixVal > 0) && (
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <ResultTile title="Revenue Lost" value={formatCurrency(revLost)} tone="danger" helper={`${daysVal} days of lost sales`} />
+            <ResultTile title="Fixed Costs" value={formatCurrency(fixedDuring)} tone="warning" helper="Expenses that keep running" />
+            <ResultTile title="Total Exposure" value={formatCurrency(totalImpact)} tone="primary" helper="Combined interruption cost" />
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm font-normal text-text-primary">Impact mix</p>
+              <p className="text-sm font-light text-text-secondary">
+                {totalImpact > 0 ? `${Math.round((revLost / totalImpact) * 100)}% revenue / ${Math.round((fixedDuring / totalImpact) * 100)}% fixed costs` : 'No exposure yet'}
+              </p>
+            </div>
+            <div className="mt-3 flex h-3 overflow-hidden rounded-full bg-white/5">
+              <div className="bg-gap transition-all duration-300" style={{ width: `${totalImpact > 0 ? (revLost / totalImpact) * 100 : 0}%` }} />
+              <div className="bg-underinsured transition-all duration-300" style={{ width: `${totalImpact > 0 ? (fixedDuring / totalImpact) * 100 : 0}%` }} />
+            </div>
+            <div className="mt-3 flex flex-wrap gap-4 text-xs font-light text-text-secondary">
+              <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gap" /> Revenue lost</span>
+              <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-underinsured" /> Fixed costs</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </CalculatorShell>
+  );
+}
 
 function InsuranceCostEstimator() {
   const [bizType, setBizType] = useState('restaurant');
@@ -191,67 +230,77 @@ function InsuranceCostEstimator() {
   const tiers = TIERS[bizType];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl shadow-md p-6">
-      <h3 className="text-lg font-semibold text-text-primary mb-4">Insurance Cost Estimator</h3>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div>
-          <label className="block text-sm text-text-secondary mb-1">Business Type</label>
-          <select value={bizType} onChange={(e) => setBizType(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-            <option value="restaurant">Restaurant</option>
-            <option value="retail">Retail</option>
-            <option value="salon">Salon</option>
-            <option value="contractor">Contractor</option>
+    <CalculatorShell
+      title="Insurance Cost Estimator"
+      description="Compare lean, recommended, and full-stack coverage ranges using your size and staffing assumptions."
+    >
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+        <Field label="Business Type">
+          <select value={bizType} onChange={(e) => setBizType(e.target.value)} className={INPUT_CLASS}>
+            <option value="restaurant" className="bg-bg-main">Restaurant</option>
+            <option value="retail" className="bg-bg-main">Retail</option>
+            <option value="salon" className="bg-bg-main">Salon</option>
+            <option value="contractor" className="bg-bg-main">Contractor</option>
           </select>
-        </div>
-        <div>
-          <label className="block text-sm text-text-secondary mb-1">Annual Revenue</label>
-          <input type="number" value={annualRev} onChange={(e) => setAnnualRev(e.target.value)} placeholder="100000" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-        </div>
-        <div>
-          <label className="block text-sm text-text-secondary mb-1">Employees</label>
-          <input type="number" value={employees} onChange={(e) => setEmployees(e.target.value)} placeholder="1" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-        </div>
-        <div>
-          <label className="block text-sm text-text-secondary mb-1">Zip Code</label>
-          <input type="text" value={zip} onChange={(e) => setZip(e.target.value)} placeholder="77004" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-        </div>
+        </Field>
+        <Field label="Annual Revenue">
+          <input type="number" value={annualRev} onChange={(e) => setAnnualRev(e.target.value)} placeholder="100000" className={INPUT_CLASS} />
+        </Field>
+        <Field label="Employees">
+          <input type="number" value={employees} onChange={(e) => setEmployees(e.target.value)} placeholder="1" className={INPUT_CLASS} />
+        </Field>
+        <Field label="Zip Code">
+          <input type="text" value={zip} onChange={(e) => setZip(e.target.value)} placeholder="77004" className={INPUT_CLASS} />
+        </Field>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {TIER_LABELS.map(({ key, label, color }) => {
-          const tier = tiers[key];
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        {Object.entries(tiers).map(([key, tier]) => {
           const low = Math.round(tier.range[0] * revFactor * empFactor);
           const high = Math.round(tier.range[1] * revFactor * empFactor);
+          const label = key === 'essential' ? 'Essential' : key === 'recommended' ? 'Recommended' : 'Comprehensive';
+
           return (
-            <motion.div key={key} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`rounded-lg border p-4 ${color}`}>
-              <h4 className="font-semibold text-text-primary mb-2">{label}</h4>
-              <p className="text-lg font-bold text-primary mb-3">{formatCurrency(low)} – {formatCurrency(high)}<span className="text-xs font-normal text-text-secondary"> /yr</span></p>
-              <ul className="space-y-1">
-                {tier.includes.map((item) => (
-                  <li key={item} className="text-xs text-text-secondary flex items-center gap-1">
-                    <span className="text-covered">✓</span> {item}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
+            <div key={key} className={`rounded-2xl border p-5 ${TIER_STYLES[key]}`}>
+              <p className="text-xs font-normal uppercase tracking-[0.05em] text-text-secondary">{label}</p>
+              <div className="mt-3">
+                <StatValue value={`${formatCurrency(low)} to ${formatCurrency(high)}`} color={key === 'recommended' ? 'primary' : key === 'comprehensive' ? 'success' : 'neutral'} size="sm" />
+              </div>
+              <p className="mt-2 text-sm font-light text-text-secondary">Estimated annual premium range</p>
+              <div className="mt-4 border-t border-white/10 pt-4">
+                <p className="text-sm font-normal text-text-primary">Included coverage</p>
+                <ul className="mt-3 space-y-2 text-sm font-light text-text-secondary">
+                  {tier.includes.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           );
         })}
       </div>
-    </motion.div>
+    </CalculatorShell>
   );
 }
 
 export default function Calculators() {
-  const [active, setActive] = useState(TABS[0]);
+  const [active, setActive] = useState(TABS[0].id);
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-text-primary mb-1">Financial Calculators</h2>
-      <p className="text-text-secondary text-sm mb-4">Plan ahead with interactive financial tools</p>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-4xl font-heading font-thin tracking-[-0.03em] text-text-primary">Financial Calculators</h2>
+        <p className="mt-1.5 text-sm font-light text-text-secondary">Use clean planning tools to model reserve needs, downtime cost, and coverage pricing.</p>
+      </div>
+
       <PillTabs active={active} onChange={setActive} />
-      {active === 'Emergency Fund' && <EmergencyFundCalc />}
-      {active === 'Business Interruption' && <BusinessInterruptionCalc />}
-      {active === 'Insurance Estimator' && <InsuranceCostEstimator />}
+
+      {active === 'emergency' && <EmergencyFundCalc />}
+      {active === 'interruption' && <BusinessInterruptionCalc />}
+      {active === 'insurance' && <InsuranceCostEstimator />}
     </div>
   );
 }

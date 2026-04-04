@@ -1,8 +1,8 @@
 import { Landmark } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRef } from 'react';
-import { formatCurrency } from '../../utils/formatCurrency';
 import { useCardTilt } from '../../hooks/useCursorPosition';
+import StatValue from '../shared/StatValue';
 
 const cardVariants = {
   hidden: { opacity: 0, x: -20 },
@@ -20,7 +20,7 @@ function AccountCard({ acct, index }) {
   return (
     <motion.div
       ref={cardRef}
-      className="flex items-center gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all duration-300"
+      className="group flex items-center gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all duration-300"
       custom={index}
       initial="hidden"
       animate="visible"
@@ -36,10 +36,10 @@ function AccountCard({ acct, index }) {
         <Landmark className="w-5 h-5 text-primary" />
       </div>
       <div className="flex-1">
-        <p className="text-sm font-medium text-text-primary">{acct.name}</p>
-        <p className="text-xs text-text-secondary">{acct.institution} · {acct.type}</p>
+        <p className="text-sm font-normal text-text-primary">{acct.name}</p>
+        <p className="text-xs font-light text-text-secondary">{acct.institution} · {acct.type}</p>
       </div>
-      <p className="text-lg font-semibold text-text-primary">{formatCurrency(acct.balance)}</p>
+      <StatValue value={acct.balance.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })} color="neutral" size="sm" className="text-right" />
     </motion.div>
   );
 }
@@ -49,7 +49,7 @@ export default function AccountBalances({ accounts }) {
 
   return (
     <div className="glass-card p-5">
-      <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">Account Balances</h3>
+      <h3 className="text-2xl font-heading font-light tracking-[-0.02em] text-text-primary mb-4">Account Balances</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {accounts.map((acct, i) => (
           <AccountCard key={acct.id} acct={acct} index={i} />

@@ -39,7 +39,7 @@ export default function GapAnalysis({ gaps }) {
           {...fadeIn}
           transition={{ duration: 0.4, delay: 0.1 * ++sectionIndex }}
         >
-          <h3 className="text-lg font-heading font-semibold text-gap mb-3">Critical Gaps</h3>
+          <h3 className="text-2xl font-heading font-light tracking-[-0.02em] text-gap mb-3">Critical Gaps</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {critical.map((p, i) => <PolicyCard key={p.id} policy={p} delay={0.05 * i} />)}
           </div>
@@ -51,7 +51,7 @@ export default function GapAnalysis({ gaps }) {
           {...fadeIn}
           transition={{ duration: 0.4, delay: 0.1 * ++sectionIndex }}
         >
-          <h3 className="text-lg font-heading font-semibold text-underinsured mb-3">Underinsured</h3>
+          <h3 className="text-2xl font-heading font-light tracking-[-0.02em] text-underinsured mb-3">Underinsured</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {underinsured.map((p, i) => <PolicyCard key={p.id} policy={p} delay={0.05 * i} />)}
           </div>
@@ -63,7 +63,7 @@ export default function GapAnalysis({ gaps }) {
           {...fadeIn}
           transition={{ duration: 0.4, delay: 0.1 * ++sectionIndex }}
         >
-          <h3 className="text-lg font-heading font-semibold text-text-primary mb-3">Recommended</h3>
+          <h3 className="text-2xl font-heading font-light tracking-[-0.02em] text-text-primary mb-3">Recommended</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {other.map((p, i) => <PolicyCard key={p.id} policy={p} delay={0.05 * i} />)}
           </div>
@@ -75,7 +75,7 @@ export default function GapAnalysis({ gaps }) {
           {...fadeIn}
           transition={{ duration: 0.4, delay: 0.1 * ++sectionIndex }}
         >
-          <h3 className="text-lg font-heading font-semibold text-covered mb-3">Adequately Covered</h3>
+          <h3 className="text-2xl font-heading font-light tracking-[-0.02em] text-covered mb-3">Adequately Covered</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {covered.map((p, i) => <PolicyCard key={p.id} policy={p} delay={0.05 * i} />)}
           </div>

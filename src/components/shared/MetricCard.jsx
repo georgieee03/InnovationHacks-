@@ -3,11 +3,20 @@ import { motion } from 'framer-motion';
 import { useRef, useMemo } from 'react';
 import { useCardTilt } from '../../hooks/useCursorPosition';
 import { useAnimatedCounter, formatAnimatedValue } from '../../hooks/useAnimatedCounter';
+import StatValue from './StatValue';
 
 const TREND_ICONS = {
   up: <TrendingUp className="w-4 h-4 text-covered" />,
   down: <TrendingDown className="w-4 h-4 text-gap" />,
   neutral: <Minus className="w-4 h-4 text-text-secondary" />,
+};
+
+const COLOR_TO_VARIANT = {
+  'text-primary': 'primary',
+  'text-covered': 'success',
+  'text-underinsured': 'warning',
+  'text-gap': 'danger',
+  'text-text-primary': 'neutral',
 };
 
 export default function MetricCard({ title, value, subtitle, trend, color, delay = 0, animate = true }) {
@@ -44,7 +53,7 @@ export default function MetricCard({ title, value, subtitle, trend, color, delay
   return (
     <motion.div
       ref={cardRef}
-      className="glass-card p-6"
+      className="glass-card group p-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay, ease: [0.4, 0, 0.2, 1] }}
@@ -59,14 +68,19 @@ export default function MetricCard({ title, value, subtitle, trend, color, delay
         willChange: 'transform',
       }}
     >
-      <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">{title}</p>
-      <p className={`text-3xl font-heading font-bold mt-2 ${color || 'text-text-primary'}`}>
-        {displayValue}
-      </p>
+      <p className="text-xs font-normal text-text-secondary uppercase tracking-[0.05em]">{title}</p>
+      <div className="mt-3">
+        <StatValue
+          value={displayValue}
+          color={COLOR_TO_VARIANT[color] || 'neutral'}
+          size="lg"
+          reflective
+        />
+      </div>
       {(subtitle || trend) && (
         <div className="flex items-center gap-1.5 mt-2">
           {trend && TREND_ICONS[trend]}
-          {subtitle && <span className="text-xs text-text-secondary">{subtitle}</span>}
+          {subtitle && <span className="text-xs font-light text-text-secondary">{subtitle}</span>}
         </div>
       )}
     </motion.div>

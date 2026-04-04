@@ -61,8 +61,8 @@ export default function InsuranceAnalyzer() {
           {...fadeInUp}
           transition={{ duration: 0.4 }}
         >
-          <h2 className="text-3xl font-heading font-bold text-text-primary">Insurance Analyzer</h2>
-          <p className="text-sm text-text-secondary mt-1.5">Upload your policy to find coverage gaps</p>
+          <h2 className="text-4xl font-heading font-thin tracking-[-0.03em] text-text-primary">Insurance Analyzer</h2>
+          <p className="text-sm font-light text-text-secondary mt-1.5">Upload your policy to find coverage gaps</p>
         </motion.div>
 
         <motion.div
@@ -75,7 +75,7 @@ export default function InsuranceAnalyzer() {
           </div>
           {!isComplete && !isAnalyzing && (
             <button onClick={handleLoadDemo}
-              className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition whitespace-nowrap">
+              className="px-4 py-2 text-sm font-normal bg-primary text-white rounded-lg hover:bg-primary/90 transition whitespace-nowrap">
               Load Demo Policy
             </button>
           )}

@@ -30,8 +30,8 @@ export default function SavingsProjection({ metrics }) {
       transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
       className="glass-card p-5"
     >
-      <h3 className="text-lg font-heading font-semibold text-text-primary mb-1">Reserve Projection</h3>
-      <p className="text-sm text-text-secondary mb-4">
+      <h3 className="text-2xl font-heading font-light tracking-[-0.02em] text-text-primary mb-1">Reserve Projection</h3>
+      <p className="text-sm font-light text-text-secondary mb-4">
         {monthlySavings > 0
           ? `At ${formatCurrency(monthlySavings)}/mo net savings, you'll reach your emergency fund target in ~${monthsToTarget} months`
           : 'Increase net savings to build your emergency fund'
