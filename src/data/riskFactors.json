@@ -1,0 +1,53 @@
+{
+  "77004": {
+    "city": "Houston", "state": "TX",
+    "risks": {
+      "flood_zone": { "level": "high", "label": "FEMA Flood Zone AE", "description": "High-risk flood zone. Houston averages a major flood event every 2-3 years." },
+      "hurricane": { "level": "high", "label": "Hurricane Corridor", "description": "Gulf Coast location with significant hurricane exposure June-November." },
+      "crime": { "level": "medium", "label": "Moderate Crime Area", "description": "Property crime rate 15% above national average." }
+    },
+    "emergencyFundMultiplier": 4
+  },
+  "90011": {
+    "city": "Los Angeles", "state": "CA",
+    "risks": {
+      "earthquake": { "level": "high", "label": "Seismic Zone", "description": "Near active fault lines. Earthquake damage not covered by standard policies." },
+      "wildfire": { "level": "medium", "label": "Wildfire Adjacent", "description": "Within 15 miles of high wildfire risk zones." },
+      "crime": { "level": "high", "label": "High Crime Area", "description": "Property crime rate 40% above national average." }
+    },
+    "emergencyFundMultiplier": 5
+  },
+  "33125": {
+    "city": "Miami", "state": "FL",
+    "risks": {
+      "flood_zone": { "level": "high", "label": "FEMA Flood Zone AE", "description": "Coastal flood zone with frequent tidal and storm flooding." },
+      "hurricane": { "level": "high", "label": "Direct Hurricane Path", "description": "One of the highest hurricane risk zones in the continental US." },
+      "crime": { "level": "medium", "label": "Moderate Crime Area", "description": "Property crime rate 20% above national average." }
+    },
+    "emergencyFundMultiplier": 5
+  },
+  "60619": {
+    "city": "Chicago", "state": "IL",
+    "risks": {
+      "crime": { "level": "high", "label": "High Crime Area", "description": "Property and violent crime rates significantly above average." },
+      "winter_storm": { "level": "high", "label": "Severe Winter Weather", "description": "Heavy snowfall and ice storms can force multi-day closures." }
+    },
+    "emergencyFundMultiplier": 4
+  },
+  "10456": {
+    "city": "Bronx, New York", "state": "NY",
+    "risks": {
+      "flood_zone": { "level": "medium", "label": "Moderate Flood Risk", "description": "Areas prone to urban flooding during heavy rainfall." },
+      "crime": { "level": "high", "label": "High Crime Area", "description": "Property crime above city and national averages." }
+    },
+    "emergencyFundMultiplier": 4
+  },
+  "85282": {
+    "city": "Tempe", "state": "AZ",
+    "risks": {
+      "extreme_heat": { "level": "high", "label": "Extreme Heat Zone", "description": "Temperatures regularly exceed 110°F. HVAC failure can force closure." },
+      "dust_storm": { "level": "medium", "label": "Haboob Risk", "description": "Dust storms can damage signage, vehicles, and HVAC systems." }
+    },
+    "emergencyFundMultiplier": 3
+  }
+}
