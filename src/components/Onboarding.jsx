@@ -1,4 +1,5 @@
 import { useState, useContext } from 'react';
+import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { AppContext } from '../context/AppContext';
 import businessTypes from '../data/businessTypes.json';
@@ -25,8 +26,18 @@ export default function Onboarding() {
   const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8"
+      >
         <div className="flex items-center gap-2 mb-2">
           <Shield className="w-8 h-8 text-primary" />
           <h1 className="text-2xl font-heading font-bold text-text-primary">Welcome to SafeGuard</h1>
@@ -78,7 +89,7 @@ export default function Onboarding() {
             Load Demo — Maria's Bakery (Houston, TX)
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

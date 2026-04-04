@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatCurrency';
 
@@ -23,7 +24,7 @@ function getFinancialCrossRef(item, financialMetrics) {
   return null;
 }
 
-export default function RecommendationCard({ item, financialMetrics }) {
+export default function RecommendationCard({ item, financialMetrics, delay = 0 }) {
   const config = PRIORITY_CONFIG[item.priority] || PRIORITY_CONFIG.recommended;
   const Icon = config.icon;
   const avgCost = item.estimatedAnnualPremium
@@ -34,7 +35,13 @@ export default function RecommendationCard({ item, financialMetrics }) {
   const isActionable = item.status === 'gap' || item.status === 'underinsured';
 
   return (
-    <div className={`rounded-xl border p-5 ${config.bg}`}>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      whileHover={{ scale: 1.01 }}
+      className={`rounded-xl border p-5 ${config.bg}`}
+    >
       <div className="flex items-start gap-3">
         <Icon className={`w-5 h-5 mt-0.5 ${config.color}`} />
         <div className="flex-1">
@@ -73,6 +80,6 @@ export default function RecommendationCard({ item, financialMetrics }) {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

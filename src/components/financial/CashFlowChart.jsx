@@ -1,11 +1,17 @@
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { motion } from 'framer-motion';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 export default function CashFlowChart({ data }) {
   if (!data?.length) return null;
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-gray-100 p-5">
+    <motion.div
+      className="bg-card rounded-xl shadow-sm border border-gray-100 p-5"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">Monthly Cash Flow</h3>
       <ResponsiveContainer width="100%" height={280}>
         <ComposedChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
@@ -23,6 +29,6 @@ export default function CashFlowChart({ data }) {
       <p className="text-xs text-text-secondary mt-3">
         ⚠️ December: Equipment repair ($2,847) caused a negative cash flow month
       </p>
-    </div>
+    </motion.div>
   );
 }

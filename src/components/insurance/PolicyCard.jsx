@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import StatusBadge from '../shared/StatusBadge';
 import { formatCurrency } from '../../utils/formatCurrency';
 
@@ -8,7 +9,7 @@ const STATUS_MAP = {
   'not-applicable': 'covered',
 };
 
-export default function PolicyCard({ policy }) {
+export default function PolicyCard({ policy, delay = 0 }) {
   if (!policy) return null;
 
   const badgeStatus = STATUS_MAP[policy.status] || 'gap';
@@ -20,11 +21,17 @@ export default function PolicyCard({ policy }) {
   const showLocationBadge = policy.locationDependent && isGap;
 
   return (
-    <div className={`rounded-xl shadow-sm border p-5 ${
-      isGap ? 'bg-gap/5 border-gap/30' :
-      policy.status === 'underinsured' ? 'bg-card border-underinsured/30' :
-      'bg-card border-gray-100'
-    }`}>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      whileHover={{ y: -2, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}
+      className={`rounded-xl shadow-sm border p-5 ${
+        isGap ? 'bg-gap/5 border-gap/30' :
+        policy.status === 'underinsured' ? 'bg-card border-underinsured/30' :
+        'bg-card border-gray-100'
+      }`}
+    >
       <div className="flex items-start justify-between mb-2">
         <h4 className="font-heading font-semibold text-text-primary">{policy.name}</h4>
         <StatusBadge status={badgeStatus} label={policy.statusLabel} />
@@ -63,6 +70,6 @@ export default function PolicyCard({ policy }) {
           <p className="text-xs text-gap font-medium">⚠️ {policy.whyItMatters}</p>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

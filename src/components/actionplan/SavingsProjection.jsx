@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { formatCurrency } from '../../utils/formatCurrency';
 
@@ -23,7 +24,12 @@ export default function SavingsProjection({ metrics }) {
     : null;
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-gray-100 p-5">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="bg-card rounded-xl shadow-sm border border-gray-100 p-5"
+    >
       <h3 className="text-lg font-heading font-semibold text-text-primary mb-1">Reserve Projection</h3>
       <p className="text-sm text-text-secondary mb-4">
         {monthlySavings > 0
@@ -35,12 +41,12 @@ export default function SavingsProjection({ metrics }) {
         <AreaChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-          <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
+          <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
           <Tooltip formatter={(v) => formatCurrency(v)} />
           <ReferenceLine y={target} stroke="#10b981" strokeDasharray="5 5" label={{ value: 'Target', position: 'right', fontSize: 11 }} />
           <Area type="monotone" dataKey="reserves" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} strokeWidth={2} />
         </AreaChart>
       </ResponsiveContainer>
-    </div>
+    </motion.div>
   );
 }

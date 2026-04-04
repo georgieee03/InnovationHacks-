@@ -1,8 +1,15 @@
+import { motion } from 'framer-motion';
+
 export default function PolicySummary({ summary }) {
   if (!summary) return null;
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-gray-100 p-5">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="bg-card rounded-xl shadow-sm border border-gray-100 p-5"
+    >
       <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">Policy Summary</h3>
 
       <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
@@ -27,14 +34,20 @@ export default function PolicySummary({ summary }) {
       <h4 className="font-heading font-semibold text-text-primary text-sm mb-2">Current Coverages</h4>
       <div className="space-y-2 mb-4">
         {summary.coverages?.map((cov, i) => (
-          <div key={i} className="p-3 bg-bg-main rounded-lg">
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 * i }}
+            className="p-3 bg-bg-main rounded-lg"
+          >
             <div className="flex justify-between items-start">
               <p className="font-medium text-text-primary text-sm">{cov.type}</p>
               <span className="text-xs bg-covered/10 text-covered px-2 py-0.5 rounded-full">Active</span>
             </div>
             <p className="text-xs text-text-secondary mt-1">Limit: {cov.limit} · Deductible: {cov.deductible}</p>
             <p className="text-xs text-text-secondary mt-0.5">{cov.details}</p>
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -48,6 +61,6 @@ export default function PolicySummary({ summary }) {
           </div>
         </>
       )}
-    </div>
+    </motion.div>
   );
 }

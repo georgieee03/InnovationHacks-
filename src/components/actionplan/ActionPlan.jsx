@@ -1,4 +1,5 @@
 import { useContext } from 'react';
+import { motion } from 'framer-motion';
 import { AppContext } from '../../context/AppContext';
 import { computeProtectionScore, getProtectionGrade } from '../../services/gapAnalyzer';
 import RecommendationCard from './RecommendationCard';
@@ -16,6 +17,11 @@ function getGradeDescription(grade) {
     default: return 'Your business has significant coverage gaps that need immediate attention.';
   }
 }
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+};
 
 export default function ActionPlan() {
   const { gapAnalysis, financialMetrics, setActiveTab } = useContext(AppContext);
@@ -48,31 +54,40 @@ export default function ActionPlan() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <motion.div
+        {...fadeInUp}
+        transition={{ duration: 0.4 }}
+      >
         <h2 className="text-2xl font-heading font-bold text-text-primary">Action Plan</h2>
         <p className="text-text-secondary mt-1">
           {actionItems.length > 0
             ? `${actionItems.length} items need your attention`
             : 'Your coverage looks solid — no critical gaps found'}
         </p>
-      </div>
+      </motion.div>
 
       {/* Protection Score Gauge */}
-      <div className="bg-card rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center">
+      <motion.div
+        {...fadeInUp}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="bg-card rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center"
+      >
         <svg width="200" height="200" viewBox="0 0 200 200">
           <circle
             cx="100" cy="100" r="90"
             fill="none" stroke="#e2e8f0" strokeWidth="12"
           />
-          <circle
+          <motion.circle
             cx="100" cy="100" r="90"
             fill="none"
             stroke={gradeInfo.color}
             strokeWidth="12"
             strokeLinecap="round"
             strokeDasharray={CIRCUMFERENCE}
-            strokeDashoffset={dashOffset}
-            style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px', transition: 'stroke-dashoffset 0.6s ease' }}
+            initial={{ strokeDashoffset: CIRCUMFERENCE }}
+            animate={{ strokeDashoffset: dashOffset }}
+            transition={{ duration: 1.5, ease: 'easeOut' }}
+            style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px' }}
           />
           <text x="100" y="92" textAnchor="middle" fontSize="40" fontWeight="bold" fill={gradeInfo.color}>
             {score}%
@@ -84,22 +99,35 @@ export default function ActionPlan() {
         <p className="text-sm text-text-secondary mt-3 text-center max-w-md">
           {getGradeDescription(gradeInfo.grade)}
         </p>
-      </div>
+      </motion.div>
 
-      <RiskTimeline gaps={gapAnalysis} />
+      <motion.div
+        {...fadeInUp}
+        transition={{ duration: 0.4, delay: 0.3 }}
+      >
+        <RiskTimeline gaps={gapAnalysis} />
+      </motion.div>
 
       {actionItems.length > 0 && (
-        <div>
+        <motion.div
+          {...fadeInUp}
+          transition={{ duration: 0.4, delay: 0.4 }}
+        >
           <h3 className="text-lg font-heading font-semibold text-text-primary mb-3">Recommendations</h3>
           <div className="space-y-3">
-            {actionItems.map(item => (
-              <RecommendationCard key={item.id} item={item} financialMetrics={financialMetrics} />
+            {actionItems.map((item, i) => (
+              <RecommendationCard key={item.id} item={item} financialMetrics={financialMetrics} delay={0.05 * i} />
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
-      <SavingsProjection metrics={financialMetrics} />
+      <motion.div
+        {...fadeInUp}
+        transition={{ duration: 0.4, delay: 0.5 }}
+      >
+        <SavingsProjection metrics={financialMetrics} />
+      </motion.div>
     </div>
   );
 }

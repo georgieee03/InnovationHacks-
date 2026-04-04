@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 export default function EmergencyFund({ metrics, riskFactors, businessInfo }) {
@@ -22,8 +23,12 @@ export default function EmergencyFund({ metrics, riskFactors, businessInfo }) {
       </p>
 
       <div className="w-full bg-gray-200 rounded-full h-4 mb-3">
-        <div className={`h-4 rounded-full transition-all ${barColor}`}
-          style={{ width: `${Math.min(100, pct)}%` }} />
+        <motion.div
+          className={`h-4 rounded-full ${barColor}`}
+          initial={{ width: 0 }}
+          animate={{ width: `${Math.min(100, pct)}%` }}
+          transition={{ duration: 1, ease: 'easeOut' }}
+        />
       </div>
 
       <div className="flex justify-between text-sm">
@@ -44,11 +49,16 @@ export default function EmergencyFund({ metrics, riskFactors, businessInfo }) {
       )}
 
       {metrics.emergencyFundGap > 0 && (
-        <div className="mt-4 rounded-lg bg-underinsured/10 border border-underinsured/30 p-4">
+        <motion.div
+          className="mt-4 rounded-lg bg-underinsured/10 border border-underinsured/30 p-4"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.5 }}
+        >
           <p className="text-sm text-underinsured font-medium">
             You need an additional {formatCurrency(metrics.emergencyFundGap)} to reach the recommended level. Consider saving {monthlySaving}/month to reach your goal in 6 months.
           </p>
-        </div>
+        </motion.div>
       )}
     </div>
   );

@@ -1,8 +1,19 @@
 import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { CATEGORY_COLORS, CATEGORY_LABELS } from '../../utils/constants';
 
 const DEFAULT_VISIBLE = 20;
+
+const rowVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3, delay: i * 0.03 },
+  }),
+  exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
+};
 
 export default function TransactionList({ transactions }) {
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -57,21 +68,32 @@ export default function TransactionList({ transactions }) {
             </tr>
           </thead>
           <tbody>
-            {visible.map((txn) => (
-              <tr key={txn.id} className="border-b border-gray-50 hover:bg-bg-main">
-                <td className="py-2.5 text-text-secondary">{txn.date}</td>
-                <td className="py-2.5 text-text-primary font-medium">{txn.description}</td>
-                <td className="py-2.5">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[txn.category] || '#94a3b8' }} />
-                    {CATEGORY_LABELS[txn.category] || txn.category}
-                  </span>
-                </td>
-                <td className={`py-2.5 text-right font-medium ${txn.amount >= 0 ? 'text-covered' : 'text-text-primary'}`}>
-                  {txn.amount >= 0 ? '+' : ''}{formatCurrency(txn.amount)}
-                </td>
-              </tr>
-            ))}
+            <AnimatePresence mode="popLayout">
+              {visible.map((txn, i) => (
+                <motion.tr
+                  key={txn.id}
+                  custom={i}
+                  variants={rowVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  layout
+                  className="border-b border-gray-50 hover:bg-bg-main"
+                >
+                  <td className="py-2.5 text-text-secondary">{txn.date}</td>
+                  <td className="py-2.5 text-text-primary font-medium">{txn.description}</td>
+                  <td className="py-2.5">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[txn.category] || '#94a3b8' }} />
+                      {CATEGORY_LABELS[txn.category] || txn.category}
+                    </span>
+                  </td>
+                  <td className={`py-2.5 text-right font-medium ${txn.amount >= 0 ? 'text-covered' : 'text-text-primary'}`}>
+                    {txn.amount >= 0 ? '+' : ''}{formatCurrency(txn.amount)}
+                  </td>
+                </motion.tr>
+              ))}
+            </AnimatePresence>
           </tbody>
         </table>
       </div>
