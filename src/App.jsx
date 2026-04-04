@@ -7,6 +7,10 @@ import TabNavigation from './components/TabNavigation';
 import FinancialOverview from './components/financial/FinancialOverview';
 import InsuranceAnalyzer from './components/insurance/InsuranceAnalyzer';
 import ActionPlan from './components/actionplan/ActionPlan';
+import Calculators from './components/calculators/Calculators';
+import RiskSimulator from './components/simulator/RiskSimulator';
+import Challenges from './components/gamification/Challenges';
+import HealthReport from './components/report/HealthReport';
 
 const tabVariants = {
   initial: { opacity: 0, x: 20 },
@@ -39,6 +43,10 @@ function Dashboard() {
               {activeTab === 'financial' && <FinancialOverview />}
               {activeTab === 'insurance' && <InsuranceAnalyzer />}
               {activeTab === 'actionplan' && <ActionPlan />}
+              {activeTab === 'calculators' && <Calculators />}
+              {activeTab === 'simulator' && <RiskSimulator />}
+              {activeTab === 'challenges' && <Challenges />}
+              {activeTab === 'report' && <HealthReport />}
             </motion.div>
           </AnimatePresence>
         </div>

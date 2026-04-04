@@ -23,3 +23,13 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
+
+@media print {
+  body { background: white; }
+  .flex.min-h-screen > aside,
+  .flex.border-b,
+  button { display: none !important; }
+  main { margin-left: 0 !important; }
+  .print-report { break-inside: avoid; }
+  .print-report > div { break-inside: avoid; page-break-inside: avoid; margin-bottom: 1rem; box-shadow: none !important; border: 1px solid #e5e7eb; }
+}
