@@ -43,13 +43,11 @@ export default function EnhancedInput({
           placeholder={placeholder}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          style={error ? { '--control-input-border-color': 'var(--color-danger)' } : undefined}
           className={`
-            w-full px-4 py-3 rounded-lg
-            bg-white/5 backdrop-blur-sm
-            border border-white/10
+            control-input focus-ring-brand w-full rounded-lg px-4 py-3
             text-text-primary placeholder-text-muted
             transition-all duration-200
-            focus:outline-none focus:border-primary focus:bg-white/8
             ${Icon ? 'pl-11' : ''}
             ${error ? 'border-gap' : ''}
           `}

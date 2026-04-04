@@ -23,7 +23,7 @@ export default function PolicySummary({ summary }) {
         </div>
         <div>
           <p className="text-text-secondary">Effective</p>
-          <p className="font-normal text-text-primary">{summary.effectiveDate} · {summary.expirationDate}</p>
+          <p className="font-normal text-text-primary">{summary.effectiveDate} to {summary.expirationDate}</p>
         </div>
         <div>
           <p className="text-text-secondary">Monthly Premium</p>
@@ -39,14 +39,14 @@ export default function PolicySummary({ summary }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 * i }}
-            className="rounded-lg border border-white/10 bg-white/5 p-3"
+            className="surface-panel rounded-lg p-3"
           >
             <div className="flex items-start justify-between">
               <p className="text-sm font-normal text-text-primary">{cov.type}</p>
               <span className="rounded-full border border-covered/30 bg-covered/20 px-2 py-0.5 text-xs text-covered">Active</span>
             </div>
-            <p className="mt-1 text-xs font-light text-text-secondary">Limit: {cov.limit} · Deductible: {cov.deductible}</p>
-            <p className="mt-0.5 text-xs font-light text-text-secondary">{cov.details}</p>
+            <p className="mt-1 text-xs font-light text-text-secondary">Limit: {cov.limit} - Deductible: {cov.deductible}</p>
+            <p className="readable-copy mt-0.5 text-xs font-light">{cov.details}</p>
           </motion.div>
         ))}
       </div>

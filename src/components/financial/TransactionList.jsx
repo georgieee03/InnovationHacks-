@@ -44,7 +44,7 @@ export default function TransactionList({ transactions }) {
             setCategoryFilter(e.target.value);
             setShowAll(false);
           }}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-text-primary transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+          className="control-input focus-ring-brand rounded-lg px-3 py-2 text-sm text-text-primary transition-all duration-200"
         >
           <option value="all" className="bg-bg-main">All Categories</option>
           {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
@@ -59,7 +59,7 @@ export default function TransactionList({ transactions }) {
             setSearchText(e.target.value);
             setShowAll(false);
           }}
-          className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-text-primary transition-all duration-200 placeholder-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+          className="control-input focus-ring-brand flex-1 rounded-lg px-3 py-2 text-sm text-text-primary transition-all duration-200 placeholder-text-muted"
         />
       </div>
 
@@ -84,7 +84,7 @@ export default function TransactionList({ transactions }) {
                   animate="visible"
                   exit="exit"
                   layout
-                  className="border-b border-white/5 transition-colors duration-200 hover:bg-white/5"
+                  className="surface-row border-b border-white/5"
                 >
                   <td className="py-2.5 text-text-secondary">{txn.date}</td>
                   <td className="py-2.5 font-normal text-text-primary">{txn.description}</td>
@@ -112,7 +112,7 @@ export default function TransactionList({ transactions }) {
       {hasMore && !showAll && (
         <button
           onClick={() => setShowAll(true)}
-          className="mt-3 w-full rounded-lg border border-white/10 py-2 text-sm font-normal text-primary transition-all duration-200 hover:border-primary/30 hover:bg-white/5 hover:text-primary/80"
+          className="surface-panel focus-ring-brand mt-3 w-full rounded-lg py-2 text-sm font-normal text-primary transition-all duration-200 hover:border-primary/30 hover:text-primary/80"
         >
           Show all transactions ({filtered.length})
         </button>
@@ -121,7 +121,7 @@ export default function TransactionList({ transactions }) {
       {showAll && hasMore && (
         <button
           onClick={() => setShowAll(false)}
-          className="mt-3 w-full rounded-lg border border-white/10 py-2 text-sm font-normal text-text-secondary transition-all duration-200 hover:bg-white/5 hover:text-text-primary"
+          className="surface-panel focus-ring-brand mt-3 w-full rounded-lg py-2 text-sm font-normal text-text-secondary transition-all duration-200 hover:text-text-primary"
         >
           Show fewer
         </button>

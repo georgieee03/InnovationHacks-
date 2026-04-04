@@ -51,7 +51,7 @@ export default function RecommendationCard({ item, financialMetrics, delay = 0 }
             <div className="flex items-center gap-2">
               <h4 className="font-heading font-normal tracking-[-0.02em] text-text-primary">{item.name}</h4>
               {item.locationDependent && (
-                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-text-secondary">
+                <span className="surface-chip rounded-full px-2 py-0.5 text-xs text-text-secondary">
                   Location risk
                 </span>
               )}
@@ -63,7 +63,7 @@ export default function RecommendationCard({ item, financialMetrics, delay = 0 }
           <p className="mt-1 text-sm text-text-secondary">{item.whyItMatters}</p>
 
           {crossRef && (
-            <p className="mt-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-text-primary">
+            <p className="surface-panel readable-copy mt-2 rounded-lg px-3 py-2 text-sm text-text-primary">
               Related financial signal: {crossRef}
             </p>
           )}
@@ -76,7 +76,7 @@ export default function RecommendationCard({ item, financialMetrics, delay = 0 }
           )}
 
           {isActionable && (
-            <button className="mt-3 rounded-lg bg-primary px-4 py-1.5 text-sm font-normal text-white transition-all duration-200 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20">
+            <button className="focus-ring-brand mt-3 rounded-lg bg-primary px-4 py-1.5 text-sm font-normal text-white shadow-[0_14px_28px_rgba(6,182,212,0.18)] transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_18px_34px_rgba(6,182,212,0.24)]">
               Get Quote
             </button>
           )}

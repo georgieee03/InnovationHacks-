@@ -287,14 +287,14 @@ export default function ChatBot() {
             <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`flex max-w-[88%] items-start gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                  message.role === 'user' ? 'bg-primary text-white' : 'bg-white/10 text-text-secondary'
+                  message.role === 'user' ? 'bg-primary text-white shadow-[0_10px_22px_rgba(6,182,212,0.22)]' : 'surface-panel text-text-secondary'
                 }`}>
                   {message.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                 </div>
                 <div className={`rounded-2xl border px-4 py-3 ${
                   message.role === 'user'
-                    ? 'border-primary/30 bg-primary/15 text-text-primary'
-                    : 'border-white/10 bg-bg-secondary/70 text-text-secondary'
+                    ? 'border-primary/30 bg-primary/15 text-text-primary shadow-[0_14px_30px_rgba(6,182,212,0.12)]'
+                    : 'surface-panel text-text-secondary'
                 }`}>
                   <MessageBody text={message.text} />
                 </div>
@@ -304,7 +304,7 @@ export default function ChatBot() {
 
           {isTyping && (
             <div className="flex justify-start">
-              <div className="rounded-2xl border border-white/10 bg-bg-secondary/70">
+              <div className="surface-panel rounded-2xl">
                 <TypingIndicator />
               </div>
             </div>
@@ -321,7 +321,7 @@ export default function ChatBot() {
                 type="button"
                 onClick={() => sendMessage(question)}
                 disabled={isTyping}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-normal text-text-secondary transition-all duration-200 hover:border-primary/30 hover:text-text-primary disabled:opacity-50"
+                className="surface-chip focus-ring-brand rounded-full px-3 py-1.5 text-xs font-normal text-text-secondary transition-all duration-200 hover:border-primary/30 hover:text-text-primary disabled:opacity-50"
               >
                 {question}
               </button>
@@ -335,13 +335,15 @@ export default function ChatBot() {
               value={input}
               onChange={(event) => setInput(event.target.value)}
               placeholder="Ask about insurance, reserves, or scenario impact..."
+              aria-label="Ask SafeGuard assistant a question"
               disabled={isTyping}
-              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-text-primary placeholder-text-muted transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+              className="control-input focus-ring-brand flex-1 rounded-xl px-4 py-3 text-sm text-text-primary placeholder-text-muted transition-all duration-200 disabled:opacity-50"
             />
             <button
               type="submit"
+              aria-label="Send message"
               disabled={!input.trim() || isTyping}
-              className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-white transition-all duration-200 hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="focus-ring-brand inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-white shadow-[0_16px_30px_rgba(6,182,212,0.18)] transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_18px_34px_rgba(6,182,212,0.24)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Send className="h-4 w-4" />
             </button>

@@ -22,7 +22,7 @@ function AccountCard({ acct, index }) {
   return (
     <MotionDiv
       ref={cardRef}
-      className="group flex items-center gap-4 rounded-lg border border-white/10 bg-white/5 p-4 transition-all duration-300 hover:bg-white/10 hover:border-primary/30"
+      className="surface-panel group flex items-center gap-4 rounded-lg p-4 transition-all duration-300 hover:border-primary/30"
       custom={index}
       initial="hidden"
       animate="visible"

@@ -4,7 +4,6 @@ import { Shield } from 'lucide-react';
 import { AppContext } from '../context/AppContext';
 import businessTypes from '../data/businessTypes.json';
 import RippleButton from './shared/RippleButton';
-import EnhancedInput from './shared/EnhancedInput';
 
 export default function Onboarding() {
   const { onboard, loadDemo } = useContext(AppContext);
@@ -32,7 +31,7 @@ export default function Onboarding() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -40,61 +39,87 @@ export default function Onboarding() {
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="glass-card w-full max-w-md p-8 shadow-2xl"
       >
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Shield className="w-7 h-7 text-primary" />
+        <div className="mb-2 flex items-center gap-3">
+          <div className="surface-panel flex h-12 w-12 items-center justify-center rounded-xl">
+            <Shield className="h-7 w-7 text-primary" />
           </div>
           <h1 className="text-2xl font-heading font-bold text-text-primary">Welcome to SafeGuard</h1>
         </div>
-        <p className="text-text-secondary mb-6">Let's set up your business profile</p>
+        <p className="readable-copy mb-6">Let&apos;s set up your business profile</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">Business Name</label>
-            <input type="text" value={form.name} onChange={update('name')} required
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200" />
+            <label className="mb-1 block text-sm font-medium text-text-primary">Business Name</label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={update('name')}
+              required
+              className="control-input focus-ring-brand w-full rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted transition-all duration-200"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">Business Type</label>
-            <select value={form.type} onChange={update('type')}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200">
+            <label className="mb-1 block text-sm font-medium text-text-primary">Business Type</label>
+            <select
+              value={form.type}
+              onChange={update('type')}
+              className="control-input focus-ring-brand w-full rounded-lg px-3 py-2 text-sm text-text-primary transition-all duration-200"
+            >
               {businessTypes.map((bt) => (
                 <option key={bt.id} value={bt.id} className="bg-bg-main">{bt.icon} {bt.label}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">Zip Code</label>
-            <input type="text" value={form.zip} onChange={update('zip')} required
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200" />
+            <label className="mb-1 block text-sm font-medium text-text-primary">Zip Code</label>
+            <input
+              type="text"
+              value={form.zip}
+              onChange={update('zip')}
+              required
+              className="control-input focus-ring-brand w-full rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted transition-all duration-200"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Monthly Revenue ($)</label>
-              <input type="number" value={form.monthlyRevenue} onChange={update('monthlyRevenue')} required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200" />
+              <label className="mb-1 block text-sm font-medium text-text-primary">Monthly Revenue ($)</label>
+              <input
+                type="number"
+                value={form.monthlyRevenue}
+                onChange={update('monthlyRevenue')}
+                required
+                className="control-input focus-ring-brand w-full rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted transition-all duration-200"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Employees</label>
-              <input type="number" value={form.employees} onChange={update('employees')} required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200" />
+              <label className="mb-1 block text-sm font-medium text-text-primary">Employees</label>
+              <input
+                type="number"
+                value={form.employees}
+                onChange={update('employees')}
+                required
+                className="control-input focus-ring-brand w-full rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted transition-all duration-200"
+              />
             </div>
           </div>
 
-          <RippleButton 
+          <RippleButton
             type="submit"
             variant="primary"
             size="lg"
-            className="w-full mt-2"
+            className="mt-2 w-full"
           >
             Get Started
           </RippleButton>
         </form>
 
-        <div className="mt-4 pt-4 border-t border-white/10 text-center">
-          <button onClick={loadDemo}
-            className="text-sm text-primary hover:text-primary/80 hover:underline font-medium transition-colors duration-200">
-            Load Demo — Maria's Bakery (Houston, TX)
+        <div className="mt-4 border-t border-white/10 pt-4 text-center">
+          <button
+            type="button"
+            onClick={loadDemo}
+            className="surface-chip focus-ring-brand rounded-full px-4 py-2 text-sm font-medium text-primary transition-colors duration-200 hover:text-primary/80"
+          >
+            Load Demo - Maria&apos;s Bakery (Houston, TX)
           </button>
         </div>
       </motion.div>
