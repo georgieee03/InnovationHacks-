@@ -15,6 +15,18 @@ const cardVariants = {
   }),
 };
 
+function formatAccountType(value) {
+  if (!value) {
+    return 'Account';
+  }
+
+  return String(value)
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function AccountCard({ acct, index }) {
   const cardRef = useRef(null);
   const tilt = useCardTilt(cardRef, 5);
@@ -39,7 +51,9 @@ function AccountCard({ acct, index }) {
       </div>
       <div className="flex-1">
         <p className="text-sm font-normal text-text-primary">{acct.name}</p>
-        <p className="text-xs font-light text-text-secondary">{acct.institution} - {acct.type}</p>
+        <p className="text-xs font-light text-text-secondary">
+          {acct.institution || 'Linked account'} - {formatAccountType(acct.type)}
+        </p>
       </div>
       <StatValue
         value={acct.balance.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}

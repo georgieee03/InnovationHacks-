@@ -17,6 +17,8 @@ export const CATEGORY_LABELS = {
   equipment: 'Equipment',
   subscriptions: 'Subscriptions',
   miscellaneous: 'Miscellaneous',
+  revenue: 'Revenue',
+  other: 'Other',
 };
 
 export const RISK_LEVEL_COLORS = {
@@ -24,3 +26,19 @@ export const RISK_LEVEL_COLORS = {
   medium: '#f59e0b',
   low: '#10b981',
 };
+
+export function formatCategoryLabel(category) {
+  if (!category) {
+    return 'Other';
+  }
+
+  if (CATEGORY_LABELS[category]) {
+    return CATEGORY_LABELS[category];
+  }
+
+  return String(category)
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}

@@ -1,6 +1,6 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { motion } from 'framer-motion';
-import { CATEGORY_LABELS } from '../../utils/constants';
+import { formatCategoryLabel } from '../../utils/constants';
 import { formatCurrency } from '../../utils/formatCurrency';
 import useTheme from '../../hooks/useTheme';
 import useScrollAnimation, { scrollFadeInUp } from '../../hooks/useScrollAnimation';
@@ -49,10 +49,12 @@ export default function SpendingChart({ data }) {
   if (!data) return null;
 
   const chartData = Object.entries(data).map(([key, value]) => ({
-    name: CATEGORY_LABELS[key] || key,
+    name: formatCategoryLabel(key),
     value: Math.round(value * 100) / 100,
     color: chartColors.categories[key] || chartColors.categories.miscellaneous,
   }));
+
+  if (!chartData.length) return null;
 
   return (
     <MotionDiv

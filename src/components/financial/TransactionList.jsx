@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatCurrency } from '../../utils/formatCurrency';
-import { CATEGORY_COLORS, CATEGORY_LABELS } from '../../utils/constants';
+import { CATEGORY_COLORS, formatCategoryLabel } from '../../utils/constants';
 
 const DEFAULT_VISIBLE = 20;
 
@@ -27,6 +27,9 @@ export default function TransactionList({ transactions }) {
       return matchesCategory && matchesSearch;
     });
   }, [transactions, categoryFilter, searchText]);
+  const availableCategories = useMemo(() => {
+    return [...new Set((transactions ?? []).map((txn) => txn.category).filter(Boolean))].sort();
+  }, [transactions]);
 
   if (!transactions?.length) return null;
 
@@ -47,8 +50,10 @@ export default function TransactionList({ transactions }) {
           className="control-input focus-ring-brand rounded-lg px-3 py-2 text-sm text-text-primary transition-all duration-200"
         >
           <option value="all" className="bg-bg-main">All Categories</option>
-          {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-            <option key={key} value={key} className="bg-bg-main">{label}</option>
+          {availableCategories.map((category) => (
+            <option key={category} value={category} className="bg-bg-main">
+              {formatCategoryLabel(category)}
+            </option>
           ))}
         </select>
         <input
@@ -91,7 +96,7 @@ export default function TransactionList({ transactions }) {
                   <td className="py-2.5">
                     <span className="inline-flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[txn.category] || '#94a3b8' }} />
-                      {CATEGORY_LABELS[txn.category] || txn.category}
+                      {formatCategoryLabel(txn.category)}
                     </span>
                   </td>
                   <td className={`py-2.5 text-right font-normal ${txn.amount >= 0 ? 'text-covered' : 'text-text-primary'}`}>

@@ -58,6 +58,16 @@ export default function CashFlowChart({ data }) {
 
   if (!data?.length) return null;
 
+  const weakestMonth = data.reduce((currentWeakest, month) => {
+    if (!currentWeakest || month.netCashFlow < currentWeakest.netCashFlow) {
+      return month;
+    }
+    return currentWeakest;
+  }, null);
+  const insightText = weakestMonth?.netCashFlow < 0
+    ? `${weakestMonth.label}: ${formatCurrency(Math.abs(weakestMonth.netCashFlow))} net outflow month.`
+    : `${data.length} month${data.length === 1 ? '' : 's'} of cash flow activity loaded.`;
+
   return (
     <MotionDiv
       ref={ref}
@@ -140,7 +150,7 @@ export default function CashFlowChart({ data }) {
         </ComposedChart>
       </ResponsiveContainer>
       <p className="mt-3 text-xs font-light text-text-secondary">
-        December: Equipment repair ($2,847) caused a negative cash flow month.
+        {insightText}
       </p>
     </MotionDiv>
   );

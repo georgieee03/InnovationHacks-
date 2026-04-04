@@ -13,7 +13,7 @@ export default function PolicyCard({ policy, delay = 0 }) {
   if (!policy) return null;
 
   const badgeStatus = STATUS_MAP[policy.status] || 'gap';
-  const avgPremium = policy.estimatedAnnualPremium
+  const avgPremium = Number.isFinite(policy.estimatedAnnualPremium?.low) && Number.isFinite(policy.estimatedAnnualPremium?.high)
     ? Math.round((policy.estimatedAnnualPremium.low + policy.estimatedAnnualPremium.high) / 2)
     : null;
 
@@ -32,22 +32,22 @@ export default function PolicyCard({ policy, delay = 0 }) {
         'border-white/10'
       }`}
     >
-      <div className="flex items-start justify-between mb-2">
+      <div className="mb-2 flex items-start justify-between">
         <h4 className="font-heading font-semibold text-text-primary">{policy.name}</h4>
         <StatusBadge status={badgeStatus} label={policy.statusLabel} />
       </div>
-      <p className="text-sm text-text-secondary mb-3">{policy.description}</p>
+      <p className="mb-3 text-sm text-text-secondary">{policy.description}</p>
 
       {showLocationBadge && (
-        <span className="inline-block text-xs px-2 py-0.5 mb-3 rounded-full bg-gap/20 text-gap font-medium border border-gap/30">
-          📍 Flood Zone
+        <span className="mb-3 inline-block rounded-full border border-gap/30 bg-gap/20 px-2 py-0.5 text-xs font-medium text-gap">
+          Location Risk
         </span>
       )}
 
       <div className="space-y-1 text-sm">
         <div className="flex justify-between">
           <span className="text-text-secondary">Recommended Limit</span>
-          <span className="text-text-primary font-medium">{policy.recommendedLimit}</span>
+          <span className="font-medium text-text-primary">{policy.recommendedLimit}</span>
         </div>
         {policy.currentLimit && (
           <div className="flex justify-between">
@@ -60,14 +60,14 @@ export default function PolicyCard({ policy, delay = 0 }) {
         {avgPremium && (
           <div className="flex justify-between">
             <span className="text-text-secondary">Est. Annual Premium</span>
-            <span className="text-text-primary font-medium">{formatCurrency(avgPremium)}</span>
+            <span className="font-medium text-text-primary">{formatCurrency(avgPremium)}</span>
           </div>
         )}
       </div>
 
       {isGap && policy.priority === 'critical' && (
-        <div className="mt-3 p-2 bg-gap/10 rounded-lg border border-gap/20">
-          <p className="text-xs text-gap font-medium">⚠️ {policy.whyItMatters}</p>
+        <div className="mt-3 rounded-lg border border-gap/20 bg-gap/10 p-2">
+          <p className="text-xs font-medium text-gap">Why it matters: {policy.whyItMatters}</p>
         </div>
       )}
     </motion.div>
