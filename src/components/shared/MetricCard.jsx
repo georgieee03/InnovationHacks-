@@ -3,7 +3,10 @@ import { motion } from 'framer-motion';
 import { useRef, useMemo } from 'react';
 import { useCardTilt } from '../../hooks/useCursorPosition';
 import { useAnimatedCounter, formatAnimatedValue } from '../../hooks/useAnimatedCounter';
+import useTheme from '../../hooks/useTheme';
 import StatValue from './StatValue';
+
+const MotionDiv = motion.div;
 
 const TREND_ICONS = {
   up: <TrendingUp className="w-4 h-4 text-covered" />,
@@ -20,8 +23,12 @@ const COLOR_TO_VARIANT = {
 };
 
 export default function MetricCard({ title, value, subtitle, trend, color, delay = 0, animate = true }) {
+  const { theme } = useTheme();
   const cardRef = useRef(null);
   const tilt = useCardTilt(cardRef, 6);
+  const hoverShadow = theme === 'light'
+    ? '0 24px 44px rgba(15, 23, 42, 0.12), 0 0 28px rgba(8, 145, 178, 0.08)'
+    : '0 26px 55px rgba(0, 0, 0, 0.34), 0 0 30px rgba(6, 182, 212, 0.12)';
 
   // Extract numeric value if it's a string with currency/percentage
   const numericValue = useMemo(() => {
@@ -51,7 +58,7 @@ export default function MetricCard({ title, value, subtitle, trend, color, delay
     : value;
 
   return (
-    <motion.div
+    <MotionDiv
       ref={cardRef}
       className="glass-card group p-6"
       initial={{ opacity: 0, y: 20 }}
@@ -60,6 +67,7 @@ export default function MetricCard({ title, value, subtitle, trend, color, delay
       whileHover={{ 
         y: -6, 
         scale: 1.02,
+        boxShadow: hoverShadow,
         transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] }
       }}
       style={{
@@ -83,6 +91,6 @@ export default function MetricCard({ title, value, subtitle, trend, color, delay
           {subtitle && <span className="text-xs font-light text-text-secondary">{subtitle}</span>}
         </div>
       )}
-    </motion.div>
+    </MotionDiv>
   );
 }

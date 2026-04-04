@@ -1,5 +1,6 @@
-import { ChevronLeft, Menu, Moon, User } from 'lucide-react';
+import { ChevronLeft, Menu, User } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ThemeToggle from '../shared/ThemeToggle';
 
 const MotionHeader = motion.header;
 const MotionDiv = motion.div;
@@ -45,7 +46,7 @@ export default function TopBar({
             type="button"
             onClick={onMenuToggle}
             title={sidebarLabel}
-            className="focus-ring-control inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-text-primary transition-all duration-200 hover:border-primary/30 hover:bg-white/[0.07]"
+            className="sidebar-action-surface focus-ring-control inline-flex h-11 w-11 items-center justify-center rounded-2xl text-text-primary transition-all duration-200 hover:border-primary/30 hover:text-primary"
             aria-label={sidebarLabel}
             aria-controls="primary-navigation"
             aria-expanded={viewportMode === 'mobile' ? isMobileOpen : isSidebarExpanded}
@@ -70,18 +71,10 @@ export default function TopBar({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            disabled
-            title="Theme toggle arrives in Phase 7"
-            aria-label="Theme toggle arrives in Phase 7"
-            className="focus-ring-control inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-text-secondary opacity-70"
-          >
-            <Moon className="h-4 w-4" />
-          </button>
+          <ThemeToggle />
 
-          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/[0.12] text-xs font-medium text-primary">
+          <div className="sidebar-action-surface flex items-center gap-2 rounded-2xl px-3 py-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.045] text-xs font-medium text-primary">
               {getInitials(businessInfo?.name)}
             </div>
             <div className="hidden sm:block">

@@ -20,7 +20,7 @@ export default function BusinessInfo({ businessInfo, financialMetrics, isExpande
   const revenue = businessInfo.monthlyRevenue || financialMetrics?.averageMonthlyIncome || 0;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+    <div className="sidebar-panel rounded-2xl p-3">
       <AnimatePresence initial={false} mode="wait">
         {isExpanded ? (
           <MotionDiv
@@ -32,7 +32,7 @@ export default function BusinessInfo({ businessInfo, financialMetrics, isExpande
             className="space-y-3"
           >
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/[0.12] text-sm font-medium text-primary">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.045] text-sm font-medium text-primary">
                 {getInitials(businessInfo.name)}
               </div>
               <div className="min-w-0">
@@ -61,7 +61,7 @@ export default function BusinessInfo({ businessInfo, financialMetrics, isExpande
             title={`${businessInfo.name} - ${businessInfo.city}, ${businessInfo.state}`}
             className="flex items-center justify-center"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/[0.12] text-xs font-medium text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.045] text-xs font-medium text-primary">
               {getInitials(businessInfo.name)}
             </div>
           </MotionDiv>

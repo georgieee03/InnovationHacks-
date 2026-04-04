@@ -160,14 +160,14 @@ export default function CollapsibleSidebar({
       initial={viewportMode === 'mobile' ? { x: -280 } : false}
       exit={viewportMode === 'mobile' ? { x: -280 } : undefined}
       transition={animationTransition}
-      className={`fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-white/10 bg-sidebar/95 backdrop-blur-xl ${
+      className={`sidebar-shell fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-white/10 backdrop-blur-xl ${
         viewportMode === 'mobile' ? 'shadow-2xl' : ''
       }`}
       style={{ width: viewportMode === 'mobile' ? 280 : sidebarWidth }}
     >
       <div className={`flex h-[88px] items-center border-b border-white/10 ${showExpanded ? 'justify-between px-5' : 'justify-center px-2'}`}>
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/[0.12] text-primary">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.045] text-primary shadow-[0_10px_24px_rgba(0,0,0,0.2)]">
             <ShieldCheck className="h-5 w-5" />
           </div>
           <AnimatePresence initial={false}>
@@ -208,7 +208,7 @@ export default function CollapsibleSidebar({
           </div>
         </div>
 
-        <div className={`border-t border-white/10 py-4 ${showExpanded ? 'px-3' : 'px-2'}`}>
+        <div className={`border-t border-white/8 py-4 ${showExpanded ? 'px-3' : 'px-2'}`}>
           <BusinessInfo
             businessInfo={businessInfo}
             financialMetrics={financialMetrics}
@@ -237,7 +237,7 @@ export default function CollapsibleSidebar({
                 disabled
                 title="Theme toggle arrives in Phase 7"
                 aria-label="Theme toggle arrives in Phase 7"
-                className={`focus-ring-control mt-1 flex w-full items-center rounded-2xl border border-white/10 bg-white/5 py-3 text-left text-text-secondary opacity-70 ${
+                className={`sidebar-action-surface focus-ring-control mt-1 flex w-full items-center rounded-2xl py-3 text-left text-text-secondary opacity-70 ${
                   showExpanded ? 'gap-3 px-3' : 'justify-center px-2'
                 }`}
               >

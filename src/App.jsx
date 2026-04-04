@@ -13,6 +13,7 @@ import ChatBot from './components/chat/ChatBot';
 import Education from './components/education/Education';
 import CursorSpotlight from './components/shared/CursorSpotlight';
 import ParticleGrid from './components/shared/ParticleGrid';
+import ScrollProgress from './components/shared/ScrollProgress';
 import CollapsibleSidebar from './components/layout/CollapsibleSidebar';
 import TopBar from './components/layout/TopBar';
 
@@ -62,11 +63,12 @@ function Dashboard() {
   const sidebarOffset = viewportMode === 'mobile' ? 0 : sidebarExpanded ? 280 : 64;
 
   return (
-    <>
+    <div className="app-background">
       <div className="animated-bg" />
       <ParticleGrid />
       <div className="noise-overlay" />
       <CursorSpotlight />
+      <ScrollProgress />
 
       <CollapsibleSidebar
         viewportMode={viewportMode}
@@ -114,7 +116,7 @@ function Dashboard() {
           </AnimatePresence>
         </div>
       </MotionMain>
-    </>
+    </div>
   );
 }
 

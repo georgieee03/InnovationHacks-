@@ -1,12 +1,15 @@
 import { motion } from 'framer-motion';
 
+const MotionDiv = motion.div;
+const MotionP = motion.p;
+
 export default function LoadingSpinner({ message, variant = 'default' }) {
   if (variant === 'dots') {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <div className="flex gap-2">
           {[0, 1, 2].map((i) => (
-            <motion.div
+            <MotionDiv
               key={i}
               className="w-3 h-3 rounded-full bg-primary"
               animate={{
@@ -23,14 +26,14 @@ export default function LoadingSpinner({ message, variant = 'default' }) {
           ))}
         </div>
         {message && (
-          <motion.p
+          <MotionP
             className="mt-4 text-sm text-text-secondary"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
             {message}
-          </motion.p>
+          </MotionP>
         )}
       </div>
     );
@@ -39,8 +42,8 @@ export default function LoadingSpinner({ message, variant = 'default' }) {
   if (variant === 'pulse') {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <motion.div
-          className="w-16 h-16 rounded-full bg-gradient-to-br from-primary via-accent-purple to-accent-green"
+        <MotionDiv
+          className="h-16 w-16 rounded-full border border-white/10 bg-gradient-to-br from-white/20 via-white/10 to-transparent"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.5, 1, 0.5],
@@ -52,14 +55,14 @@ export default function LoadingSpinner({ message, variant = 'default' }) {
           }}
         />
         {message && (
-          <motion.p
+          <MotionP
             className="mt-4 text-sm text-text-secondary"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
             {message}
-          </motion.p>
+          </MotionP>
         )}
       </div>
     );
@@ -68,7 +71,7 @@ export default function LoadingSpinner({ message, variant = 'default' }) {
   // Default spinner
   return (
     <div className="flex flex-col items-center justify-center py-12">
-      <motion.div
+      <MotionDiv
         className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full"
         animate={{ rotate: 360 }}
         transition={{
@@ -78,14 +81,14 @@ export default function LoadingSpinner({ message, variant = 'default' }) {
         }}
       />
       {message && (
-        <motion.p
+        <MotionP
           className="mt-4 text-sm text-text-secondary"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
           {message}
-        </motion.p>
+        </MotionP>
       )}
     </div>
   );

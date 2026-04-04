@@ -4,12 +4,14 @@ import { useRef } from 'react';
 import { useCardTilt } from '../../hooks/useCursorPosition';
 import StatValue from '../shared/StatValue';
 
+const MotionDiv = motion.div;
+
 const cardVariants = {
   hidden: { opacity: 0, x: -20 },
-  visible: (i) => ({
+  visible: (index) => ({
     opacity: 1,
     x: 0,
-    transition: { duration: 0.4, delay: i * 0.1 },
+    transition: { duration: 0.4, delay: index * 0.1 },
   }),
 };
 
@@ -18,9 +20,9 @@ function AccountCard({ acct, index }) {
   const tilt = useCardTilt(cardRef, 5);
 
   return (
-    <motion.div
+    <MotionDiv
       ref={cardRef}
-      className="group flex items-center gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all duration-300"
+      className="group flex items-center gap-4 rounded-lg border border-white/10 bg-white/5 p-4 transition-all duration-300 hover:bg-white/10 hover:border-primary/30"
       custom={index}
       initial="hidden"
       animate="visible"
@@ -32,15 +34,21 @@ function AccountCard({ acct, index }) {
         willChange: 'transform',
       }}
     >
-      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-        <Landmark className="w-5 h-5 text-primary" />
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+        <Landmark className="h-5 w-5 text-primary" />
       </div>
       <div className="flex-1">
         <p className="text-sm font-normal text-text-primary">{acct.name}</p>
-        <p className="text-xs font-light text-text-secondary">{acct.institution} · {acct.type}</p>
+        <p className="text-xs font-light text-text-secondary">{acct.institution} - {acct.type}</p>
       </div>
-      <StatValue value={acct.balance.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })} color="neutral" size="sm" className="text-right" />
-    </motion.div>
+      <StatValue
+        value={acct.balance.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
+        color="neutral"
+        size="sm"
+        reflective={false}
+        className="text-right"
+      />
+    </MotionDiv>
   );
 }
 
@@ -49,10 +57,10 @@ export default function AccountBalances({ accounts }) {
 
   return (
     <div className="glass-card p-5">
-      <h3 className="text-2xl font-heading font-light tracking-[-0.02em] text-text-primary mb-4">Account Balances</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {accounts.map((acct, i) => (
-          <AccountCard key={acct.id} acct={acct} index={i} />
+      <h3 className="mb-4 text-2xl font-heading font-light tracking-[-0.02em] text-text-primary">Account Balances</h3>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {accounts.map((acct, index) => (
+          <AccountCard key={acct.id} acct={acct} index={index} />
         ))}
       </div>
     </div>

@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const MotionButton = motion.button;
+const MotionSpan = motion.span;
+
 export default function RippleButton({
   children,
   onClick,
@@ -51,14 +54,14 @@ export default function RippleButton({
   };
 
   return (
-    <motion.button
+    <MotionButton
       onClick={handleClick}
       disabled={disabled}
       className={`
         relative overflow-hidden
         inline-flex items-center justify-center gap-2
         font-semibold rounded-lg
-        border backdrop-blur-sm
+        border
         transition-all duration-200
         disabled:opacity-50 disabled:cursor-not-allowed
         ${variants[variant]}
@@ -75,7 +78,7 @@ export default function RippleButton({
 
       <AnimatePresence>
         {ripples.map((ripple) => (
-          <motion.span
+          <MotionSpan
             key={ripple.id}
             className="absolute rounded-full bg-white/30 pointer-events-none"
             style={{
@@ -95,6 +98,6 @@ export default function RippleButton({
           />
         ))}
       </AnimatePresence>
-    </motion.button>
+    </MotionButton>
   );
 }

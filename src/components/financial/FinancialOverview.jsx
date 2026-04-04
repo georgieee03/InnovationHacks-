@@ -9,12 +9,14 @@ import SpendingChart from './SpendingChart';
 import TransactionList from './TransactionList';
 import EmergencyFund from './EmergencyFund';
 
+const MotionDiv = motion.div;
+
 const sectionVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: (i) => ({
+  visible: (index) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4, delay: i * 0.1 },
+    transition: { duration: 0.4, delay: index * 0.1 },
   }),
 };
 
@@ -35,7 +37,7 @@ export default function FinancialOverview() {
         <div>
           <h2 className="text-4xl font-heading font-thin tracking-[-0.03em] text-text-primary">Financial Overview</h2>
           <p className="mt-1.5 text-sm font-light text-text-secondary">
-            {businessInfo?.name} · Nov 2025 to Feb 2026
+            {businessInfo?.name} - Nov 2025 to Feb 2026
           </p>
         </div>
 
@@ -47,29 +49,29 @@ export default function FinancialOverview() {
             title="Monthly Runway"
             value={`${financialMetrics.monthsOfRunway} months`}
             color={runwayColor}
-            subtitle={financialMetrics.monthsOfRunway < 3 ? 'Critical · below 3 months' : undefined}
+            subtitle={financialMetrics.monthsOfRunway < 3 ? 'Critical - below 3 months' : undefined}
             delay={0.2}
           />
         </div>
 
-        <motion.div custom={1} initial="hidden" animate="visible" variants={sectionVariants}>
+        <MotionDiv custom={1} initial="hidden" animate="visible" variants={sectionVariants}>
           <AccountBalances accounts={accounts} />
-        </motion.div>
+        </MotionDiv>
 
-        <motion.div custom={2} initial="hidden" animate="visible" variants={sectionVariants}>
+        <MotionDiv custom={2} initial="hidden" animate="visible" variants={sectionVariants}>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <CashFlowChart data={financialMetrics.monthlyBreakdown} />
             <SpendingChart data={financialMetrics.spendingByCategory} />
           </div>
-        </motion.div>
+        </MotionDiv>
 
-        <motion.div custom={3} initial="hidden" animate="visible" variants={sectionVariants}>
+        <MotionDiv custom={3} initial="hidden" animate="visible" variants={sectionVariants}>
           <EmergencyFund metrics={financialMetrics} riskFactors={riskFactors} businessInfo={businessInfo} />
-        </motion.div>
+        </MotionDiv>
 
-        <motion.div custom={4} initial="hidden" animate="visible" variants={sectionVariants}>
+        <MotionDiv custom={4} initial="hidden" animate="visible" variants={sectionVariants}>
           <TransactionList transactions={financialMetrics.recentTransactions} />
-        </motion.div>
+        </MotionDiv>
       </div>
     </AnimatePresence>
   );
