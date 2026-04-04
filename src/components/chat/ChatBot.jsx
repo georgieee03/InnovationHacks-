@@ -287,13 +287,13 @@ export default function ChatBot() {
             <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`flex max-w-[88%] items-start gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                  message.role === 'user' ? 'bg-primary text-white shadow-[0_10px_22px_rgba(6,182,212,0.22)]' : 'surface-panel text-text-secondary'
+                  message.role === 'user' ? 'bg-primary text-white shadow-[0_10px_22px_rgba(0,207,49,0.24)]' : 'surface-panel text-text-secondary'
                 }`}>
                   {message.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                 </div>
                 <div className={`rounded-2xl border px-4 py-3 ${
                   message.role === 'user'
-                    ? 'border-primary/30 bg-primary/15 text-text-primary shadow-[0_14px_30px_rgba(6,182,212,0.12)]'
+                    ? 'border-primary/30 bg-primary/15 text-text-primary shadow-[0_14px_30px_rgba(0,207,49,0.14)]'
                     : 'surface-panel text-text-secondary'
                 }`}>
                   <MessageBody text={message.text} />
@@ -343,7 +343,7 @@ export default function ChatBot() {
               type="submit"
               aria-label="Send message"
               disabled={!input.trim() || isTyping}
-              className="focus-ring-brand inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-white shadow-[0_16px_30px_rgba(6,182,212,0.18)] transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_18px_34px_rgba(6,182,212,0.24)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="focus-ring-brand inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-white shadow-[0_16px_30px_rgba(0,207,49,0.2)] transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_18px_34px_rgba(0,207,49,0.26)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Send className="h-4 w-4" />
             </button>

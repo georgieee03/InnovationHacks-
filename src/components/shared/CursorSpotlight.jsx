@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import useTheme from '../../hooks/useTheme';
 
-const SPOTLIGHT_SIZE = 520;
+const SPOTLIGHT_SIZE = 300;
 const HALF_SPOTLIGHT = SPOTLIGHT_SIZE / 2;
 
 export default function CursorSpotlight() {
@@ -11,8 +11,8 @@ export default function CursorSpotlight() {
   const currentRef = useRef({ x: 0, y: 0, opacity: 0, scale: 0.94 });
   const targetRef = useRef({ x: 0, y: 0, opacity: 0, scale: 0.94 });
   const spotlightGradient = theme === 'light'
-    ? 'radial-gradient(circle, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.2) 14%, rgba(8, 145, 178, 0.08) 32%, rgba(8, 145, 178, 0.03) 48%, rgba(15, 23, 42, 0.025) 62%, transparent 80%)'
-    : 'radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.085) 16%, rgba(255, 255, 255, 0.04) 34%, rgba(6, 182, 212, 0.05) 50%, rgba(6, 182, 212, 0.018) 62%, transparent 80%)';
+    ? 'radial-gradient(circle, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.24) 14%, rgba(0, 207, 49, 0.16) 32%, rgba(0, 207, 49, 0.07) 48%, rgba(15, 23, 42, 0.03) 62%, transparent 80%)'
+    : 'radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.12) 16%, rgba(255, 255, 255, 0.055) 34%, rgba(0, 207, 49, 0.12) 50%, rgba(0, 207, 49, 0.05) 62%, transparent 80%)';
 
   useEffect(() => {
     if (typeof window === 'undefined' || window.matchMedia('(pointer: coarse)').matches) {

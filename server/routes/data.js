@@ -1,7 +1,80 @@
+import { readFileSync } from 'node:fs';
 import { Router } from 'express';
 import { getDb } from '../db.js';
 
+const riskFactorFallbacks = JSON.parse(
+  readFileSync(new URL('../../src/data/riskFactors.json', import.meta.url), 'utf8')
+);
+
 const router = Router();
+
+router.get('/zip-lookup', async (req, res) => {
+  const zip = String(req.query.zip || '').trim();
+  const fallbackLocation = riskFactorFallbacks[zip] || null;
+
+  if (!/^\d{5}$/.test(zip)) {
+    return res.status(400).json({ error: 'ZIP code must be 5 digits' });
+  }
+
+  try {
+    const response = await fetch(`https://api.zippopotam.us/us/${encodeURIComponent(zip)}`);
+
+    if (response.status === 404) {
+      if (fallbackLocation?.city && fallbackLocation?.state) {
+        return res.json({
+          zip,
+          city: fallbackLocation.city,
+          state: fallbackLocation.state,
+          source: 'local-risk-fallback',
+        });
+      }
+
+      return res.json(null);
+    }
+
+    if (!response.ok) {
+      throw new Error(`ZIP lookup failed with status ${response.status}`);
+    }
+
+    const payload = await response.json();
+    const place = payload?.places?.[0];
+
+    if (!place) {
+      if (fallbackLocation?.city && fallbackLocation?.state) {
+        return res.json({
+          zip,
+          city: fallbackLocation.city,
+          state: fallbackLocation.state,
+          source: 'local-risk-fallback',
+        });
+      }
+
+      return res.json(null);
+    }
+
+    return res.json({
+      zip,
+      city: place['place name'] || '',
+      state: place['state abbreviation'] || '',
+      stateName: place.state || '',
+      country: payload.country || 'United States',
+      source: 'zippopotam',
+    });
+  } catch (error) {
+    console.error('ZIP lookup error:', error);
+
+    if (fallbackLocation?.city && fallbackLocation?.state) {
+      return res.json({
+        zip,
+        city: fallbackLocation.city,
+        state: fallbackLocation.state,
+        source: 'local-risk-fallback',
+      });
+    }
+
+    return res.status(500).json({ error: 'Failed to look up ZIP code' });
+  }
+});
 
 router.get('/business-types', async (_req, res) => {
   const sql = getDb();

@@ -18,8 +18,8 @@ export default function NavigationItem({ item, isActive, isExpanded, onClick, bu
   const Icon = item.icon;
   const badgeClass = badgeStyles[item.badge?.color || 'neutral'];
   const activeStateClass = theme === 'light'
-    ? 'border-primary bg-primary/10 text-text-primary shadow-[0_12px_24px_rgba(15,23,42,0.08),0_0_18px_rgba(8,145,178,0.12)]'
-    : 'border-primary bg-white/[0.07] text-text-primary shadow-[0_10px_24px_rgba(0,0,0,0.18),0_0_18px_rgba(6,182,212,0.08)]';
+    ? 'border-primary bg-primary/10 text-text-primary shadow-[0_12px_24px_rgba(15,23,42,0.08),0_0_18px_rgba(0,207,49,0.14)]'
+    : 'border-primary bg-white/[0.07] text-text-primary shadow-[0_10px_24px_rgba(0,0,0,0.18),0_0_18px_rgba(0,207,49,0.1)]';
   const inactiveStateClass = theme === 'light'
     ? 'border-transparent bg-transparent text-text-secondary hover:border-primary/60 hover:bg-primary/[0.06] hover:text-text-primary'
     : 'border-transparent bg-transparent text-text-secondary hover:border-primary/60 hover:bg-white/[0.045] hover:text-text-primary';

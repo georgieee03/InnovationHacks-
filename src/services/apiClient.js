@@ -99,6 +99,7 @@ export const api = {
   }),
   getBusiness: (id) => fetchAPI(`/business${id ? `?id=${encodeURIComponent(id)}` : ''}`),
   getTransactions: (businessId) => fetchAPI(`/transactions?businessId=${encodeURIComponent(businessId)}`),
+  lookupZip: (zip) => fetchAPI(`/zip-lookup?zip=${encodeURIComponent(zip)}`),
   getRiskFactors: (zip) => fetchAPI(`/risk-factors?zip=${encodeURIComponent(zip)}`),
   getRecommendations: (businessType) => fetchAPI(`/recommendations?businessType=${encodeURIComponent(businessType)}`),
   getBusinessTypes: () => fetchAPI('/business-types'),

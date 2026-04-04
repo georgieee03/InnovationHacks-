@@ -76,7 +76,7 @@ export default function RecommendationCard({ item, financialMetrics, delay = 0 }
           )}
 
           {isActionable && (
-            <button className="focus-ring-brand mt-3 rounded-lg bg-primary px-4 py-1.5 text-sm font-normal text-white shadow-[0_14px_28px_rgba(6,182,212,0.18)] transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_18px_34px_rgba(6,182,212,0.24)]">
+            <button className="focus-ring-brand mt-3 rounded-lg bg-primary px-4 py-1.5 text-sm font-normal text-white shadow-[0_14px_28px_rgba(0,207,49,0.2)] transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_18px_34px_rgba(0,207,49,0.26)]">
               Get Quote
             </button>
           )}

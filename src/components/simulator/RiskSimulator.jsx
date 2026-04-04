@@ -99,9 +99,9 @@ const STATUS_STYLES = {
 };
 
 const SELECTED_SCENARIO_STYLE = {
-  '--surface-panel-border-color': 'rgba(6, 182, 212, 0.35)',
-  '--surface-panel-strong-background': 'linear-gradient(180deg, rgba(6, 182, 212, 0.18) 0%, rgba(6, 182, 212, 0.08) 38%, rgba(255, 255, 255, 0.04) 100%), rgba(255, 255, 255, 0.05)',
-  '--surface-panel-strong-shadow-color': '0 18px 34px rgba(6, 182, 212, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -1px 0 rgba(255, 255, 255, 0.03)',
+  '--surface-panel-border-color': 'rgba(0, 207, 49, 0.38)',
+  '--surface-panel-strong-background': 'linear-gradient(180deg, rgba(0, 207, 49, 0.2) 0%, rgba(0, 207, 49, 0.1) 38%, rgba(255, 255, 255, 0.04) 100%), rgba(255, 255, 255, 0.05)',
+  '--surface-panel-strong-shadow-color': '0 18px 34px rgba(0, 207, 49, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -1px 0 rgba(255, 255, 255, 0.03)',
 };
 
 const COVERAGE_SURFACE_STYLES = {
@@ -216,7 +216,7 @@ export default function RiskSimulator() {
                 style={selected ? SELECTED_SCENARIO_STYLE : undefined}
                 className={`rounded-2xl border p-4 text-left transition-all duration-200 ${
                   selected
-                    ? 'surface-panel-strong focus-ring-brand border-primary/35 shadow-[0_0_0_1px_rgba(6,182,212,0.12)]'
+                    ? 'surface-panel-strong focus-ring-brand border-primary/35 shadow-[0_0_0_1px_rgba(0,207,49,0.16)]'
                     : 'surface-panel focus-ring-brand hover:border-white/20'
                 }`}
               >
@@ -225,7 +225,7 @@ export default function RiskSimulator() {
                     <p className="text-[11px] font-normal uppercase tracking-[0.05em] text-text-secondary">{item.category}</p>
                     <p className="mt-2 text-lg font-normal tracking-[-0.02em] text-text-primary">{item.label}</p>
                   </div>
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${selected ? 'bg-primary/15 text-primary shadow-[0_12px_24px_rgba(6,182,212,0.14)]' : 'surface-chip text-text-secondary'}`}>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${selected ? 'bg-primary/15 text-primary shadow-[0_12px_24px_rgba(0,207,49,0.18)]' : 'surface-chip text-text-secondary'}`}>
                     <Icon className="h-5 w-5" />
                   </div>
                 </div>

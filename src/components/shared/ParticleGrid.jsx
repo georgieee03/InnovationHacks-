@@ -19,9 +19,9 @@ export default function ParticleGrid() {
       ? {
           pointerGlow: [
             [0, 'rgba(255, 255, 255, 0.24)'],
-            [0.26, 'rgba(8, 145, 178, 0.08)'],
-            [0.58, 'rgba(8, 145, 178, 0.035)'],
-            [1, 'rgba(8, 145, 178, 0)'],
+            [0.26, 'rgba(0, 207, 49, 0.1)'],
+            [0.58, 'rgba(0, 207, 49, 0.045)'],
+            [1, 'rgba(0, 207, 49, 0)'],
           ],
           particleFill: 'rgba(15, 23, 42, 0.18)',
           lineOpacity: 0.085,
@@ -30,8 +30,8 @@ export default function ParticleGrid() {
           pointerGlow: [
             [0, 'rgba(255, 255, 255, 0.08)'],
             [0.28, 'rgba(255, 255, 255, 0.03)'],
-            [0.62, 'rgba(6, 182, 212, 0.02)'],
-            [1, 'rgba(6, 182, 212, 0)'],
+            [0.62, 'rgba(0, 207, 49, 0.04)'],
+            [1, 'rgba(0, 207, 49, 0)'],
           ],
           particleFill: 'rgba(255, 255, 255, 0.2)',
           lineOpacity: 0.11,

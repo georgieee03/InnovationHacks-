@@ -54,7 +54,7 @@ export default function MagneticButton({ children, className, onClick, ...props 
       transition={{ type: 'spring', stiffness: 380, damping: 24 }}
       whileHover={{
         scale: 1.02,
-        boxShadow: '0 0 20px rgba(6, 182, 212, 0.2)',
+        boxShadow: '0 0 20px rgba(0, 207, 49, 0.24)',
       }}
       whileTap={{ scale: 0.96 }}
       {...props}

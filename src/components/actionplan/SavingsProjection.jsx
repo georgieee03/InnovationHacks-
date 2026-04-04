@@ -20,7 +20,7 @@ export default function SavingsProjection({ metrics }) {
   const { ref, controls, inView, prefersReducedMotion } = useScrollAnimation();
   const chartColors = theme === 'light'
     ? {
-        primary: '#0891b2',
+        primary: '#00CF31',
         success: '#059669',
         grid: 'rgba(15, 23, 42, 0.08)',
         axisText: '#52525b',
@@ -30,7 +30,7 @@ export default function SavingsProjection({ metrics }) {
         tooltipShadow: '0 18px 34px rgba(15, 23, 42, 0.12)',
       }
     : {
-        primary: '#06b6d4',
+        primary: '#00CF31',
         success: '#10b981',
         grid: 'rgba(255,255,255,0.06)',
         axisText: '#71717a',
