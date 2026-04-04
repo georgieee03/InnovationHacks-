@@ -99,6 +99,10 @@ textarea {
   isolation: isolate;
 }
 
+body.sidebar-open {
+  overflow: hidden;
+}
+
 /* Responsive Typography */
 @media (max-width: 1024px) {
   h1 { font-size: 2.5rem; }
@@ -131,6 +135,38 @@ textarea {
 .glass-card:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(6, 182, 212, 0.4);
+}
+
+.topbar-glass {
+  background:
+    linear-gradient(180deg, rgba(10, 14, 26, 0.92) 0%, rgba(10, 14, 26, 0.78) 100%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.sidebar-backdrop {
+  background: rgba(10, 14, 26, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.sidebar-tooltip {
+  background: rgba(10, 14, 26, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 18px 38px rgba(2, 6, 23, 0.35),
+    0 0 0 1px rgba(6, 182, 212, 0.08);
+}
+
+.focus-ring-control:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(10, 14, 26, 1),
+    0 0 0 4px rgba(6, 182, 212, 0.45);
+}
+
+.enterprise-main {
+  transition: margin-left 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Animated Background Gradient */
