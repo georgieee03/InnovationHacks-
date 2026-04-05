@@ -11,8 +11,8 @@ router.get('/session', (req, res) => {
     enabled: authEnabled,
     authenticated: Boolean(currentUser && currentUser.auth0Id),
     user: currentUser,
-    loginUrl: '/api/auth/login',
-    logoutUrl: '/api/auth/logout',
+    loginUrl: '/api/login',
+    logoutUrl: '/api/logout',
   });
 });
 

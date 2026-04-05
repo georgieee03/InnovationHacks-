@@ -170,8 +170,8 @@ export function AppProvider({ children }) {
   const [authEnabled, setAuthEnabled] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authUser, setAuthUser] = useState(null);
-  const [loginUrl, setLoginUrl] = useState('/api/auth/login');
-  const [logoutUrl, setLogoutUrl] = useState('/api/auth/logout');
+  const [loginUrl, setLoginUrl] = useState('/api/login');
+  const [logoutUrl, setLogoutUrl] = useState('/api/logout');
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [plaidConnected, setPlaidConnected] = useState(false);
@@ -324,8 +324,8 @@ export function AppProvider({ children }) {
           enabled: false,
           authenticated: false,
           user: null,
-          loginUrl: '/api/auth/login',
-          logoutUrl: '/api/auth/logout',
+          loginUrl: '/api/login',
+          logoutUrl: '/api/logout',
         }));
 
         if (!active) return;
@@ -333,8 +333,8 @@ export function AppProvider({ children }) {
         setAuthEnabled(Boolean(session.enabled));
         setIsAuthenticated(Boolean(session.authenticated));
         setAuthUser(session.user || null);
-        setLoginUrl(session.loginUrl || '/api/auth/login');
-        setLogoutUrl(session.logoutUrl || '/api/auth/logout');
+        setLoginUrl(session.loginUrl || '/api/login');
+        setLogoutUrl(session.logoutUrl || '/api/logout');
 
         if (session.enabled && !session.authenticated) {
           setBusinessInfo(null);
