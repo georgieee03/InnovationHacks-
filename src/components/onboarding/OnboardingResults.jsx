@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { CheckCircle2, ChevronDown, Building2, Search, ListChecks, Lightbulb, AlertTriangle, Landmark } from 'lucide-react';
+import { CheckCircle2, ChevronDown, Building2, Search, ListChecks, Lightbulb, AlertTriangle } from 'lucide-react';
 import RippleButton from '../shared/RippleButton';
+import OnboardingPlaidConnect from './OnboardingPlaidConnect';
 
 const riskColor = {
   low: 'text-covered border-covered/30 bg-covered/10',
@@ -8,19 +9,27 @@ const riskColor = {
   high: 'text-gap border-gap/30 bg-gap/10',
 };
 
-export default function OnboardingResults({ result, onSave, onConnectPlaid }) {
+export default function OnboardingResults({ result, onSave, formData }) {
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [expanded, setExpanded] = useState('entity');
 
   const toggle = (id) => setExpanded(expanded === id ? null : id);
 
-  const handleSave = async (connectBank = false) => {
+  const handleSaveForPlaid = async () => {
     setSaving(true);
     try {
-      await onSave();
-      if (connectBank && onConnectPlaid) {
-        onConnectPlaid();
-      }
+      await onSave(true); // skipOnboarding = true — stay on this page
+      setSaved(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveAndGo = async () => {
+    setSaving(true);
+    try {
+      await onSave(false); // complete onboarding — go to dashboard
     } finally {
       setSaving(false);
     }
@@ -160,38 +169,45 @@ export default function OnboardingResults({ result, onSave, onConnectPlaid }) {
           )}
 
           {/* Bank connection */}
-          <div className="glass-card rounded-[24px] p-5">
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-covered/10">
-                <Landmark className="h-5 w-5 text-covered" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-text-primary">Connect your bank for deeper insights</p>
-                <p className="mt-1 text-xs leading-relaxed text-text-secondary">
-                  Linking your bank lets us automatically track income and expenses, spot tax deductions, and give you real-time cash flow visibility.
-                </p>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <RippleButton variant="primary" size="md" onClick={() => handleSave(true)} disabled={saving}>
-                    {saving ? 'Saving...' : 'Save & connect bank'}
-                  </RippleButton>
-                  <RippleButton variant="secondary" size="md" onClick={() => handleSave(false)} disabled={saving}>
-                    {saving ? 'Saving...' : 'Save and go to dashboard'}
-                  </RippleButton>
-                </div>
-                <p className="mt-2 text-xs text-text-secondary/60">Optional — you can connect your bank later from the dashboard.</p>
+          {saved ? (
+            <OnboardingPlaidConnect />
+          ) : (
+            <div className="glass-card rounded-[24px] p-5">
+              <p className="text-sm font-medium text-text-primary">Connect your bank for deeper insights</p>
+              <p className="mt-2 text-xs leading-relaxed text-text-secondary">
+                Save your plan first, then connect your bank to automatically track income, expenses, and deductions.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <RippleButton variant="primary" size="md" onClick={handleSaveForPlaid} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save & connect bank'}
+                </RippleButton>
+                <RippleButton variant="secondary" size="md" onClick={handleSaveAndGo} disabled={saving}>
+                  {saving ? 'Saving...' : 'Skip — go to dashboard'}
+                </RippleButton>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Main CTA */}
-          <div className="pb-8 pt-2">
-            <RippleButton variant="primary" size="lg" className="w-full" onClick={() => handleSave(false)} disabled={saving}>
-              {saving ? 'Saving your plan...' : 'Save my plan and go to dashboard'}
-            </RippleButton>
-            <p className="mt-3 text-center text-xs text-text-secondary/60">
-              Your plan is saved and updated as your business grows.
-            </p>
-          </div>
+          {/* Main CTA — only show if not yet saved for Plaid */}
+          {!saved && (
+            <div className="pb-8 pt-2">
+              <RippleButton variant="primary" size="lg" className="w-full" onClick={handleSaveAndGo} disabled={saving}>
+                {saving ? 'Saving your plan...' : 'Save my plan and go to dashboard'}
+              </RippleButton>
+              <p className="mt-3 text-center text-xs text-text-secondary/60">
+                Your plan is saved and updated as your business grows.
+              </p>
+            </div>
+          )}
+
+          {/* After Plaid connect, show a go-to-dashboard button */}
+          {saved && (
+            <div className="pb-8 pt-2">
+              <RippleButton variant="secondary" size="lg" className="w-full" onClick={handleSaveAndGo} disabled={saving}>
+                Continue to dashboard
+              </RippleButton>
+            </div>
+          )}
         </div>
       </div>
     </div>

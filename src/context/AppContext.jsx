@@ -251,23 +251,46 @@ export function AppProvider({ children }) {
       remoteRiskFactors = localSession.riskFactors;
     }
 
-    let remoteBundle = { accounts: [], transactions: [] };
+    // Try loading Plaid data first (auth0_id-scoped), fall back to DB transactions, then local
+    let nextAccounts = localSession.accounts;
+    let nextTransactions = localSession.transactions;
+    let hasPlaid = false;
+
     try {
-      remoteBundle = await api.getTransactions(normalizedBusiness.id);
+      const [plaidAccounts, plaidTransactions] = await Promise.all([
+        api.getPlaidAccounts(),
+        api.getPlaidTransactions(),
+      ]);
+
+      const plaidAccts = (plaidAccounts.accounts || []).map(normalizeAccount);
+      const plaidTxns = (plaidTransactions.transactions || []).map(normalizeTransaction);
+
+      if (plaidAccts.length > 0) {
+        nextAccounts = plaidAccts;
+        nextTransactions = plaidTxns;
+        hasPlaid = true;
+      }
     } catch {
-      remoteBundle = { accounts: [], transactions: [] };
+      // Plaid not connected or failed — try DB transactions
     }
 
-    const nextAccounts = remoteBundle.accounts?.length
-      ? remoteBundle.accounts.map(normalizeAccount)
-      : localSession.accounts;
-    const nextTransactions = remoteBundle.transactions?.length
-      ? remoteBundle.transactions.map(normalizeTransaction)
-      : localSession.transactions;
+    if (!hasPlaid) {
+      try {
+        const remoteBundle = await api.getTransactions(normalizedBusiness.id);
+        if (remoteBundle.accounts?.length) {
+          nextAccounts = remoteBundle.accounts.map(normalizeAccount);
+        }
+        if (remoteBundle.transactions?.length) {
+          nextTransactions = remoteBundle.transactions.map(normalizeTransaction);
+        }
+      } catch {
+        // Use local fallback
+      }
+    }
 
     applyLoadedState(normalizedBusiness, nextAccounts, nextTransactions, remoteRiskFactors, {
       isOnboarded: true,
-      plaidConnected: false,
+      plaidConnected: hasPlaid,
       ...options,
     });
   }, [applyLoadedState]);

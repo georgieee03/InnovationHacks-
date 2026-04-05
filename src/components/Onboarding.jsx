@@ -22,11 +22,12 @@ import RippleButton from './shared/RippleButton';
  */
 
 export default function Onboarding() {
-  const { onboard, loadPlaidData, preparePlaidOnboarding, loadDemo, authUser } = useContext(AppContext);
+  const { onboard, loadPlaidData, loadDemo, authUser } = useContext(AppContext);
   const [stage, setStage] = useState('intro');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [savedSession, setSavedSession] = useState(null);
+  const [derivedFormData, setDerivedFormData] = useState(null);
 
   // Check for pending Plaid session on mount
   useEffect(() => {
@@ -56,7 +57,7 @@ export default function Onboarding() {
     }
   }, []);
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async (skipOnboarding = false) => {
     if (!result?.businessProfile) return;
 
     const profile = result.businessProfile;
@@ -70,35 +71,33 @@ export default function Onboarding() {
       employees: profile.employeeCount || 1,
     };
 
-    const session = await onboard(formData);
-    setSavedSession(session);
+    setDerivedFormData(formData);
 
-    // Save compliance items from AI results
-    if (result.complianceItems?.length && session?.business?.id) {
-      for (const item of result.complianceItems) {
-        try {
-          // Compliance items are saved via the workspace route which auto-creates them
-          // The onboard flow already seeds compliance via the business route
-        } catch {
-          // Non-blocking
-        }
-      }
+    if (skipOnboarding) {
+      // Save business but don't complete onboarding — stay on results page for Plaid
+      const session = await onboard(formData, { markOnboarded: false });
+      setSavedSession(session);
+    } else {
+      // Save and go straight to dashboard
+      const session = await onboard(formData);
+      setSavedSession(session);
     }
   }, [result, onboard]);
 
-  const handleConnectPlaid = useCallback(async () => {
-    if (!savedSession?.business) return;
-    const formData = {
-      name: savedSession.business.name,
-      type: savedSession.business.type,
-      zip: savedSession.business.zip,
-      city: savedSession.business.city,
-      state: savedSession.business.state,
-      monthlyRevenue: savedSession.business.monthlyRevenue,
-      employees: savedSession.business.employees,
+  const getFormData = useCallback(() => {
+    if (derivedFormData) return derivedFormData;
+    if (!result?.businessProfile) return null;
+    const profile = result.businessProfile;
+    return {
+      name: profile.businessName || 'My Business',
+      type: profile.businessType || 'service',
+      zip: profile.businessAddress?.zip || '',
+      city: profile.businessAddress?.city || '',
+      state: profile.businessAddress?.state || profile.entityState || '',
+      monthlyRevenue: parseRevenueEstimate(result),
+      employees: profile.employeeCount || 1,
     };
-    await preparePlaidOnboarding(formData);
-  }, [savedSession, preparePlaidOnboarding]);
+  }, [derivedFormData, result]);
 
   const handleDemo = useCallback(async () => {
     setStage('processing');
@@ -145,7 +144,7 @@ export default function Onboarding() {
       <OnboardingResults
         result={result}
         onSave={handleSave}
-        onConnectPlaid={handleConnectPlaid}
+        formData={getFormData()}
       />
     );
   }

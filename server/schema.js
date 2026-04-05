@@ -42,6 +42,19 @@ async function ensureBusinesses(sql) {
   await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS total_revenue_ytd DECIMAL(12,2) DEFAULT 0`;
   await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS total_expenses_ytd DECIMAL(12,2) DEFAULT 0`;
   await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS financials_updated_at TIMESTAMP`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS business_description TEXT DEFAULT ''`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS naics_code TEXT DEFAULT ''`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS ein TEXT`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS formation_date TEXT`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS business_address JSONB DEFAULT '{}'::jsonb`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS operating_jurisdictions JSONB DEFAULT '[]'::jsonb`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS owner_phone TEXT DEFAULT ''`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS has_other_job BOOLEAN DEFAULT FALSE`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS estimated_w2_income DECIMAL(12,2)`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS is_first_time_business BOOLEAN DEFAULT TRUE`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS uses_personal_vehicle BOOLEAN DEFAULT FALSE`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS current_cash_balance DECIMAL(12,2)`;
+  await sql`ALTER TABLE businesses ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`;
   await sql`CREATE UNIQUE INDEX IF NOT EXISTS businesses_auth0_id_key ON businesses(auth0_id)`;
 }
 
@@ -205,6 +218,138 @@ async function ensureLaunchPadTables(sql) {
   await sql`CREATE INDEX IF NOT EXISTS compliance_items_business_id_idx ON compliance_items(business_id)`;
   await sql`CREATE INDEX IF NOT EXISTS funding_opportunities_business_id_idx ON funding_opportunities(business_id)`;
   await sql`CREATE INDEX IF NOT EXISTS growth_actions_business_id_idx ON growth_actions(business_id)`;
+
+  // Add missing columns to quotes (from Prisma schema)
+  await sql`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS sent_at TIMESTAMP`;
+  await sql`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS viewed_at TIMESTAMP`;
+  await sql`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMP`;
+  await sql`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP`;
+  await sql`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS contract_generated BOOLEAN DEFAULT FALSE`;
+  await sql`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS contract_id TEXT`;
+  await sql`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS stripe_payment_intent_id TEXT`;
+  await sql`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS payment_method TEXT`;
+  await sql`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS payment_url TEXT`;
+  await sql`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS follow_ups_sent INTEGER DEFAULT 0`;
+  await sql`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS last_follow_up_at TIMESTAMP`;
+  await sql`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS next_follow_up_at TIMESTAMP`;
+
+  // Add missing columns to compliance_items
+  await sql`ALTER TABLE compliance_items ADD COLUMN IF NOT EXISTS obtained_date TEXT`;
+  await sql`ALTER TABLE compliance_items ADD COLUMN IF NOT EXISTS expiration_date TEXT`;
+  await sql`ALTER TABLE compliance_items ADD COLUMN IF NOT EXISTS renewal_date TEXT`;
+  await sql`ALTER TABLE compliance_items ADD COLUMN IF NOT EXISTS renewal_frequency TEXT`;
+  await sql`ALTER TABLE compliance_items ADD COLUMN IF NOT EXISTS days_until_due INTEGER`;
+  await sql`ALTER TABLE compliance_items ADD COLUMN IF NOT EXISTS penalty_for_non_compliance TEXT`;
+  await sql`ALTER TABLE compliance_items ADD COLUMN IF NOT EXISTS reminder_sent_30_days BOOLEAN DEFAULT FALSE`;
+  await sql`ALTER TABLE compliance_items ADD COLUMN IF NOT EXISTS reminder_sent_14_days BOOLEAN DEFAULT FALSE`;
+  await sql`ALTER TABLE compliance_items ADD COLUMN IF NOT EXISTS reminder_sent_3_days BOOLEAN DEFAULT FALSE`;
+  await sql`ALTER TABLE compliance_items ADD COLUMN IF NOT EXISTS last_checked_at TIMESTAMP DEFAULT NOW()`;
+  await sql`ALTER TABLE compliance_items ADD COLUMN IF NOT EXISTS proof_url TEXT`;
+
+  // Bank transactions (Plaid sync)
+  await sql`
+    CREATE TABLE IF NOT EXISTS bank_transactions (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+      transaction_id TEXT NOT NULL UNIQUE,
+      account_id TEXT NOT NULL,
+      amount DECIMAL(12,2) NOT NULL,
+      date TEXT NOT NULL,
+      name TEXT NOT NULL,
+      merchant_name TEXT,
+      category JSONB DEFAULT '[]'::jsonb,
+      pending BOOLEAN DEFAULT FALSE,
+      payment_channel TEXT DEFAULT '',
+      personal_finance_category JSONB
+    )
+  `;
+
+  // Plaid connections
+  await sql`
+    CREATE TABLE IF NOT EXISTS plaid_connections (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+      item_id TEXT NOT NULL UNIQUE,
+      access_token TEXT NOT NULL,
+      institution_id TEXT NOT NULL DEFAULT '',
+      institution_name TEXT NOT NULL DEFAULT '',
+      accounts JSONB DEFAULT '[]'::jsonb,
+      status TEXT DEFAULT 'active',
+      error_code TEXT,
+      last_synced_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  // Tax summaries
+  await sql`
+    CREATE TABLE IF NOT EXISTS tax_summaries (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+      tax_year INTEGER NOT NULL,
+      quarter INTEGER NOT NULL DEFAULT 0,
+      gross_revenue DECIMAL(12,2) DEFAULT 0,
+      net_revenue DECIMAL(12,2) DEFAULT 0,
+      total_cogs DECIMAL(12,2) DEFAULT 0,
+      gross_profit DECIMAL(12,2) DEFAULT 0,
+      total_expenses DECIMAL(12,2) DEFAULT 0,
+      mileage_deduction DECIMAL(12,2) DEFAULT 0,
+      home_office_deduction DECIMAL(12,2) DEFAULT 0,
+      total_deductions DECIMAL(12,2) DEFAULT 0,
+      net_taxable_income DECIMAL(12,2) DEFAULT 0,
+      estimated_federal_tax DECIMAL(12,2) DEFAULT 0,
+      estimated_state_tax DECIMAL(12,2) DEFAULT 0,
+      estimated_self_employment_tax DECIMAL(12,2) DEFAULT 0,
+      total_estimated_tax DECIMAL(12,2) DEFAULT 0,
+      missed_deductions JSONB DEFAULT '[]'::jsonb,
+      tax_saving_opportunities JSONB DEFAULT '[]'::jsonb,
+      expense_breakdown JSONB DEFAULT '{}'::jsonb,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  // Profit and loss
+  await sql`
+    CREATE TABLE IF NOT EXISTS profit_and_loss (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+      period TEXT NOT NULL,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      revenue DECIMAL(12,2) DEFAULT 0,
+      cogs DECIMAL(12,2) DEFAULT 0,
+      gross_profit DECIMAL(12,2) DEFAULT 0,
+      total_expenses DECIMAL(12,2) DEFAULT 0,
+      net_profit DECIMAL(12,2) DEFAULT 0,
+      profit_margin DECIMAL(8,4) DEFAULT 0,
+      expense_breakdown JSONB DEFAULT '{}'::jsonb,
+      compared_to_previous_period JSONB DEFAULT '{}'::jsonb,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  // Expense categories
+  await sql`
+    CREATE TABLE IF NOT EXISTS expense_categories (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      is_custom BOOLEAN DEFAULT FALSE,
+      is_tax_deductible BOOLEAN DEFAULT TRUE,
+      monthly_total DECIMAL(12,2) DEFAULT 0,
+      yearly_total DECIMAL(12,2) DEFAULT 0,
+      last_updated TIMESTAMP DEFAULT NOW(),
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`CREATE INDEX IF NOT EXISTS bank_transactions_business_id_idx ON bank_transactions(business_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS plaid_connections_business_id_idx ON plaid_connections(business_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS tax_summaries_business_id_idx ON tax_summaries(business_id)`;
 }
 
 async function ensureReferenceData(sql) {
