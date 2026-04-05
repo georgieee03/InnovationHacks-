@@ -103,9 +103,9 @@ export default function DocumentsWorkspace() {
   };
   const unlocked = {
     contracts: true,
-    quotes: counts.contracts > 0,
-    receipts: counts.quotes > 0,
-    compliance: counts.receipts > 0,
+    quotes: true,
+    receipts: true,
+    compliance: true,
   };
   const done = {
     contracts: counts.contracts > 0,

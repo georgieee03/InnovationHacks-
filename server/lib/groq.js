@@ -5,8 +5,25 @@
  */
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+<<<<<<< Updated upstream
 const PRIMARY_MODEL = 'qwen/qwen3-235b-a22b-instruct-2507';
 const VISION_MODEL = 'google/gemini-2.0-flash-001';
+=======
+
+// Fast: used when TinyFish already supplied web context and the AI is only structuring/extracting.
+// Also used for simple generation tasks (quotes, compliance lists, chat).
+const PRIMARY_MODEL = 'google/gemini-2.0-flash-001';
+
+// Accurate: used for complex analysis (taxes, contracts, business advisor) and for any
+// scan endpoint that receives NO TinyFish context and must reason independently.
+const ACCURATE_MODEL = 'google/gemini-2.5-flash-preview';
+
+const VISION_MODEL = 'google/gemini-2.0-flash-001'; // Gemini Flash handles vision natively
+
+// Exported so route files can pick the right tier at call-site.
+export const FAST_MODEL_ID = PRIMARY_MODEL;
+export const ACCURATE_MODEL_ID = ACCURATE_MODEL;
+>>>>>>> Stashed changes
 
 /**
  * Core identity and behavioral guidelines for all AI calls in Launchpad.

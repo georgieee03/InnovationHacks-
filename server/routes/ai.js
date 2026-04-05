@@ -1,18 +1,18 @@
 /**
- * AI routes — ported from LaunchPad's Next.js API routes to Express.
- * All routes use Groq for JSON generation.
+ * AI routes — all use OpenRouter for JSON generation.
  */
 import { Router } from 'express';
+import { TinyFish } from '@tiny-fish/sdk';
 import { requireSession } from '../auth.js';
 import { getDb } from '../db.js';
-import { groqJSON, groqVisionJSON, isGroqConfigured } from '../lib/groq.js';
+import { aiJSON, aiVisionJSON, isAIConfigured, FAST_MODEL_ID, ACCURATE_MODEL_ID } from '../lib/openrouter.js';
 
 const router = Router();
 
 // ─── Business Advisor (onboarding AI) ─────────────────────────────────────────
 
 router.post('/ai/business-advisor', async (req, res) => {
-  if (!isGroqConfigured()) {
+  if (!isAIConfigured()) {
     return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
   }
 
@@ -79,7 +79,7 @@ Return ONLY valid JSON (no markdown):
   "urgentWarnings": ["string"]
 }`;
 
-    const result = await groqJSON(prompt, { maxTokens: 6000 });
+    const result = await aiJSON(prompt, { maxTokens: 6000, model: ACCURATE_MODEL_ID });
     return res.json(result);
   } catch (err) {
     console.error('business-advisor error:', err);
@@ -104,7 +104,7 @@ const RECEIPT_SCHEMA = `{
 const RECEIPT_RULES = `Gas→vehicle_fuel. Restaurant→meals_entertainment,businessPercentage=50. Phone/internet→utilities,50-80%. deductibleAmount=amount×(businessPercentage/100).`;
 
 router.post('/ai/analyze-receipt', requireSession, async (req, res) => {
-  if (!isGroqConfigured()) {
+  if (!isAIConfigured()) {
     return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
   }
 
@@ -125,16 +125,18 @@ router.post('/ai/analyze-receipt', requireSession, async (req, res) => {
     let result;
     if (isImage) {
       try {
-        result = await groqVisionJSON(prompt, fileBase64, fileMimeType);
+        // FAST: Gemini Flash handles vision natively; structuring a receipt image is speed-critical
+        result = await aiVisionJSON(prompt, fileBase64, fileMimeType, { model: FAST_MODEL_ID });
       } catch {
         // Vision failed, fall through to text analysis
       }
     }
 
     if (!result) {
-      // For PDFs or vision fallback, ask Groq to analyze based on description
-      result = await groqJSON(
-        `${prompt}\n\nThe receipt is a ${fileMimeType} file uploaded by the business owner. Since you cannot see the image, generate a reasonable placeholder analysis and set needsMoreInfo to true with pendingQuestion asking the user to provide vendor name and amount.`
+      // FAST: simple placeholder generation when image can't be read
+      result = await aiJSON(
+        `${prompt}\n\nThe receipt is a ${fileMimeType} file uploaded by the business owner. Since you cannot see the image, generate a reasonable placeholder analysis and set needsMoreInfo to true with pendingQuestion asking the user to provide vendor name and amount.`,
+        { model: FAST_MODEL_ID }
       );
     }
 
@@ -148,7 +150,7 @@ router.post('/ai/analyze-receipt', requireSession, async (req, res) => {
 // ─── Analyze Taxes ────────────────────────────────────────────────────────────
 
 router.post('/ai/analyze-taxes', requireSession, async (req, res) => {
-  if (!isGroqConfigured()) {
+  if (!isAIConfigured()) {
     return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
   }
 
@@ -208,7 +210,8 @@ Return ONLY JSON:
   "entityAdvice": "string|null"
 }`;
 
-    const result = await groqJSON(prompt, { maxTokens: 4000 });
+    // ACCURATE: complex financial reasoning over real transaction data
+    const result = await aiJSON(prompt, { maxTokens: 4000, model: ACCURATE_MODEL_ID });
     return res.json(result);
   } catch (err) {
     console.error('analyze-taxes error:', err);
@@ -219,7 +222,7 @@ Return ONLY JSON:
 // ─── Analyze Contract ─────────────────────────────────────────────────────────
 
 router.post('/ai/analyze-contract', requireSession, async (req, res) => {
-  if (!isGroqConfigured()) {
+  if (!isAIConfigured()) {
     return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
   }
 
@@ -249,7 +252,8 @@ Return ONLY JSON:
   "financialTerms": {"totalValue":number|null,"paymentSchedule":"string|null","penalties":"string|null"}
 }`;
 
-    const result = await groqJSON(prompt, { maxTokens: 4000 });
+    // ACCURATE: legal risk analysis requires careful reasoning
+    const result = await aiJSON(prompt, { maxTokens: 4000, model: ACCURATE_MODEL_ID });
 
     if (contractId && businessId) {
       await sql`
@@ -271,7 +275,7 @@ Return ONLY JSON:
 // ─── Generate Quote ───────────────────────────────────────────────────────────
 
 router.post('/ai/generate-quote', requireSession, async (req, res) => {
-  if (!isGroqConfigured()) {
+  if (!isAIConfigured()) {
     return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
   }
 
@@ -302,7 +306,8 @@ Generate a professional quote with competitive pricing. Return ONLY JSON:
   "notes": "string"
 }`;
 
-    const result = await groqJSON(prompt);
+    // FAST: structured pricing generation — straightforward, speed matters
+    const result = await aiJSON(prompt, { model: FAST_MODEL_ID });
     return res.json(result);
   } catch (err) {
     console.error('generate-quote error:', err);
@@ -716,7 +721,7 @@ ${sectionHtml}
 }
 
 router.post('/ai/generate-contract', requireSession, async (req, res) => {
-  if (!isGroqConfigured()) {
+  if (!isAIConfigured()) {
     return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
   }
 
@@ -762,7 +767,8 @@ Example format:
   ...
 }`;
 
-    const sections = await groqJSON(prompt, { maxTokens: 4096 });
+    // ACCURATE: legal contract generation — accuracy and correct clauses matter
+    const sections = await aiJSON(prompt, { maxTokens: 4096, model: ACCURATE_MODEL_ID });
 
     const fullHtml = assembleContractHtml({
       typeLabel,
@@ -789,7 +795,7 @@ Example format:
 // ─── Generate Compliance ──────────────────────────────────────────────────────
 
 router.post('/ai/generate-compliance', requireSession, async (req, res) => {
-  if (!isGroqConfigured()) {
+  if (!isAIConfigured()) {
     return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
   }
 
@@ -810,7 +816,8 @@ Has employees: ${Boolean(biz.has_employees)}
 Return ONLY a JSON array:
 [{"title":"string","description":"string","jurisdiction":"federal|state|county|city","jurisdictionName":"string","category":"license|registration|permit|tax_filing|insurance|report","isRequired":true,"legalCitation":null,"applicationUrl":null,"cost":0,"renewalFrequency":"annual|quarterly|monthly|one_time","estimatedProcessingTime":"string","documentationRequired":["string"],"penaltyForNonCompliance":null}]`;
 
-    const result = await groqJSON(prompt);
+    // FAST: compliance list generation is well-structured and predictable
+    const result = await aiJSON(prompt, { model: FAST_MODEL_ID });
     const items = Array.isArray(result) ? result : result.complianceItems || [];
 
     // Save to DB
@@ -842,9 +849,30 @@ Return ONLY a JSON array:
 
 // ─── Scan Opportunities ───────────────────────────────────────────────────────
 
+// ─── TinyFish agent helper ────────────────────────────────────────────────────
+
+async function runTinyFishAgent(url, goal) {
+  if (!process.env.TINYFISH_API_KEY) return null;
+  try {
+    const client = new TinyFish({ apiKey: process.env.TINYFISH_API_KEY });
+    const stream = await client.agent.stream({ url, goal });
+    const chunks = [];
+    for await (const event of stream) {
+      const text = event?.content ?? event?.text ?? event?.delta ?? '';
+      if (text) chunks.push(text);
+    }
+    return chunks.join('');
+  } catch (err) {
+    console.error('[TinyFish] agent error:', err.message);
+    return null;
+  }
+}
+
+// ─── Scan Opportunities (growth + funding via TinyFish agent) ─────────────────
+
 router.post('/ai/scan-opportunities', requireSession, async (req, res) => {
-  if (!isGroqConfigured()) {
-    return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
+  if (!isAIConfigured()) {
+    return res.status(503).json({ error: 'OPENROUTER_API_KEY is not configured' });
   }
 
   try {
@@ -854,11 +882,26 @@ router.post('/ai/scan-opportunities', requireSession, async (req, res) => {
     const biz = bizRows[0];
     if (!biz) return res.status(404).json({ error: 'Business not found' });
 
-    const prompt = `You are a growth advisor for small businesses. Identify funding and growth opportunities for:
+    const annualRevenue = Math.round(Number(biz.monthly_revenue_estimate || 0) * 12);
 
-Business: ${biz.name} (${biz.type}) in ${biz.city || ''}, ${biz.state || ''}
-Monthly revenue: $${Number(biz.monthly_revenue_estimate || 0)}
-Employees: ${biz.employees || 1}
+    const tfGoal = `Scan for business funding opportunities (grants, loans, competitions, accelerators) for a ${biz.type} business named "${biz.name}" in ${biz.city || ''}, ${biz.state || ''} with ~$${annualRevenue} annual revenue and ${biz.employees || 1} employee(s).
+Search SBA.gov, Grants.gov, Score.org, Kiva.org for currently active opportunities.
+Also identify: pricing optimization recommendations based on industry benchmarks, and expense reduction opportunities specific to ${biz.type} businesses.
+For each funding opportunity include: name, provider, type, amount range, eligibility requirements, application URL, fit score 0-100.
+For actions include: title, type (pricing/expense/milestone), reasoning, urgency, effort level.`;
+
+    const tfContext = await runTinyFishAgent('https://sba.gov/funding-programs', tfGoal);
+
+    const contextBlock = tfContext
+      ? `LIVE RESEARCH RESULTS:\n${tfContext.slice(0, 6000)}`
+      : `No live research available — use training knowledge for ${biz.state || 'US'} ${biz.type} businesses.`;
+
+    const prompt = `You are a growth advisor for small businesses.
+
+BUSINESS: ${biz.name} (${biz.type}) in ${biz.city || ''}, ${biz.state || ''}
+Monthly revenue: $${Number(biz.monthly_revenue_estimate || 0)}, Employees: ${biz.employees || 1}
+
+${contextBlock}
 
 Return ONLY JSON:
 {
@@ -866,19 +909,20 @@ Return ONLY JSON:
   "actions": [{"type":"pricing|expense|milestone","title":"string","impact":"string","reasoning":"string","urgency":"high|medium|low","effort":"low|medium|high"}]
 }`;
 
-    const result = await groqJSON(prompt);
-    return res.json(result);
+    // FAST when TinyFish supplied context (AI just structures it); ACCURATE when reasoning alone
+    const result = await aiJSON(prompt, { maxTokens: 4096, model: tfContext ? FAST_MODEL_ID : ACCURATE_MODEL_ID });
+    return res.json({ ...result, source: tfContext ? 'tinyfish+ai' : 'ai-only' });
   } catch (err) {
     console.error('scan-opportunities error:', err);
     return res.status(500).json({ error: 'Opportunity scan failed' });
   }
 });
 
-// ─── Scan Funding (TinyFish + AI fallback) ────────────────────────────────────
+// ─── Scan Funding (TinyFish agent + AI) ──────────────────────────────────────
 
 router.post('/ai/scan-funding', requireSession, async (req, res) => {
-  if (!isGroqConfigured()) {
-    return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
+  if (!isAIConfigured()) {
+    return res.status(503).json({ error: 'OPENROUTER_API_KEY is not configured' });
   }
 
   try {
@@ -888,49 +932,43 @@ router.post('/ai/scan-funding', requireSession, async (req, res) => {
     const biz = bizRows[0];
     if (!biz) return res.status(404).json({ error: 'Business not found' });
 
-    // Try TinyFish first if configured
-    if (process.env.TINYFISH_API_KEY) {
-      try {
-        const tfRes = await fetch('https://api.tinyfish.io/v1/search', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${process.env.TINYFISH_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: `small business funding grants loans ${biz.type} ${biz.state || ''}`,
-            maxResults: 8,
-          }),
-        });
+    const annualRevenue = Math.round(Number(biz.monthly_revenue_estimate || 0) * 12);
 
-        if (tfRes.ok) {
-          const tfData = await tfRes.json();
-          return res.json({ source: 'tinyfish', results: tfData.results || [] });
-        }
-      } catch {
-        // Fall through to AI
-      }
-    }
+    const tfGoal = `Find all active funding opportunities (grants, loans, microloans, lines of credit) for a ${biz.type} small business in ${biz.state || 'the US'} with ~$${annualRevenue} annual revenue.
+Search SBA.gov, Grants.gov, Kiva.org, Accion.org, CDFI Fund for real active programs.
+For each opportunity provide: name, provider, type, amount min/max, interest rate if applicable, eligibility requirements, application URL, deadline, and fit score 0-100 for this business.`;
 
-    // AI fallback
+    const tfContext = await runTinyFishAgent('https://sba.gov/funding-programs/loans', tfGoal);
+
+    const contextBlock = tfContext
+      ? `LIVE RESEARCH:\n${tfContext.slice(0, 5000)}`
+      : `No live data — use training knowledge for ${biz.state || 'US'} ${biz.type} businesses.`;
+
     const prompt = `Find real funding opportunities for a ${biz.type} business in ${biz.state || 'the US'} with ~$${Number(biz.monthly_revenue_estimate || 0)}/month revenue.
 
-Return ONLY JSON array:
-[{"name":"string","provider":"string","type":"grant|loan|line_of_credit","amountMin":number,"amountMax":number,"eligibilityMatch":0-100,"applicationUrl":"","recommendation":"string","fitScore":0-100}]`;
+${contextBlock}
 
-    const result = await groqJSON(prompt);
-    return res.json({ source: 'ai-fallback', results: Array.isArray(result) ? result : [] });
+Return ONLY JSON array:
+[{"name":"string","provider":"string","type":"grant|loan|line_of_credit","amountMin":number,"amountMax":number,"eligibilityMatch":0-100,"applicationUrl":"string","recommendation":"string","fitScore":0-100}]`;
+
+    // FAST when TinyFish data available; ACCURATE when generating funding data from scratch
+    const result = await aiJSON(prompt, { maxTokens: 3000, model: tfContext ? FAST_MODEL_ID : ACCURATE_MODEL_ID });
+    return res.json({ source: tfContext ? 'tinyfish+ai' : 'ai-fallback', results: Array.isArray(result) ? result : [] });
   } catch (err) {
     console.error('scan-funding error:', err);
     return res.status(500).json({ error: 'Funding scan failed' });
   }
 });
 
+<<<<<<< Updated upstream
 // ─── Scan Tax Opportunities (TinyFish web search + AI analysis) ───────────────
+=======
+// ─── Scan Tax Opportunities (TinyFish agent + AI analysis) ────────────────────
+>>>>>>> Stashed changes
 
 router.post('/ai/scan-tax-opportunities', requireSession, async (req, res) => {
-  if (!isGroqConfigured()) {
-    return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
+  if (!isAIConfigured()) {
+    return res.status(503).json({ error: 'OPENROUTER_API_KEY is not configured' });
   }
 
   try {
@@ -944,9 +982,19 @@ router.post('/ai/scan-tax-opportunities', requireSession, async (req, res) => {
     const bizState = biz.state || '';
     const entityType = biz.entity_type || 'sole_prop';
     const hasEmployees = Boolean(biz.has_employees);
+    const annualRevenue = Math.round(Number(biz.monthly_revenue_estimate || 0) * 12);
 
-    let webResults = [];
+    const tfGoal = `Research every tax deduction, credit, exemption, and legal tax strategy available to a ${bizType} ${entityType} business in ${bizState} with ~$${annualRevenue} annual revenue${hasEmployees ? ' and employees' : ''}.
+Scrape IRS.gov, state tax agency sites, Nolo.com, and tax law databases for:
+- Federal deductions and credits this business qualifies for
+- ${bizState} state-specific tax incentives and industry exemptions
+- Legal tax loopholes and strategies for ${entityType} entities
+- Investment strategies to reduce taxable income (SEP-IRA, HSA, Section 179, bonus depreciation, etc.)
+- Industry-specific incentives for ${bizType} businesses
+${hasEmployees ? '- Payroll tax credits (WOTC, R&D, etc.)' : '- Self-employment tax reduction strategies'}
+For each strategy: title, type, jurisdiction, eligibility score 0-100, estimated annual savings, exact steps to claim, relevant IRS form or publication, source URL.`;
 
+<<<<<<< Updated upstream
     // Try TinyFish for real-time web scraping of tax opportunities
     if (process.env.TINYFISH_API_KEY) {
       const queries = [
@@ -987,22 +1035,35 @@ router.post('/ai/scan-tax-opportunities', requireSession, async (req, res) => {
       : 'No live web results available — use your training knowledge.';
 
     const prompt = `You are a CPA specializing in small business tax strategy.
+=======
+    const tfContext = await runTinyFishAgent('https://irs.gov/businesses/small-businesses-self-employed', tfGoal);
+
+    const webContext = tfContext
+      ? `LIVE RESEARCH FROM IRS AND TAX SOURCES:\n${tfContext.slice(0, 7000)}`
+      : 'No live web results — use comprehensive training knowledge for this business profile.';
+
+    const prompt = `You are a CPA specializing in aggressive (but legal) small business tax strategy.
+>>>>>>> Stashed changes
 
 BUSINESS PROFILE:
 - Type: ${bizType}
 - Entity: ${entityType}
 - State: ${bizState}
 - Has employees: ${hasEmployees}
-- Annual revenue estimate: ~$${Math.round(Number(biz.monthly_revenue_estimate || 0) * 12)}
+- Annual revenue estimate: ~$${annualRevenue}
 
 ${webContext}
 
+<<<<<<< Updated upstream
 Based on the business profile and any web results above, identify specific tax exemptions, deductions, credits, and loopholes this business may qualify for. Focus on:
 1. Industry-specific deductions for ${bizType} businesses
 2. ${bizState} state-specific tax credits and exemptions
 3. Entity structure advantages (${entityType})
 4. Commonly missed deductions for this business type
 5. Recent tax law changes that benefit this business
+=======
+Identify every specific tax exemption, deduction, credit, loophole, and investment strategy this business qualifies for. Be specific — name exact IRS forms, dollar thresholds, and actionable steps. Help the owner game the system legally.
+>>>>>>> Stashed changes
 
 Return ONLY JSON:
 {
@@ -1022,11 +1083,11 @@ Return ONLY JSON:
   ]
 }`;
 
-    const result = await groqJSON(prompt, { maxTokens: 4096 });
+    // FAST when TinyFish scraped real tax sources; ACCURATE when AI must reason independently
+    const result = await aiJSON(prompt, { maxTokens: 4096, model: tfContext ? FAST_MODEL_ID : ACCURATE_MODEL_ID });
     return res.json({
       opportunities: Array.isArray(result.opportunities) ? result.opportunities : [],
-      source: webResults.length > 0 ? 'tinyfish+ai' : 'ai-only',
-      webResultsCount: webResults.length,
+      source: tfContext ? 'tinyfish+ai' : 'ai-only',
     });
   } catch (err) {
     console.error('scan-tax-opportunities error:', err);
