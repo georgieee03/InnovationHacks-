@@ -217,15 +217,7 @@ export default function FinancialOverview() {
           </div>
         </div>
 
-        {/* Checklist */}
-        <GettingStartedChecklist
-          contracts={checklistData.contracts}
-          receipts={checklistData.receipts}
-          quotes={checklistData.quotes}
-          complianceItems={checklistData.complianceItems}
-        />
-
-        {/* KPI strip */}
+        {/* KPI strip */
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <KpiCard
             label="Total Balance"
@@ -507,6 +499,16 @@ export default function FinancialOverview() {
               )}
             </div>
           </div>
+        </Section>
+
+        {/* Getting started checklist */}
+        <Section delay={0.35}>
+          <GettingStartedChecklist
+            contracts={checklistData.contracts}
+            receipts={checklistData.receipts}
+            quotes={checklistData.quotes}
+            complianceItems={checklistData.complianceItems}
+          />
         </Section>
 
       </div>
