@@ -10,7 +10,6 @@ import {
   GraduationCap,
   Settings,
   ShieldCheck,
-  ClipboardCheck,
 } from 'lucide-react';
 import NavigationItem from './NavigationItem';
 import BusinessInfo from './BusinessInfo';
@@ -51,7 +50,6 @@ export default function CollapsibleSidebar({
     { id: 'taxes', label: 'Tax Analysis', shortLabel: 'Taxes', icon: DollarSign, section: 'main' },
     { id: 'simulator', label: 'Risk Simulator', shortLabel: 'Simulator', icon: AlertTriangle, section: 'main' },
     { id: 'learn', label: 'Learn', shortLabel: 'Learn', icon: GraduationCap, section: 'main' },
-    { id: 'actionplan', label: 'Action Plan', shortLabel: 'Action Plan', icon: ClipboardCheck, section: 'main' },
     { id: 'settings', label: 'Settings', shortLabel: 'Settings', icon: Settings, section: 'footer', disabled: true },
   ]), [gapCount]);
 
