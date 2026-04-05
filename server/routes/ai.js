@@ -960,11 +960,7 @@ Return ONLY JSON array:
   }
 });
 
-<<<<<<< Updated upstream
-// ─── Scan Tax Opportunities (TinyFish web search + AI analysis) ───────────────
-=======
 // ─── Scan Tax Opportunities (TinyFish agent + AI analysis) ────────────────────
->>>>>>> Stashed changes
 
 router.post('/ai/scan-tax-opportunities', requireSession, async (req, res) => {
   if (!isAIConfigured()) {
@@ -994,48 +990,6 @@ Scrape IRS.gov, state tax agency sites, Nolo.com, and tax law databases for:
 ${hasEmployees ? '- Payroll tax credits (WOTC, R&D, etc.)' : '- Self-employment tax reduction strategies'}
 For each strategy: title, type, jurisdiction, eligibility score 0-100, estimated annual savings, exact steps to claim, relevant IRS form or publication, source URL.`;
 
-<<<<<<< Updated upstream
-    // Try TinyFish for real-time web scraping of tax opportunities
-    if (process.env.TINYFISH_API_KEY) {
-      const queries = [
-        `${bizType} business tax deductions exemptions ${new Date().getFullYear()}`,
-        `${bizState} state tax credits small business ${entityType}`,
-        `IRS tax loopholes deductions ${bizType} self-employed`,
-        hasEmployees ? `small business payroll tax credits employees ${new Date().getFullYear()}` : `sole proprietor tax deductions ${bizType}`,
-      ];
-
-      for (const query of queries) {
-        try {
-          const tfRes = await fetch('https://api.tinyfish.io/v1/search', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${process.env.TINYFISH_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query,
-              maxResults: 4,
-              sources: ['irs.gov', 'sba.gov', 'nolo.com', 'taxfoundation.org', 'score.org'],
-            }),
-          });
-
-          if (tfRes.ok) {
-            const tfData = await tfRes.json();
-            webResults.push(...(tfData.results || []));
-          }
-        } catch {
-          // continue with other queries
-        }
-      }
-    }
-
-    // Use AI to analyze web results + business profile and produce structured opportunities
-    const webContext = webResults.length > 0
-      ? `WEB SEARCH RESULTS:\n${webResults.slice(0, 12).map(r => `- ${r.title}: ${r.snippet || r.description || ''} (${r.url || ''})`).join('\n')}`
-      : 'No live web results available — use your training knowledge.';
-
-    const prompt = `You are a CPA specializing in small business tax strategy.
-=======
     const tfContext = await runTinyFishAgent('https://irs.gov/businesses/small-businesses-self-employed', tfGoal);
 
     const webContext = tfContext
@@ -1043,7 +997,6 @@ For each strategy: title, type, jurisdiction, eligibility score 0-100, estimated
       : 'No live web results — use comprehensive training knowledge for this business profile.';
 
     const prompt = `You are a CPA specializing in aggressive (but legal) small business tax strategy.
->>>>>>> Stashed changes
 
 BUSINESS PROFILE:
 - Type: ${bizType}
@@ -1054,16 +1007,12 @@ BUSINESS PROFILE:
 
 ${webContext}
 
-<<<<<<< Updated upstream
-Based on the business profile and any web results above, identify specific tax exemptions, deductions, credits, and loopholes this business may qualify for. Focus on:
+Identify every specific tax exemption, deduction, credit, loophole, and investment strategy this business qualifies for. Be specific — name exact IRS forms, dollar thresholds, and actionable steps. Help the owner game the system legally. Focus on:
 1. Industry-specific deductions for ${bizType} businesses
 2. ${bizState} state-specific tax credits and exemptions
 3. Entity structure advantages (${entityType})
-4. Commonly missed deductions for this business type
-5. Recent tax law changes that benefit this business
-=======
-Identify every specific tax exemption, deduction, credit, loophole, and investment strategy this business qualifies for. Be specific — name exact IRS forms, dollar thresholds, and actionable steps. Help the owner game the system legally.
->>>>>>> Stashed changes
+4. Investment strategies to reduce taxable income (SEP-IRA, Section 179, bonus depreciation)
+5. Commonly missed deductions and recent tax law changes that benefit this business
 
 Return ONLY JSON:
 {
