@@ -97,7 +97,7 @@ async function fetchAPI(endpoint, options = {}) {
 }
 
 export const api = {
-  getAuthSession: () => fetchAPI('/auth/session'),
+  getAuthSession: () => fetchAPI('/session'),
   createBusiness: (data) => fetchAPI('/business', {
     method: 'POST',
     body: JSON.stringify(data),

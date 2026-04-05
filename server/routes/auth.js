@@ -3,7 +3,7 @@ import { getRequestUser, isAuthConfigured } from '../auth.js';
 
 const router = Router();
 
-router.get('/auth/session', (req, res) => {
+router.get('/session', (req, res) => {
   const currentUser = getRequestUser(req);
   const authEnabled = isAuthConfigured();
 
