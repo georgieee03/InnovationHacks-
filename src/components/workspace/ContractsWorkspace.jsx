@@ -4,6 +4,7 @@ import { AppContext } from '../../context/AppContext';
 import { api } from '../../services/apiClient';
 import { formatCurrency } from '../../utils/formatCurrency';
 import RippleButton from '../shared/RippleButton';
+import GenerateContractModal from './GenerateContractModal';
 
 const INITIAL_FORM = {
   contractType: 'service',
@@ -23,6 +24,7 @@ export default function ContractsWorkspace() {
   const [error, setError] = useState('');
   const [selectedContract, setSelectedContract] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [showGenerate, setShowGenerate] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -100,6 +102,18 @@ export default function ContractsWorkspace() {
           <p className="mt-3 max-w-2xl text-sm leading-7 text-text-secondary">
             Upload contracts for AI analysis — get health scores, obligation tracking, clause breakdowns, and missing protection alerts.
           </p>
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => setShowGenerate(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary/80 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.347.13A3.5 3.5 0 0112 18.5a3.5 3.5 0 01-3.093-1.47l-.347-.13z" />
+              </svg>
+              Generate a contract
+            </button>
+          </div>
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             <div className="surface-panel rounded-3xl p-4">
               <p className="text-[11px] uppercase tracking-[0.08em] text-text-secondary">Live contracts</p>
@@ -160,8 +174,7 @@ export default function ContractsWorkspace() {
       )}
 
       {/* Contract list */}
-      <div className="surface-panel rounded-[30px] p-6">
-        <div className="flex items-center justify-between gap-3">
+      <div className="surface-panel rounded-[30px] p-6">        <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-medium text-text-primary">Tracked agreements</p>
             <p className="mt-1 text-sm text-text-secondary">Click a contract to view AI analysis.</p>
@@ -210,6 +223,14 @@ export default function ContractsWorkspace() {
           <p className="mt-6 text-sm text-text-secondary">No contracts yet.</p>
         )}
       </div>
+
+      {showGenerate && businessInfo?.id && (
+        <GenerateContractModal
+          businessId={businessInfo.id}
+          onClose={() => setShowGenerate(false)}
+          onSaved={(created) => setContracts((cur) => [created, ...cur])}
+        />
+      )}
     </section>
   );
 }

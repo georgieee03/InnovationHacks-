@@ -1,4 +1,7 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+// Load .env first, then .env.local overrides (mirrors Vite's convention)
+config();
+config({ path: '.env.local', override: true });
 import cors from 'cors';
 import express from 'express';
 import { attachSessionUser, createAuthMiddleware } from './auth.js';

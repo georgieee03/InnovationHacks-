@@ -1,14 +1,16 @@
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Database, Landmark, RefreshCw } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import { formatCurrency } from '../../utils/formatCurrency';
+import { api } from '../../services/apiClient';
 import MetricCard from '../shared/MetricCard';
 import AccountBalances from './AccountBalances';
 import CashFlowChart from './CashFlowChart';
 import SpendingChart from './SpendingChart';
 import TransactionList from './TransactionList';
 import EmergencyFund from './EmergencyFund';
+import GettingStartedChecklist from '../shared/GettingStartedChecklist';
 
 const MotionDiv = motion.div;
 
@@ -32,6 +34,24 @@ export default function FinancialOverview() {
     loadPlaidData,
   } = useContext(AppContext);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [checklistData, setChecklistData] = useState({ contracts: [], receipts: [], quotes: [], complianceItems: [] });
+
+  useEffect(() => {
+    if (!businessInfo?.id) return;
+    Promise.all([
+      api.listContracts().catch(() => []),
+      api.listReceipts().catch(() => []),
+      api.listQuotes().catch(() => []),
+      api.listCompliance().catch(() => []),
+    ]).then(([contracts, receipts, quotes, complianceItems]) => {
+      setChecklistData({
+        contracts: Array.isArray(contracts) ? contracts : [],
+        receipts: Array.isArray(receipts) ? receipts : [],
+        quotes: Array.isArray(quotes) ? quotes : [],
+        complianceItems: Array.isArray(complianceItems) ? complianceItems : [],
+      });
+    });
+  }, [businessInfo?.id]);
 
   if (!financialMetrics) return null;
 
@@ -86,8 +106,14 @@ export default function FinancialOverview() {
           </p>
         </div>
 
-        <div className="surface-panel flex flex-col gap-4 rounded-2xl p-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-3">
+        <GettingStartedChecklist
+          contracts={checklistData.contracts}
+          receipts={checklistData.receipts}
+          quotes={checklistData.quotes}
+          complianceItems={checklistData.complianceItems}
+        />
+
+        <div className="surface-panel flex flex-col gap-4 rounded-2xl p-4 lg:flex-row lg:items-center lg:justify-between">          <div className="flex items-start gap-3">
             <div className="surface-chip flex h-10 w-10 items-center justify-center rounded-xl">
               {plaidConnected ? (
                 <Landmark className="h-5 w-5 text-covered" />
