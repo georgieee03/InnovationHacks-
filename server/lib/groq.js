@@ -8,7 +8,7 @@
  */
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const PRIMARY_MODEL = 'qwen/qwen3-235b-a22b:free';
+const PRIMARY_MODEL = 'google/gemini-2.0-flash-001';
 const FALLBACK_MODEL = 'google/gemini-2.0-flash-001';
 const VISION_MODEL = 'google/gemini-2.0-flash-001'; // Gemini handles vision natively
 
@@ -100,72 +100,44 @@ function getApiUrl() {
 
 /**
  * Generate a JSON response from a text-only prompt.
- * Primary: Qwen 3 235B (free), Fallback: Gemini 2.0 Flash.
+ * Uses Gemini 2.0 Flash via OpenRouter.
  */
 export async function groqJSON(prompt, options = {}) {
   const apiKey = process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY is not configured');
 
-  const models = [
-    options.model || getGroqModel(),
-    FALLBACK_MODEL,
-  ];
-
+  const model = options.model || getGroqModel();
   const { headers } = getHeaders();
   const url = getApiUrl();
-  let lastError;
 
-  for (const model of models) {
-    try {
-      const body = {
-        model,
-        temperature: options.temperature ?? 0.1,
-        max_tokens: options.maxTokens ?? 4096,
-        messages: [
-          {
-            role: 'system',
-            content: LAUNCHPAD_SYSTEM_PROMPT + '\n\nYou are a precise JSON API. Always respond with valid JSON only. No markdown, no explanation, no text outside the JSON object. Do NOT use thinking tags.',
-          },
-          { role: 'user', content: prompt },
-        ],
-      };
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      model,
+      temperature: options.temperature ?? 0.1,
+      max_tokens: options.maxTokens ?? 4096,
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: LAUNCHPAD_SYSTEM_PROMPT + '\n\nYou are a precise JSON API. Always respond with valid JSON only. No markdown, no explanation, no text outside the JSON object.',
+        },
+        { role: 'user', content: prompt },
+      ],
+    }),
+  });
 
-      // Qwen free models on OpenRouter don't support response_format
-      if (!model.includes(':free')) {
-        body.response_format = { type: 'json_object' };
-      }
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-      });
-
-      if (response.status === 429) {
-        const errBody = await response.text();
-        console.error(`Rate limit on ${model}:`, errBody);
-        lastError = new Error(`Rate limited on ${model}`);
-        continue;
-      }
-
-      if (!response.ok) {
-        const text = await response.text();
-        console.error(`API error on ${model}:`, response.status, text);
-        lastError = new Error(`API error ${response.status}`);
-        continue;
-      }
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content ?? '';
-      const cleaned = cleanJSON(content);
-      return JSON.parse(cleaned);
-    } catch (err) {
-      lastError = err;
-      console.error(`${model} failed:`, err.message);
-    }
+  if (!response.ok) {
+    const text = await response.text();
+    console.error(`AI error (${model}):`, response.status, text);
+    throw new Error(`AI API error ${response.status}`);
   }
 
-  throw lastError || new Error('All AI models failed');
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content ?? '';
+  const cleaned = cleanJSON(content);
+  return JSON.parse(cleaned);
 }
 
 /**
