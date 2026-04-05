@@ -50,8 +50,23 @@ export default function GrowthWorkspace() {
     setError('');
 
     try {
-      const payload = await api.refreshGrowthWorkspace();
+      // Run both the existing workspace refresh AND the AI scans in parallel
+      const [workspacePayload, opportunitiesResult, fundingResult] = await Promise.allSettled([
+        api.refreshGrowthWorkspace(),
+        businessInfo?.id ? api.scanOpportunities({ businessId: businessInfo.id }) : Promise.resolve(null),
+        businessInfo?.id ? api.scanFunding({ businessId: businessInfo.id }) : Promise.resolve(null),
+      ]);
+
+      const payload = workspacePayload.status === 'fulfilled' ? workspacePayload.value : workspace;
       setWorkspace((current) => ({ ...current, ...payload }));
+
+      // If AI scans returned new opportunities, they'll be picked up on next load
+      if (opportunitiesResult.status === 'fulfilled' && opportunitiesResult.value?.opportunities) {
+        console.log('AI scan found', opportunitiesResult.value.opportunities.length, 'opportunities');
+      }
+      if (fundingResult.status === 'fulfilled' && fundingResult.value?.results) {
+        console.log('Funding scan found', fundingResult.value.results.length, 'results');
+      }
     } catch (refreshError) {
       setError(refreshError.message || 'Failed to refresh funding opportunities');
     } finally {

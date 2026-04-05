@@ -18,6 +18,7 @@ import {
   Moon,
   Settings,
   ShieldCheck,
+  DollarSign,
 } from 'lucide-react';
 import NavigationItem from './NavigationItem';
 import BusinessInfo from './BusinessInfo';
@@ -59,6 +60,7 @@ export default function CollapsibleSidebar({
     { id: 'receipts', label: 'Receipts', shortLabel: 'Receipts', icon: Camera, section: 'main' },
     { id: 'compliance', label: 'Compliance', shortLabel: 'Compliance', icon: BadgeCheck, section: 'main' },
     { id: 'growth', label: 'Growth', shortLabel: 'Growth', icon: TrendingUp, section: 'main' },
+    { id: 'taxes', label: 'Tax Analysis', shortLabel: 'Taxes', icon: DollarSign, section: 'main' },
     { id: 'calculators', label: 'Calculators', shortLabel: 'Calculators', icon: Calculator, section: 'main' },
     { id: 'simulator', label: 'Risk Simulator', shortLabel: 'Simulator', icon: AlertTriangle, section: 'main' },
     { id: 'challenges', label: 'Challenges', shortLabel: 'Challenges', icon: Trophy, section: 'main' },

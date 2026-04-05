@@ -164,6 +164,43 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({}),
   }),
+  // AI routes
+  businessAdvisor: (answers) => fetchAPI('/ai/business-advisor', {
+    method: 'POST',
+    body: JSON.stringify(answers),
+  }),
+  analyzeReceipt: (data) => fetchAPI('/ai/analyze-receipt', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  analyzeTaxes: (data) => fetchAPI('/ai/analyze-taxes', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  analyzeContract: (data) => fetchAPI('/ai/analyze-contract', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  generateQuote: (data) => fetchAPI('/ai/generate-quote', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  generateContract: (data) => fetchAPI('/ai/generate-contract', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  generateCompliance: (data) => fetchAPI('/ai/generate-compliance', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  scanOpportunities: (data) => fetchAPI('/ai/scan-opportunities', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  scanFunding: (data) => fetchAPI('/ai/scan-funding', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
   uploadWorkspaceFile: (folder, file) => {
     const formData = new FormData();
     formData.append('folder', folder);

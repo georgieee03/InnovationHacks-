@@ -23,6 +23,7 @@ import QuotesWorkspace from './components/workspace/QuotesWorkspace';
 import ReceiptsWorkspace from './components/workspace/ReceiptsWorkspace';
 import ComplianceWorkspace from './components/workspace/ComplianceWorkspace';
 import GrowthWorkspace from './components/workspace/GrowthWorkspace';
+import TaxAnalysis from './components/workspace/TaxAnalysis';
 
 const pageRegistry = {
   financial: { label: 'Financial Overview', component: FinancialOverview },
@@ -33,6 +34,7 @@ const pageRegistry = {
   receipts: { label: 'Receipts', component: ReceiptsWorkspace },
   compliance: { label: 'Compliance', component: ComplianceWorkspace },
   growth: { label: 'Growth', component: GrowthWorkspace },
+  taxes: { label: 'Tax Analysis', component: TaxAnalysis },
   calculators: { label: 'Calculators', component: Calculators },
   simulator: { label: 'Risk Simulator', component: RiskSimulator },
   challenges: { label: 'Challenges', component: Challenges },

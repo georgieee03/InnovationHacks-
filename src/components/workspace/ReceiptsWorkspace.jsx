@@ -1,90 +1,121 @@
 import { useContext, useEffect, useState } from 'react';
-import { Camera, Receipt, FolderOpen } from 'lucide-react';
+import { Camera, Receipt, FolderOpen, Sparkles, Loader2, Upload } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import { api } from '../../services/apiClient';
 import { formatCurrency } from '../../utils/formatCurrency';
 import RippleButton from '../shared/RippleButton';
 
-const INITIAL_FORM = {
-  vendor: '',
-  amount: '',
-  date: '',
-  category: 'operations',
-  taxNotes: '',
-};
+const CATEGORIES = [
+  'operations', 'inventory', 'marketing', 'equipment', 'supplies',
+  'vehicle_fuel', 'vehicle_maintenance', 'insurance', 'rent', 'utilities',
+  'professional_services', 'meals_entertainment', 'office_supplies',
+  'software', 'training', 'other',
+];
 
 export default function ReceiptsWorkspace() {
   const { businessInfo } = useContext(AppContext);
   const [receipts, setReceipts] = useState([]);
-  const [form, setForm] = useState(INITIAL_FORM);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [scanning, setScanning] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState('');
+  const [showUpload, setShowUpload] = useState(false);
 
   useEffect(() => {
     let active = true;
-
-    if (!businessInfo?.id) {
-      setReceipts([]);
-      setLoading(false);
-      return undefined;
-    }
-
+    if (!businessInfo?.id) { setReceipts([]); setLoading(false); return; }
     setLoading(true);
     api.listReceipts()
-      .then((rows) => {
-        if (active) {
-          setReceipts(Array.isArray(rows) ? rows : []);
-          setError('');
-        }
-      })
-      .catch((loadError) => {
-        if (active) {
-          setError(loadError.message || 'Failed to load receipts');
-        }
-      })
-      .finally(() => {
-        if (active) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
+      .then((rows) => { if (active) { setReceipts(Array.isArray(rows) ? rows : []); setError(''); } })
+      .catch((e) => { if (active) setError(e.message || 'Failed to load receipts'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [businessInfo?.id]);
 
-  const deductibleTotal = receipts.reduce((sum, item) => sum + Number(item.deductible_amount || 0), 0);
+  const deductibleTotal = receipts.reduce((sum, r) => sum + Number(r.deductible_amount || 0), 0);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (!file) {
-      setError('Attach a receipt image or PDF before saving.');
-      return;
+  const handleAIScan = async () => {
+    if (!file || !businessInfo?.id) return;
+    setScanning(true);
+    setError('');
+    setScanResult(null);
+
+    try {
+      const base64 = await fileToBase64(file);
+      const result = await api.analyzeReceipt({
+        fileBase64: base64,
+        fileMimeType: file.type,
+        businessId: businessInfo.id,
+      });
+      setScanResult(result);
+    } catch (e) {
+      setError(e.message || 'AI receipt scan failed');
+    } finally {
+      setScanning(false);
     }
+  };
 
+  const handleSaveScanned = async () => {
+    if (!scanResult || !businessInfo?.id) return;
     setSaving(true);
     setError('');
 
+    try {
+      let uploadedFile = null;
+      if (file) {
+        uploadedFile = await api.uploadWorkspaceFile('receipts', file);
+      }
+
+      const created = await api.createReceipt({
+        uploadedFileId: uploadedFile?.id || null,
+        imageUrl: uploadedFile?.blob_url || '',
+        vendor: scanResult.vendor || '',
+        amount: Number(scanResult.amount || 0),
+        date: scanResult.date || new Date().toISOString().slice(0, 10),
+        category: scanResult.category || 'other',
+        taxClassification: scanResult.taxClassification || 'expense',
+        businessPercentage: Number(scanResult.businessPercentage || 100),
+        deductibleAmount: Number(scanResult.deductibleAmount || scanResult.amount || 0),
+        taxNotes: scanResult.taxNotes || '',
+        lineItems: scanResult.lineItems || [],
+        associatedMileage: scanResult.associatedMileage || null,
+        needsMoreInfo: Boolean(scanResult.needsMoreInfo),
+        pendingQuestion: scanResult.pendingQuestion || null,
+      });
+
+      setReceipts((cur) => [created, ...cur]);
+      setFile(null);
+      setScanResult(null);
+      setShowUpload(false);
+    } catch (e) {
+      setError(e.message || 'Failed to save receipt');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleManualSave = async (e) => {
+    e.preventDefault();
+    if (!file) { setError('Attach a receipt file first.'); return; }
+    setSaving(true);
+    setError('');
     try {
       const uploadedFile = await api.uploadWorkspaceFile('receipts', file);
       const created = await api.createReceipt({
         uploadedFileId: uploadedFile.id,
         imageUrl: uploadedFile.blob_url,
-        vendor: form.vendor,
-        amount: Number(form.amount || 0),
-        date: form.date || new Date().toISOString().slice(0, 10),
-        category: form.category,
-        taxNotes: form.taxNotes,
-        deductibleAmount: Number(form.amount || 0),
+        vendor: 'Manual upload',
+        amount: 0,
+        date: new Date().toISOString().slice(0, 10),
+        category: 'other',
       });
-
-      setReceipts((current) => [created, ...current]);
-      setForm(INITIAL_FORM);
+      setReceipts((cur) => [created, ...cur]);
       setFile(null);
-    } catch (saveError) {
-      setError(saveError.message || 'Failed to save receipt');
+      setShowUpload(false);
+    } catch (e) {
+      setError(e.message || 'Failed to save receipt');
     } finally {
       setSaving(false);
     }
@@ -92,72 +123,128 @@ export default function ReceiptsWorkspace() {
 
   return (
     <section className="space-y-6">
-      <div className="grid gap-4 xl:grid-cols-[1.02fr_0.98fr]">
-        <div className="surface-panel-strong rounded-[30px] p-6">
-          <p className="text-[11px] uppercase tracking-[0.08em] text-text-secondary">Receipts</p>
-          <h2 className="mt-3 text-3xl font-heading font-light tracking-[-0.03em] text-text-primary">Capture operating spend without leaving SafeGuard</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-text-secondary">
-            LaunchPad&apos;s receipt workflow has been restyled into the SafeGuard shell so expense capture can directly support reserves, cashflow, and compliance follow-up.
-          </p>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <div className="surface-panel rounded-3xl p-4">
-              <p className="text-[11px] uppercase tracking-[0.08em] text-text-secondary">Saved receipts</p>
-              <p className="mt-2 text-2xl font-light text-text-primary">{receipts.length}</p>
-            </div>
-            <div className="surface-panel rounded-3xl p-4">
-              <p className="text-[11px] uppercase tracking-[0.08em] text-text-secondary">Deductible tracked</p>
-              <p className="mt-2 text-2xl font-light text-text-primary">{formatCurrency(deductibleTotal)}</p>
-            </div>
-            <div className="surface-panel rounded-3xl p-4">
-              <p className="text-[11px] uppercase tracking-[0.08em] text-text-secondary">Storage</p>
-              <p className="mt-2 text-sm text-text-primary">Blob-backed files tied to the same business identity as quotes and contracts.</p>
-            </div>
+      <div className="surface-panel-strong rounded-[30px] p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.08em] text-text-secondary">Receipts</p>
+            <h2 className="mt-3 text-3xl font-heading font-light tracking-[-0.03em] text-text-primary">
+              Capture and analyze operating spend
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-text-secondary">
+              Upload receipts and let AI categorize them, flag tax deductions, and track spending automatically.
+            </p>
           </div>
+          <RippleButton variant="primary" size="md" onClick={() => setShowUpload(!showUpload)}>
+            <Upload className="h-4 w-4" />
+            Upload Receipt
+          </RippleButton>
         </div>
 
-        <form onSubmit={handleSubmit} className="surface-panel rounded-[30px] p-6">
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          <div className="surface-panel rounded-3xl p-4">
+            <p className="text-[11px] uppercase tracking-[0.08em] text-text-secondary">Saved receipts</p>
+            <p className="mt-2 text-2xl font-light text-text-primary">{receipts.length}</p>
+          </div>
+          <div className="surface-panel rounded-3xl p-4">
+            <p className="text-[11px] uppercase tracking-[0.08em] text-text-secondary">Deductible tracked</p>
+            <p className="mt-2 text-2xl font-light text-text-primary">{formatCurrency(deductibleTotal)}</p>
+          </div>
+          <div className="surface-panel rounded-3xl p-4">
+            <p className="text-[11px] uppercase tracking-[0.08em] text-text-secondary">AI powered</p>
+            <p className="mt-2 text-sm text-text-primary">Groq vision analyzes images, categorizes spend, and flags deductions.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Upload zone */}
+      {showUpload && (
+        <div className="glass-card rounded-[30px] p-6">
           <div className="flex items-start gap-3">
             <div className="surface-chip flex h-11 w-11 items-center justify-center rounded-2xl">
               <Camera className="h-5 w-5 text-primary" />
             </div>
             <div>
               <p className="text-sm font-medium text-text-primary">Upload a receipt</p>
-              <p className="mt-1 text-sm leading-6 text-text-secondary">Save the file, tag the spend category, and keep tax notes inside the workspace.</p>
+              <p className="mt-1 text-sm leading-6 text-text-secondary">
+                Drop an image or PDF. AI will extract vendor, amount, category, and tax info.
+              </p>
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3">
-            <input type="file" accept="image/*,.pdf" onChange={(event) => setFile(event.target.files?.[0] || null)} className="control-input rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-text-primary" />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input value={form.vendor} onChange={(event) => setForm((current) => ({ ...current, vendor: event.target.value }))} placeholder="Vendor" className="control-input rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-text-primary" />
-              <input value={form.amount} onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))} placeholder="Amount" type="number" className="control-input rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-text-primary" />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input value={form.date} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} type="date" className="control-input rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-text-primary" />
-              <select value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} className="control-input rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-text-primary">
-                <option value="operations">Operations</option>
-                <option value="inventory">Inventory</option>
-                <option value="marketing">Marketing</option>
-                <option value="equipment">Equipment</option>
-              </select>
-            </div>
-            <textarea value={form.taxNotes} onChange={(event) => setForm((current) => ({ ...current, taxNotes: event.target.value }))} rows={3} placeholder="Tax notes or follow-up reminders" className="control-input rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-text-primary" />
+          <div className="mt-5">
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/10 bg-white/[0.02] p-8 transition-colors hover:border-primary/30 hover:bg-primary/5">
+              <Upload className="mb-2 h-8 w-8 text-text-secondary" />
+              <span className="text-sm text-text-secondary">{file ? file.name : 'Click or drag to upload'}</span>
+              <span className="mt-1 text-xs text-text-secondary/60">JPEG, PNG, WEBP, or PDF</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                onChange={(e) => { setFile(e.target.files?.[0] || null); setScanResult(null); }}
+                className="hidden"
+              />
+            </label>
           </div>
 
-          {error ? <p className="mt-4 text-sm text-gap">{error}</p> : null}
+          {file && !scanResult && (
+            <div className="mt-4 flex flex-wrap gap-3">
+              <RippleButton variant="primary" size="md" onClick={handleAIScan} disabled={scanning}>
+                {scanning ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> : <><Sparkles className="mr-2 h-4 w-4" /> AI Scan Receipt</>}
+              </RippleButton>
+              <RippleButton variant="secondary" size="md" onClick={handleManualSave} disabled={saving}>
+                Save without AI scan
+              </RippleButton>
+            </div>
+          )}
 
-          <RippleButton type="submit" variant="primary" size="lg" disabled={saving} className="mt-5 w-full">
-            {saving ? 'Saving receipt...' : 'Upload and save receipt'}
-          </RippleButton>
-        </form>
-      </div>
+          {/* AI Scan Results */}
+          {scanResult && (
+            <div className="mt-5 space-y-3">
+              <p className="text-sm font-medium text-primary">AI Analysis Complete</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="surface-panel rounded-2xl p-3">
+                  <p className="text-xs text-text-secondary">Vendor</p>
+                  <p className="mt-1 text-sm text-text-primary">{scanResult.vendor || 'Unknown'}</p>
+                </div>
+                <div className="surface-panel rounded-2xl p-3">
+                  <p className="text-xs text-text-secondary">Amount</p>
+                  <p className="mt-1 text-sm text-text-primary">{formatCurrency(Number(scanResult.amount || 0))}</p>
+                </div>
+                <div className="surface-panel rounded-2xl p-3">
+                  <p className="text-xs text-text-secondary">Category</p>
+                  <p className="mt-1 text-sm text-text-primary">{scanResult.category}</p>
+                </div>
+                <div className="surface-panel rounded-2xl p-3">
+                  <p className="text-xs text-text-secondary">Deductible</p>
+                  <p className="mt-1 text-sm text-covered">{formatCurrency(Number(scanResult.deductibleAmount || 0))} ({scanResult.businessPercentage}%)</p>
+                </div>
+              </div>
+              {scanResult.taxNotes && (
+                <div className="surface-panel rounded-2xl p-3">
+                  <p className="text-xs text-text-secondary">Tax Notes</p>
+                  <p className="mt-1 text-sm text-text-primary">{scanResult.taxNotes}</p>
+                </div>
+              )}
+              {scanResult.needsMoreInfo && scanResult.pendingQuestion && (
+                <div className="rounded-2xl border border-warning/20 bg-warning/5 p-3">
+                  <p className="text-sm text-warning">{scanResult.pendingQuestion}</p>
+                </div>
+              )}
+              <RippleButton variant="primary" size="md" onClick={handleSaveScanned} disabled={saving} className="w-full">
+                {saving ? 'Saving...' : 'Save this receipt'}
+              </RippleButton>
+            </div>
+          )}
 
+          {error && <p className="mt-4 text-sm text-gap">{error}</p>}
+        </div>
+      )}
+
+      {/* Receipt list */}
       <div className="surface-panel rounded-[30px] p-6">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-text-primary">Recent receipt activity</p>
-            <p className="mt-1 text-sm text-text-secondary">Every upload is attached to this business profile and available for follow-up later.</p>
+            <p className="text-sm font-medium text-text-primary">Recent receipts</p>
+            <p className="mt-1 text-sm text-text-secondary">Every upload is attached to this business profile.</p>
           </div>
           <FolderOpen className="h-5 w-5 text-primary" />
         </div>
@@ -172,10 +259,16 @@ export default function ReceiptsWorkspace() {
                   <div>
                     <p className="text-sm font-medium text-text-primary">{receipt.vendor || 'Unknown vendor'}</p>
                     <p className="mt-1 text-sm text-text-secondary">{receipt.category} · {receipt.date}</p>
+                    {receipt.tax_notes && <p className="mt-1 text-xs text-text-secondary/70">{receipt.tax_notes}</p>}
                   </div>
                   <div className="flex items-center gap-4 text-sm text-text-secondary">
                     <span>{formatCurrency(Number(receipt.amount || 0))}</span>
-                    <a href={receipt.image_url} target="_blank" rel="noreferrer" className="text-primary transition-colors hover:text-primary/80">Open file</a>
+                    {receipt.deductible_amount > 0 && (
+                      <span className="text-covered">-{formatCurrency(Number(receipt.deductible_amount))}</span>
+                    )}
+                    {receipt.image_url && (
+                      <a href={receipt.image_url} target="_blank" rel="noreferrer" className="text-primary transition-colors hover:text-primary/80">Open</a>
+                    )}
                   </div>
                 </div>
               </article>
@@ -187,4 +280,17 @@ export default function ReceiptsWorkspace() {
       </div>
     </section>
   );
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }

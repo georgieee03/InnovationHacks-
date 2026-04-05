@@ -1,7 +1,8 @@
 import { useContext, useEffect, useState } from 'react';
-import { ClipboardList, BadgeCheck } from 'lucide-react';
+import { ClipboardList, BadgeCheck, Sparkles, Loader2 } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import { api } from '../../services/apiClient';
+import RippleButton from '../shared/RippleButton';
 
 const STATUS_OPTIONS = [
   { value: 'not_started', label: 'Not started' },
@@ -14,6 +15,7 @@ export default function ComplianceWorkspace() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -50,6 +52,22 @@ export default function ComplianceWorkspace() {
 
   const completedCount = items.filter((item) => item.status === 'complete').length;
 
+  const handleGenerateCompliance = async () => {
+    if (!businessInfo?.id) return;
+    setGenerating(true);
+    setError('');
+    try {
+      await api.generateCompliance({ businessId: businessInfo.id });
+      // Reload compliance items
+      const rows = await api.listCompliance();
+      setItems(Array.isArray(rows) ? rows : []);
+    } catch (e) {
+      setError(e.message || 'Failed to generate compliance items');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const updateStatus = async (id, status) => {
     setItems((current) => current.map((item) => (item.id === id ? { ...item, status } : item)));
 
@@ -83,6 +101,9 @@ export default function ComplianceWorkspace() {
             </div>
           </div>
         </div>
+        <RippleButton variant="primary" size="md" onClick={handleGenerateCompliance} disabled={generating} className="mt-4">
+          {generating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><Sparkles className="mr-2 h-4 w-4" /> AI Generate Compliance</>}
+        </RippleButton>
       </div>
 
       <div className="surface-panel rounded-[30px] p-6">

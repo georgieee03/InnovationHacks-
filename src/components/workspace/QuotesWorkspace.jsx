@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { ReceiptText, Send, ArrowUpRight } from 'lucide-react';
+import { ReceiptText, Send, ArrowUpRight, Sparkles, Loader2 } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import { api } from '../../services/apiClient';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -21,6 +21,7 @@ export default function QuotesWorkspace() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -89,6 +90,35 @@ export default function QuotesWorkspace() {
     }
   };
 
+  const handleAIGenerate = async () => {
+    if (!businessInfo?.id || !form.clientName || !form.services) {
+      setError('Enter a client name and service description first.');
+      return;
+    }
+    setGenerating(true);
+    setError('');
+    try {
+      const result = await api.generateQuote({
+        businessId: businessInfo.id,
+        clientName: form.clientName,
+        serviceDescription: form.services,
+      });
+      if (result) {
+        const services = (result.services || []).map((s) => s.label || s.description || '').join('\n');
+        setForm((cur) => ({
+          ...cur,
+          services: services || cur.services,
+          subtotal: String(result.subtotal || cur.subtotal),
+          taxRate: String(result.taxRate || cur.taxRate),
+        }));
+      }
+    } catch (e) {
+      setError(e.message || 'AI quote generation failed');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   return (
     <section className="space-y-6">
       <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
@@ -141,6 +171,9 @@ export default function QuotesWorkspace() {
 
           <RippleButton type="submit" variant="primary" size="lg" disabled={saving} className="mt-5 w-full">
             {saving ? 'Saving quote...' : 'Save quote draft'}
+          </RippleButton>
+          <RippleButton type="button" variant="secondary" size="md" disabled={generating} className="mt-2 w-full" onClick={handleAIGenerate}>
+            {generating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating pricing...</> : <><Sparkles className="mr-2 h-4 w-4" /> AI Generate Pricing</>}
           </RippleButton>
         </form>
       </div>

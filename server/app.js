@@ -3,6 +3,7 @@ import cors from 'cors';
 import express from 'express';
 import { attachSessionUser, createAuthMiddleware } from './auth.js';
 import { ensureDatabaseSchema } from './schema.js';
+import aiRoutes from './routes/ai.js';
 import analyzeRoutes from './routes/analyze.js';
 import authRoutes from './routes/auth.js';
 import businessRoutes from './routes/business.js';
@@ -36,6 +37,7 @@ app.use('/api/plaid', plaidRoutes);
 app.use('/api', authRoutes);
 app.use('/api/business', businessRoutes);
 app.use('/api/workspace', workspaceRoutes);
+app.use('/api', aiRoutes);
 app.use('/api', dataRoutes);
 app.use('/api', analyzeRoutes);
 
