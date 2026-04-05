@@ -3,22 +3,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   BarChart3,
   Shield,
-  ClipboardCheck,
   FileSignature,
-  ReceiptText,
-  Camera,
-  BadgeCheck,
   TrendingUp,
-  Calculator,
+  DollarSign,
   AlertTriangle,
-  Trophy,
-  FileText,
-  MessageCircle,
   GraduationCap,
-  Moon,
   Settings,
   ShieldCheck,
-  DollarSign,
+  ClipboardCheck,
 } from 'lucide-react';
 import NavigationItem from './NavigationItem';
 import BusinessInfo from './BusinessInfo';
@@ -267,7 +259,7 @@ export default function CollapsibleSidebar({
             ))}
 
             <Tooltip
-              content="Theme toggle arrives in Phase 7"
+              content="Theme toggle coming soon"
               side="right"
               delay={300}
               disabled={showExpanded}
@@ -275,13 +267,13 @@ export default function CollapsibleSidebar({
               <button
                 type="button"
                 disabled
-                title="Theme toggle arrives in Phase 7"
-                aria-label="Theme toggle arrives in Phase 7"
-                className={`sidebar-action-surface focus-ring-control mt-1 flex w-full items-center rounded-2xl py-3 text-left text-text-secondary opacity-70 ${
+                title="Theme toggle coming soon"
+                aria-label="Theme toggle coming soon"
+                className={`sidebar-action-surface focus-ring-control mt-1 flex w-full items-center rounded-2xl py-3 text-left text-text-secondary opacity-40 ${
                   showExpanded ? 'gap-3 px-3' : 'justify-center px-2'
                 }`}
               >
-                <Moon className="h-4 w-4 shrink-0" />
+                <ShieldCheck className="h-4 w-4 shrink-0" />
                 <AnimatePresence initial={false}>
                   {showExpanded && (
                     <MotionSpan

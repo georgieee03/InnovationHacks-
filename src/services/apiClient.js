@@ -201,6 +201,10 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(data),
   }),
+  scanTaxOpportunities: (data) => fetchAPI('/ai/scan-tax-opportunities', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
   uploadWorkspaceFile: (folder, file) => {
     const formData = new FormData();
     formData.append('folder', folder);

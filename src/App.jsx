@@ -6,11 +6,7 @@ import Onboarding from './components/Onboarding';
 import FinancialOverview from './components/financial/FinancialOverview';
 import InsuranceAnalyzer from './components/insurance/InsuranceAnalyzer';
 import ActionPlan from './components/actionplan/ActionPlan';
-import Calculators from './components/calculators/Calculators';
 import RiskSimulator from './components/simulator/RiskSimulator';
-import Challenges from './components/gamification/Challenges';
-import HealthReport from './components/report/HealthReport';
-import ChatBot from './components/chat/ChatBot';
 import Education from './components/education/Education';
 import CursorSpotlight from './components/shared/CursorSpotlight';
 import LoadingSpinner from './components/shared/LoadingSpinner';
@@ -18,29 +14,19 @@ import ParticleGrid from './components/shared/ParticleGrid';
 import ScrollProgress from './components/shared/ScrollProgress';
 import CollapsibleSidebar from './components/layout/CollapsibleSidebar';
 import TopBar from './components/layout/TopBar';
-import ContractsWorkspace from './components/workspace/ContractsWorkspace';
-import QuotesWorkspace from './components/workspace/QuotesWorkspace';
-import ReceiptsWorkspace from './components/workspace/ReceiptsWorkspace';
-import ComplianceWorkspace from './components/workspace/ComplianceWorkspace';
+import DocumentsWorkspace from './components/workspace/DocumentsWorkspace';
 import GrowthWorkspace from './components/workspace/GrowthWorkspace';
 import TaxAnalysis from './components/workspace/TaxAnalysis';
 
 const pageRegistry = {
-  financial: { label: 'Financial Overview', component: FinancialOverview },
-  insurance: { label: 'Insurance Analyzer', component: InsuranceAnalyzer },
-  actionplan: { label: 'Action Plan', component: ActionPlan },
-  contracts: { label: 'Contracts', component: ContractsWorkspace },
-  quotes: { label: 'Quotes', component: QuotesWorkspace },
-  receipts: { label: 'Receipts', component: ReceiptsWorkspace },
-  compliance: { label: 'Compliance', component: ComplianceWorkspace },
+  financial: { label: 'Dashboard', component: FinancialOverview },
+  documents: { label: 'Documents', component: DocumentsWorkspace },
+  insurance: { label: 'Insurance', component: InsuranceAnalyzer },
   growth: { label: 'Growth', component: GrowthWorkspace },
   taxes: { label: 'Tax Analysis', component: TaxAnalysis },
-  calculators: { label: 'Calculators', component: Calculators },
   simulator: { label: 'Risk Simulator', component: RiskSimulator },
-  challenges: { label: 'Challenges', component: Challenges },
-  report: { label: 'Health Report', component: HealthReport },
-  chat: { label: 'Chat Assistant', component: ChatBot },
-  learn: { label: 'Learning Center', component: Education },
+  learn: { label: 'Learn', component: Education },
+  actionplan: { label: 'Action Plan', component: ActionPlan },
 };
 
 const viewTransition = {
@@ -145,7 +131,7 @@ function Dashboard() {
           marginLeft: sidebarOffset,
         }}
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-        className="enterprise-main relative z-10 min-h-screen max-w-full overflow-x-hidden pt-[104px]"
+        className="enterprise-main relative z-10 min-h-screen max-w-full overflow-x-hidden overflow-y-auto pt-[104px]"
       >
         <div className="mx-auto w-full max-w-[1600px] px-4 pb-8 sm:px-6 lg:px-8">
           <AnimatePresence mode="wait">

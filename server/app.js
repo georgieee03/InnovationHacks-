@@ -10,6 +10,7 @@ import aiRoutes from './routes/ai.js';
 import analyzeRoutes from './routes/analyze.js';
 import authRoutes from './routes/auth.js';
 import businessRoutes from './routes/business.js';
+import businessDataRoutes from './routes/businessData.js';
 import dataRoutes from './routes/data.js';
 import plaidRoutes from './routes/plaid.js';
 import workspaceRoutes from './routes/workspace.js';
@@ -39,6 +40,7 @@ app.use(async (_req, res, next) => {
 app.use('/api/plaid', plaidRoutes);
 app.use('/api', authRoutes);
 app.use('/api/business', businessRoutes);
+app.use('/api/data/businesses', businessDataRoutes);
 app.use('/api/workspace', workspaceRoutes);
 app.use('/api', aiRoutes);
 app.use('/api', dataRoutes);

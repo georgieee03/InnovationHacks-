@@ -7,6 +7,7 @@ import {
   BadgeDollarSign,
   TrendingUp,
   Loader2,
+  Network,
 } from 'lucide-react';
 import { AppContext } from '../context/AppContext';
 import { api } from '../services/apiClient';
@@ -162,6 +163,7 @@ export default function Onboarding({ previewOnly = false }) {
     { icon: <Shield className="h-5 w-5" />, title: 'Compliance Tracking', desc: 'We identify every license, permit, and filing your business needs — and remind you before deadlines.', color: 'text-primary bg-primary/10' },
     { icon: <BadgeDollarSign className="h-5 w-5" />, title: 'Tax Insights', desc: 'See estimated quarterly taxes, deduction opportunities, and what you should set aside.', color: 'text-warning bg-warning/10' },
     { icon: <TrendingUp className="h-5 w-5" />, title: 'Growth Tools', desc: 'Create professional quotes, discover funding, and get AI-powered suggestions to grow revenue.', color: 'text-primary bg-primary/10' },
+    { icon: <Network className="h-5 w-5" />, title: 'Insurance Network', desc: 'Compare coverage options, close protection gaps, and get matched to policies built for your business type.', color: 'text-violet-400 bg-violet-400/10' },
   ];
 
   return (
