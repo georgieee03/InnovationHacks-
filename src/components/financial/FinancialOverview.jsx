@@ -217,7 +217,7 @@ export default function FinancialOverview() {
           </div>
         </div>
 
-        {/* KPI strip */
+        {/* KPI strip */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <KpiCard
             label="Total Balance"
