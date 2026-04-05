@@ -1,4 +1,4 @@
-﻿import { useContext, useState } from 'react';
+import { useContext, useState } from 'react';
 import { DollarSign, Loader2, ChevronDown, ExternalLink, Sparkles, Search } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import { api } from '../../services/apiClient';
@@ -23,6 +23,7 @@ export default function TaxAnalysis() {
 
   const handleAnalyze = async () => {
     if (!businessInfo?.id) return;
+    setLoading(true); setError('');
     setLoading(true); setError('');
     try {
       const data = await api.analyzeTaxes({ businessId: businessInfo.id });

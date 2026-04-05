@@ -1,5 +1,5 @@
-﻿/**
- * /api/data/businesses/:businessId/* ΓÇö full CRUD layer.
+/**
+ * /api/data/businesses/:businessId/* — full CRUD layer.
  * Mirrors the business.graph.ts service from the Next.js version.
  * All routes verify the business belongs to the current user before operating.
  */
@@ -12,7 +12,7 @@ import { getDb } from '../db.js';
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } });
 
-// ΓöÇΓöÇΓöÇ Ownership guard ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Ownership guard ──────────────────────────────────────────────────────────
 async function requireOwnedBusiness(sql, req, res) {
   const { businessId } = req.params;
   if (!businessId) { res.status(400).json({ error: 'businessId required' }); return null; }
@@ -27,7 +27,7 @@ async function requireOwnedBusiness(sql, req, res) {
 
 router.use(requireSession);
 
-// ΓöÇΓöÇΓöÇ Business CRUD ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Business CRUD ────────────────────────────────────────────────────────────
 
 router.post('/', async (req, res) => {
   const sql = getDb();
@@ -84,7 +84,7 @@ router.patch('/:businessId', async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Failed to update business' }); }
 });
 
-// ΓöÇΓöÇΓöÇ Contracts ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Contracts ────────────────────────────────────────────────────────────────
 
 router.get('/:businessId/contracts', async (req, res) => {
   const sql = getDb();
@@ -154,7 +154,7 @@ router.delete('/:businessId/contracts/:contractId', async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Failed to delete contract' }); }
 });
 
-// ΓöÇΓöÇΓöÇ Receipts ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Receipts ─────────────────────────────────────────────────────────────────
 
 router.get('/:businessId/receipts', async (req, res) => {
   const sql = getDb();
@@ -221,7 +221,7 @@ router.delete('/:businessId/receipts/:receiptId', async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Failed to delete receipt' }); }
 });
 
-// ΓöÇΓöÇΓöÇ Quotes ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Quotes ───────────────────────────────────────────────────────────────────
 
 router.get('/:businessId/quotes', async (req, res) => {
   const sql = getDb();
@@ -284,7 +284,7 @@ router.delete('/:businessId/quotes/:quoteId', async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Failed to delete quote' }); }
 });
 
-// ΓöÇΓöÇΓöÇ Compliance ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Compliance ───────────────────────────────────────────────────────────────
 
 router.get('/:businessId/compliance', async (req, res) => {
   const sql = getDb();
@@ -341,7 +341,7 @@ router.delete('/:businessId/compliance/:itemId', async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Failed to delete compliance item' }); }
 });
 
-// ΓöÇΓöÇΓöÇ Funding Opportunities ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Funding Opportunities ────────────────────────────────────────────────────
 
 router.get('/:businessId/funding', async (req, res) => {
   const sql = getDb();
@@ -386,7 +386,7 @@ router.patch('/:businessId/funding/:opportunityId', async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Failed to update funding opportunity' }); }
 });
 
-// ΓöÇΓöÇΓöÇ Bank Transactions ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Bank Transactions ────────────────────────────────────────────────────────
 
 router.get('/:businessId/bank-transactions', async (req, res) => {
   const sql = getDb();
@@ -401,7 +401,7 @@ router.get('/:businessId/bank-transactions', async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Failed to load bank transactions' }); }
 });
 
-// ΓöÇΓöÇΓöÇ Plaid Connections ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Plaid Connections ────────────────────────────────────────────────────────
 
 router.get('/:businessId/plaid-connections', async (req, res) => {
   const sql = getDb();
@@ -419,7 +419,7 @@ router.get('/:businessId/plaid-connections', async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Failed to load Plaid connections' }); }
 });
 
-// ΓöÇΓöÇΓöÇ Growth Actions ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Growth Actions ───────────────────────────────────────────────────────────
 
 router.get('/:businessId/growth-actions', async (req, res) => {
   const sql = getDb();
@@ -448,7 +448,7 @@ router.patch('/:businessId/growth-actions/:actionId', async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Failed to update growth action' }); }
 });
 
-// ΓöÇΓöÇΓöÇ Uploaded Files ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Uploaded Files ───────────────────────────────────────────────────────────
 
 router.get('/:businessId/files', async (req, res) => {
   const sql = getDb();
@@ -490,7 +490,7 @@ router.post('/:businessId/files/upload', upload.single('file'), async (req, res)
   } catch (e) { console.error('File upload error:', e); res.status(500).json({ error: 'Failed to upload file' }); }
 });
 
-// ΓöÇΓöÇΓöÇ Normalizers ΓÇö snake_case DB ΓåÆ camelCase API ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Normalizers — snake_case DB → camelCase API ──────────────────────────────
 
 function normalizeBusinessOut(r) {
   return {

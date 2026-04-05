@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DocumentsWorkspace ΓÇö Contracts, Quotes, Receipts, Compliance in one place.
  * Each tab loads its own data lazily on first activation ΓÇö no upfront waterfall.
  */

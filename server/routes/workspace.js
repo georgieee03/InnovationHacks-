@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { put } from '@vercel/blob';
+import { TinyFish } from '@tiny-fish/sdk';
 import { requireSession } from '../auth.js';
 import { getDb } from '../db.js';
-import { buildTinyFishRequest, ensureBusinessWorkspace } from '../workspace.js';
+import { ensureBusinessWorkspace } from '../workspace.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
@@ -377,71 +378,57 @@ async function refreshFundingIfTinyFishConfigured(sql, business) {
   }
 
   try {
-    const response = await fetch('https://api.tinyfish.io/v1/search', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.TINYFISH_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(buildTinyFishRequest(business)),
-    });
+    const client = new TinyFish({ apiKey: process.env.TINYFISH_API_KEY });
+    const annualRevenue = Math.round(Number(business.monthly_revenue_estimate || 0) * 12);
 
-    if (!response.ok) {
-      return { refreshed: false, source: 'fallback' };
+    const goal = `Find all active funding opportunities (grants, microloans, SBA loans, competitions) for a ${business.type} business named "${business.name}" in ${business.city || ''}, ${business.state || ''} with ~$${annualRevenue} annual revenue.
+Search SBA.gov, Grants.gov, Kiva.org, Accion.org, and state economic development sites.
+For each opportunity extract: name, provider, type (grant/loan/microloan/line_of_credit), amount range (min/max), interest rate, repayment terms, eligibility requirements, application URL, deadline, and fit score 0-100.`;
+
+    const stream = await client.agent.stream({ url: 'https://sba.gov/funding-programs', goal });
+
+    const chunks = [];
+    for await (const event of stream) {
+      const text = event?.content ?? event?.text ?? event?.delta ?? '';
+      if (text) chunks.push(text);
     }
 
-    const payload = await response.json();
-    const results = Array.isArray(payload?.results) ? payload.results.slice(0, 6) : [];
+    const agentOutput = chunks.join('');
+    if (!agentOutput) return { refreshed: false, source: 'fallback' };
 
-    if (!results.length) {
-      return { refreshed: false, source: 'fallback' };
-    }
+    // Parse agent output into structured results via JSON extraction
+    const jsonMatch = agentOutput.match(/\[[\s\S]*\]/);
+    const results = jsonMatch ? (() => { try { return JSON.parse(jsonMatch[0]); } catch { return []; } })() : [];
 
-    await sql`
-      DELETE FROM funding_opportunities
-      WHERE business_id = ${business.id} AND status = 'discovered'
-    `;
+    if (!results.length) return { refreshed: false, source: 'tinyfish' };
 
-    for (const item of results) {
+    await sql`DELETE FROM funding_opportunities WHERE business_id = ${business.id} AND status = 'discovered'`;
+
+    for (const item of results.slice(0, 8)) {
       await sql`
         INSERT INTO funding_opportunities (
-          business_id,
-          name,
-          provider,
-          type,
-          amount_min,
-          amount_max,
-          interest_rate,
-          repayment_terms,
-          eligibility_match,
-          eligibility_criteria,
-          application_url,
-          application_deadline,
-          status,
-          application_progress,
-          prefilled_fields,
-          fit_score,
-          recommendation,
-          estimated_time_to_apply
+          business_id, name, provider, type, amount_min, amount_max,
+          interest_rate, repayment_terms, eligibility_match, eligibility_criteria,
+          application_url, application_deadline, status, application_progress,
+          prefilled_fields, fit_score, recommendation, estimated_time_to_apply
         )
         VALUES (
           ${business.id},
-          ${item.title || 'Funding opportunity'},
-          ${item.source || 'TinyFish'},
+          ${item.name || item.title || 'Funding opportunity'},
+          ${item.provider || item.source || 'TinyFish'},
           ${item.type || 'other'},
-          ${Number(item.minAmount || 0)},
-          ${Number(item.maxAmount || 0)},
+          ${Number(item.amountMin || item.minAmount || 0)},
+          ${Number(item.amountMax || item.maxAmount || 0)},
           ${item.interestRate || null},
-          ${item.terms || null},
-          ${Number(item.match || 72)},
+          ${item.repaymentTerms || item.terms || null},
+          ${Number(item.eligibilityMatch || item.match || 72)},
           ${JSON.stringify([])}::jsonb,
-          ${item.url || ''},
+          ${item.applicationUrl || item.url || ''},
           ${item.deadline || null},
-          'discovered',
-          0,
-          ${JSON.stringify({ source: 'tinyfish' })}::jsonb,
-          ${Number(item.fitScore || item.match || 72)},
-          ${item.description || 'Current opportunity sourced via TinyFish search.'},
+          'discovered', 0,
+          ${JSON.stringify({ source: 'tinyfish', businessName: business.name })}::jsonb,
+          ${Number(item.fitScore || item.eligibilityMatch || 72)},
+          ${item.recommendation || item.description || 'Sourced via TinyFish live research.'},
           ${'20-40 minutes'}
         )
       `;
