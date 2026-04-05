@@ -17,7 +17,7 @@ export default function EnhancedInput({
   return (
     <div className={`relative ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-text-secondary mb-2">
+        <label className="mb-2.5 block text-[0.76rem] font-medium uppercase tracking-[0.1em] text-text-secondary">
           {label}
         </label>
       )}
@@ -28,7 +28,7 @@ export default function EnhancedInput({
           </div>
         )}
         <motion.div
-          className="absolute inset-0 rounded-lg pointer-events-none"
+          className="pointer-events-none absolute inset-0 rounded-xl"
           animate={{
             boxShadow: isFocused
               ? '0 0 0 3px rgba(0, 207, 49, 0.22), 0 0 20px rgba(0, 207, 49, 0.32)'
@@ -45,8 +45,8 @@ export default function EnhancedInput({
           onBlur={() => setIsFocused(false)}
           style={error ? { '--control-input-border-color': 'var(--color-danger)' } : undefined}
           className={`
-            control-input focus-ring-brand w-full rounded-lg px-4 py-3
-            text-text-primary placeholder-text-muted
+            control-input focus-ring-brand w-full rounded-xl px-4 py-3.5
+            text-[0.98rem] tracking-[-0.014em] text-text-primary placeholder-text-muted
             transition-all duration-200
             ${Icon ? 'pl-11' : ''}
             ${error ? 'border-gap' : ''}
@@ -56,7 +56,7 @@ export default function EnhancedInput({
       </div>
       {error && (
         <motion.p
-          className="mt-1.5 text-xs text-gap"
+          className="mt-2 text-[0.82rem] text-gap"
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}

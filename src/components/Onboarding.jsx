@@ -93,7 +93,7 @@ function StepPill({ step, index, active, complete, enabled, onClick }) {
       type="button"
       onClick={onClick}
       disabled={!enabled}
-      className={`surface-chip min-w-[132px] rounded-2xl px-3 py-3 text-left transition-all duration-200 ${
+      className={`surface-chip min-w-[148px] rounded-[24px] px-4 py-3.5 text-left transition-all duration-200 ${
         active
           ? 'border-primary/35 bg-primary/10 shadow-[0_12px_28px_rgba(0,207,49,0.12)]'
           : complete
@@ -103,13 +103,13 @@ function StepPill({ step, index, active, complete, enabled, onClick }) {
     >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] font-normal uppercase tracking-[0.06em] text-text-secondary">{step.eyebrow}</p>
-          <p className={`mt-1 text-sm ${active ? 'font-medium text-text-primary' : 'font-normal text-text-secondary'}`}>
+          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-text-secondary">{step.eyebrow}</p>
+          <p className={`mt-1.5 text-[0.95rem] leading-5 tracking-[-0.014em] ${active ? 'font-medium text-text-primary' : 'font-normal text-text-secondary'}`}>
             {step.title}
           </p>
         </div>
         <div
-          className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs ${
+          className={`flex h-9 w-9 items-center justify-center rounded-full border text-[0.8rem] ${
             complete
               ? 'border-covered/30 bg-covered/10 text-covered'
               : active
@@ -120,7 +120,7 @@ function StepPill({ step, index, active, complete, enabled, onClick }) {
           {complete ? <CheckCircle2 className="h-4 w-4" /> : index + 1}
         </div>
       </div>
-      <p className="mt-2 text-xs text-text-secondary">{step.summary}</p>
+      <p className="mt-2.5 text-[0.82rem] leading-5 text-text-secondary">{step.summary}</p>
     </button>
   );
 }
@@ -142,16 +142,16 @@ function QuestionShell({
   return (
     <motion.section
       layout
-      className="surface-panel-strong rounded-[28px] p-5 sm:p-6"
+      className="surface-panel-strong rounded-[32px] p-6 sm:p-7"
     >
       <div className="mb-5 flex items-start gap-4">
-        <div className={`surface-chip flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${accentClasses}`}>
+        <div className={`surface-chip flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-[18px] ${accentClasses}`}>
           <Icon className={`h-5 w-5 ${accent === 'covered' ? 'text-covered' : accent === 'warning' ? 'text-underinsured' : 'text-primary'}`} />
         </div>
         <div className="min-w-0">
-          <p className="text-[11px] font-normal uppercase tracking-[0.08em] text-text-secondary">{eyebrow}</p>
-          <h2 className="mt-1 text-2xl font-heading font-light tracking-[-0.03em] text-text-primary">{title}</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-text-secondary">{description}</p>
+          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-text-secondary">{eyebrow}</p>
+          <h2 className="mt-1.5 text-[1.95rem] font-heading font-light tracking-[-0.035em] text-text-primary sm:text-[2.15rem]">{title}</h2>
+          <p className="mt-2.5 max-w-[42rem] text-[0.98rem] leading-8 text-text-secondary">{description}</p>
         </div>
       </div>
       {children}
@@ -174,10 +174,10 @@ function SignalInput({
   const [isFocused, setIsFocused] = useState(false);
 
   return (
-    <div className="surface-panel rounded-[30px] p-5">
-      <label className="text-[11px] font-normal uppercase tracking-[0.08em] text-text-secondary">{label}</label>
+    <div className="surface-panel rounded-[32px] p-6">
+      <label className="text-[10px] font-medium uppercase tracking-[0.14em] text-text-secondary">{label}</label>
       <div
-        className={`mt-4 flex min-h-[80px] items-center gap-4 rounded-[24px] border px-5 py-4 transition-all duration-200 ${
+        className={`mt-4 flex min-h-[84px] items-center gap-4 rounded-[26px] border px-5 py-4 transition-all duration-200 ${
           isFocused
             ? 'border-primary/35 bg-primary/[0.08] shadow-[0_14px_28px_rgba(0,207,49,0.1)]'
             : 'border-white/10 bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
@@ -185,7 +185,7 @@ function SignalInput({
       >
         {Icon ? (
           <div
-            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 ${
+            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border transition-all duration-200 ${
               isFocused
                 ? 'border-primary/25 bg-primary/15 text-primary'
                 : 'border-white/10 bg-white/[0.04] text-text-secondary'
@@ -205,7 +205,7 @@ function SignalInput({
           maxLength={maxLength}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className={`control-input w-full rounded-2xl border-0 bg-transparent px-0 py-2 text-lg font-normal tracking-[-0.02em] text-text-primary shadow-none outline-none placeholder:text-text-muted appearance-none [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+          className={`control-input w-full rounded-2xl border-0 bg-transparent px-0 py-2 text-[1.04rem] font-normal tracking-[-0.018em] text-text-primary shadow-none outline-none placeholder:text-text-muted appearance-none [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
             readOnly ? 'cursor-default' : ''
           }`}
         />
@@ -244,8 +244,8 @@ function BusinessTypeCard({ businessType, selected, onSelect }) {
 function SummaryRow({ label, value }) {
   return (
     <div className="surface-panel rounded-2xl px-4 py-3">
-      <p className="text-[11px] font-normal uppercase tracking-[0.07em] text-text-secondary">{label}</p>
-      <p className="mt-2 text-sm font-medium text-text-primary">{value}</p>
+      <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-text-secondary">{label}</p>
+      <p className="mt-2.5 text-[0.95rem] font-medium tracking-[-0.014em] text-text-primary">{value}</p>
     </div>
   );
 }
@@ -490,7 +490,7 @@ export default function Onboarding() {
                 <Shield className="h-7 w-7 text-primary" />
               </div>
               <div>
-                <p className="text-[11px] font-normal uppercase tracking-[0.1em] text-text-secondary">Onboarding flow</p>
+                <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-text-secondary">Onboarding flow</p>
                 <h1 className="mt-1 text-4xl font-heading font-thin tracking-[-0.04em] text-text-primary sm:text-5xl">
                   Welcome to SafeGuard
                 </h1>
@@ -610,7 +610,7 @@ export default function Onboarding() {
                                 )}
                               </div>
                               <div>
-                                <p className="text-[11px] font-normal uppercase tracking-[0.08em] text-text-secondary">Location status</p>
+                                <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-text-secondary">Location status</p>
                                 <p className="mt-2 text-sm text-text-primary">{zipLookup.message}</p>
                               </div>
                             </div>
@@ -711,8 +711,8 @@ export default function Onboarding() {
                                 <Database className="h-5 w-5 text-primary" />
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-text-primary">Continue without Plaid</p>
-                                <p className="mt-1 text-xs leading-6 text-text-secondary">
+                                <p className="text-[0.98rem] font-medium tracking-[-0.014em] text-text-primary">Continue without Plaid</p>
+                                <p className="mt-1.5 text-[0.82rem] leading-6 text-text-secondary">
                                   Start with API-enriched business context and local fallback financial data. You can still analyze risk and coverage immediately.
                                 </p>
                               </div>
@@ -744,7 +744,7 @@ export default function Onboarding() {
 
             <div className="mt-4 flex shrink-0 flex-col gap-4 border-t border-white/10 pt-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-text-secondary">{stageFooterMessage}</p>
+                <p className="text-[0.92rem] leading-6 text-text-secondary">{stageFooterMessage}</p>
 
                 {activeStep < 3 ? (
                   <div className="flex items-center gap-3 self-end">

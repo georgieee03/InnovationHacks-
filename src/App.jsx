@@ -54,10 +54,6 @@ function Dashboard() {
     navigateToTab,
   } = useContext(AppContext);
 
-  if (!isOnboarded) {
-    return <Onboarding />;
-  }
-
   const activePage = pageRegistry[activeTab] || pageRegistry.financial;
   const ActiveComponent = activePage.component;
   const sidebarOffset = viewportMode === 'mobile' ? 0 : sidebarExpanded ? 280 : 64;
@@ -70,52 +66,58 @@ function Dashboard() {
       <CursorSpotlight />
       <ScrollProgress />
 
-      <CollapsibleSidebar
-        viewportMode={viewportMode}
-        isExpanded={sidebarExpanded}
-        isMobileOpen={mobileSidebarOpen}
-        activeTab={activeTab}
-        businessInfo={businessInfo}
-        financialMetrics={financialMetrics}
-        gapAnalysis={gapAnalysis}
-        onNavigate={navigateToTab}
-        onHoverExpandedChange={setSidebarHoverExpanded}
-        onMobileOpen={openMobileSidebar}
-        onMobileClose={closeMobileSidebar}
-      />
+      {isOnboarded ? (
+        <>
+          <CollapsibleSidebar
+            viewportMode={viewportMode}
+            isExpanded={sidebarExpanded}
+            isMobileOpen={mobileSidebarOpen}
+            activeTab={activeTab}
+            businessInfo={businessInfo}
+            financialMetrics={financialMetrics}
+            gapAnalysis={gapAnalysis}
+            onNavigate={navigateToTab}
+            onHoverExpandedChange={setSidebarHoverExpanded}
+            onMobileOpen={openMobileSidebar}
+            onMobileClose={closeMobileSidebar}
+          />
 
-      <TopBar
-        activeLabel={activePage.label}
-        businessInfo={businessInfo}
-        sidebarOffset={sidebarOffset}
-        viewportMode={viewportMode}
-        isSidebarExpanded={sidebarExpanded}
-        isMobileOpen={mobileSidebarOpen}
-        onMenuToggle={toggleSidebar}
-      />
+          <TopBar
+            activeLabel={activePage.label}
+            businessInfo={businessInfo}
+            sidebarOffset={sidebarOffset}
+            viewportMode={viewportMode}
+            isSidebarExpanded={sidebarExpanded}
+            isMobileOpen={mobileSidebarOpen}
+            onMenuToggle={toggleSidebar}
+          />
 
-      <MotionMain
-        animate={{
-          marginLeft: sidebarOffset,
-        }}
-        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-        className="enterprise-main relative z-10 min-h-screen max-w-full overflow-x-hidden pt-[104px]"
-      >
-        <div className="mx-auto w-full max-w-[1600px] px-4 pb-8 sm:px-6 lg:px-8">
-          <AnimatePresence mode="wait">
-            <MotionDiv
-              key={activeTab}
-              variants={viewTransition}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-            >
-              <ActiveComponent />
-            </MotionDiv>
-          </AnimatePresence>
-        </div>
-      </MotionMain>
+          <MotionMain
+            animate={{
+              marginLeft: sidebarOffset,
+            }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+        className="enterprise-main relative z-10 min-h-screen max-w-full overflow-x-hidden pt-[112px]"
+          >
+            <div className="mx-auto w-full max-w-[1600px] px-4 pb-8 sm:px-6 lg:px-8">
+              <AnimatePresence mode="wait">
+                <MotionDiv
+                  key={activeTab}
+                  variants={viewTransition}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                >
+                  <ActiveComponent />
+                </MotionDiv>
+              </AnimatePresence>
+            </div>
+          </MotionMain>
+        </>
+      ) : (
+        <Onboarding />
+      )}
     </div>
   );
 }

@@ -165,9 +165,9 @@ export default function CollapsibleSidebar({
       }`}
       style={{ width: viewportMode === 'mobile' ? 280 : sidebarWidth }}
     >
-      <div className={`flex h-[88px] items-center border-b border-white/10 ${showExpanded ? 'justify-between px-5' : 'justify-center px-2'}`}>
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.045] text-primary shadow-[0_10px_24px_rgba(0,0,0,0.2)]">
+      <div className={`flex h-[96px] items-center border-b border-white/10 ${showExpanded ? 'justify-between px-6' : 'justify-center px-3'}`}>
+        <div className="flex items-center gap-3.5">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[18px] border border-white/10 bg-white/[0.045] text-primary shadow-[0_10px_24px_rgba(0,0,0,0.2)]">
             <ShieldCheck className="h-5 w-5" />
           </div>
           <AnimatePresence initial={false}>
@@ -178,8 +178,8 @@ export default function CollapsibleSidebar({
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <p className="text-lg font-normal tracking-[-0.02em] text-text-primary">SafeGuard</p>
-                <p className="text-[11px] font-light uppercase tracking-[0.05em] text-text-secondary">Enterprise workspace</p>
+                <p className="text-[1.08rem] font-medium tracking-[-0.022em] text-text-primary">SafeGuard</p>
+                <p className="mt-0.5 text-[0.66rem] font-medium uppercase tracking-[0.13em] text-text-secondary">Enterprise workspace</p>
               </MotionDiv>
             )}
           </AnimatePresence>
@@ -187,8 +187,8 @@ export default function CollapsibleSidebar({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className={`flex-1 overflow-y-auto py-4 ${showExpanded ? 'px-3' : 'px-2'}`}>
-          <div className="space-y-1">
+        <div className={`flex-1 overflow-y-auto py-5 ${showExpanded ? 'px-3.5' : 'px-2.5'}`}>
+          <div className="space-y-1.5">
             {mainItems.map((item, index) => (
               <MotionDiv
                 key={item.id}
@@ -208,7 +208,7 @@ export default function CollapsibleSidebar({
           </div>
         </div>
 
-        <div className={`border-t border-white/8 py-4 ${showExpanded ? 'px-3' : 'px-2'}`}>
+        <div className={`border-t border-white/8 py-5 ${showExpanded ? 'px-3.5' : 'px-2.5'}`}>
           <BusinessInfo
             businessInfo={businessInfo}
             financialMetrics={financialMetrics}
@@ -237,8 +237,8 @@ export default function CollapsibleSidebar({
                 disabled
                 title="Theme toggle arrives in Phase 7"
                 aria-label="Theme toggle arrives in Phase 7"
-                className={`sidebar-action-surface focus-ring-control mt-1 flex w-full items-center rounded-2xl py-3 text-left text-text-secondary opacity-70 ${
-                  showExpanded ? 'gap-3 px-3' : 'justify-center px-2'
+                className={`sidebar-action-surface focus-ring-control mt-1 flex w-full items-center rounded-[20px] py-3.5 text-left text-text-secondary opacity-70 ${
+                  showExpanded ? 'gap-3.5 px-3.5' : 'justify-center px-2.5'
                 }`}
               >
                 <Moon className="h-4 w-4 shrink-0" />
@@ -249,7 +249,7 @@ export default function CollapsibleSidebar({
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
                       transition={{ duration: 0.2 }}
-                      className="text-sm font-normal tracking-[-0.01em]"
+                      className="text-[0.94rem] font-medium tracking-[-0.014em]"
                     >
                       Theme Toggle
                     </MotionSpan>

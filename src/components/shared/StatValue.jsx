@@ -1,10 +1,10 @@
 import useTheme from '../../hooks/useTheme';
 
 const SIZE_CLASSES = {
-  sm: 'text-xl md:text-2xl',
-  md: 'text-2xl md:text-3xl',
-  lg: 'text-3xl md:text-4xl',
-  xl: 'text-4xl md:text-5xl',
+  sm: 'text-[1.35rem] md:text-[1.65rem]',
+  md: 'text-[1.8rem] md:text-[2.2rem]',
+  lg: 'text-[2.45rem] md:text-[3rem]',
+  xl: 'text-[3.1rem] md:text-[3.9rem]',
 };
 
 const COLOR_VARIANTS = {
@@ -30,7 +30,7 @@ export default function StatValue({
 
   if (!shouldUseReflective) {
     return (
-      <span className={`inline-block font-heading font-light tracking-[-0.03em] text-text-primary ${sizeClass} ${className}`}>
+      <span className={`inline-block font-heading font-normal leading-[0.96] tracking-[-0.03em] text-text-primary ${sizeClass} ${className}`}>
         {value}
       </span>
     );
@@ -38,7 +38,7 @@ export default function StatValue({
 
   return (
     <span
-      className={`text-reflective reflective-hover inline-block font-heading font-light leading-none tracking-[-0.04em] ${reflectiveModeClass} ${colorClass} ${sizeClass} ${className}`}
+      className={`text-reflective reflective-hover inline-block font-heading font-normal leading-[0.92] tracking-[-0.035em] ${reflectiveModeClass} ${colorClass} ${sizeClass} ${className}`}
       data-value={value}
       data-size={size}
       data-tone={color}

@@ -50,7 +50,7 @@ export default function Tooltip({
             animate={{ opacity: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, x: side === 'right' ? -8 : 0, y: side === 'right' ? 0 : 8 }}
             transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-            className={`sidebar-tooltip pointer-events-none absolute z-50 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-normal tracking-[0.02em] text-text-primary ${positionClasses}`}
+            className={`sidebar-tooltip pointer-events-none absolute z-50 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-[0.78rem] font-medium tracking-[0.04em] text-text-primary ${positionClasses}`}
           >
             {content}
           </MotionDiv>

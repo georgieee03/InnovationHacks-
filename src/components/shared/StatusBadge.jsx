@@ -12,7 +12,7 @@ const DEFAULT_LABELS = {
 
 export default function StatusBadge({ status, label, pulse = false }) {
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-all duration-300 ${STATUS_STYLES[status] || STATUS_STYLES.gap} ${pulse ? 'animate-pulse-subtle' : ''}`}>
+    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[0.7rem] font-medium uppercase tracking-[0.1em] transition-all duration-300 ${STATUS_STYLES[status] || STATUS_STYLES.gap} ${pulse ? 'animate-pulse-subtle' : ''}`}>
       {pulse && (
         <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${status === 'covered' ? 'bg-covered' : status === 'underinsured' ? 'bg-underinsured' : 'bg-gap'} animate-ping-slow`} />
       )}

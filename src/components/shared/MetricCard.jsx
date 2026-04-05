@@ -76,8 +76,8 @@ export default function MetricCard({ title, value, subtitle, trend, color, delay
         willChange: 'transform',
       }}
     >
-      <p className="text-xs font-normal text-text-secondary uppercase tracking-[0.05em]">{title}</p>
-      <div className="mt-3">
+      <p className="text-[0.72rem] font-medium uppercase tracking-[0.12em] text-text-secondary">{title}</p>
+      <div className="mt-3.5">
         <StatValue
           value={displayValue}
           color={COLOR_TO_VARIANT[color] || 'neutral'}
@@ -86,9 +86,9 @@ export default function MetricCard({ title, value, subtitle, trend, color, delay
         />
       </div>
       {(subtitle || trend) && (
-        <div className="flex items-center gap-1.5 mt-2">
+        <div className="mt-2.5 flex items-center gap-1.5">
           {trend && TREND_ICONS[trend]}
-          {subtitle && <span className="text-xs font-light text-text-secondary">{subtitle}</span>}
+          {subtitle && <span className="text-[0.82rem] text-text-secondary">{subtitle}</span>}
         </div>
       )}
     </MotionDiv>

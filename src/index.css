@@ -42,23 +42,25 @@
   --color-accent-green: var(--color-success);
 
   /* Fonts */
-  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-heading: var(--font-primary);
-  --font-body: var(--font-primary);
-  --font-weight-thin: 200;
-  --font-weight-light: 300;
+  --font-display: 'Gilda Display', Georgia, 'Times New Roman', serif;
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-primary: var(--font-ui);
+  --font-heading: var(--font-display);
+  --font-body: var(--font-ui);
+  --font-weight-thin: 400;
+  --font-weight-light: 400;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
-  --text-xs: 0.8125rem;
-  --text-sm: 0.875rem;
-  --text-base: 0.9375rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --text-4xl: 2.25rem;
-  --text-5xl: 3rem;
+  --text-xs: 0.84rem;
+  --text-sm: 0.95rem;
+  --text-base: 1rem;
+  --text-lg: 1.14rem;
+  --text-xl: 1.34rem;
+  --text-2xl: 1.62rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.65rem;
+  --text-5xl: 3.55rem;
 }
 
 :root {
@@ -360,10 +362,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-weight: var(--font-weight-light);
-  font-size: 0.9375rem;
-  line-height: 1.55;
-  letter-spacing: -0.005em;
+  font-weight: var(--font-weight-normal);
+  font-size: 1rem;
+  line-height: 1.62;
+  letter-spacing: -0.012em;
 }
 
 body,
@@ -396,34 +398,50 @@ textarea,
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
+  font-weight: 400;
   color: var(--color-text-primary);
   text-wrap: balance;
 }
 
-h1 { font-size: 3rem; line-height: 1.1; font-weight: var(--font-weight-thin); letter-spacing: -0.03em; }
-h2 { font-size: 2.25rem; line-height: 1.15; font-weight: var(--font-weight-thin); letter-spacing: -0.025em; }
-h3 { font-size: 1.75rem; line-height: 1.2; font-weight: var(--font-weight-light); letter-spacing: -0.02em; }
-h4 { font-size: 1.5rem; line-height: 1.25; font-weight: var(--font-weight-light); letter-spacing: -0.015em; }
-h5 { font-size: 1.25rem; line-height: 1.3; font-weight: var(--font-weight-normal); letter-spacing: -0.01em; }
-h6 { font-size: 1.125rem; line-height: 1.35; font-weight: var(--font-weight-normal); letter-spacing: -0.01em; }
+h1 { font-size: 3rem; line-height: 1.02; letter-spacing: -0.04em; }
+h2 { font-size: 2.25rem; line-height: 1.08; letter-spacing: -0.035em; }
+h3 { font-size: 1.75rem; line-height: 1.12; letter-spacing: -0.03em; }
+h4 { font-size: 1.5rem; line-height: 1.16; letter-spacing: -0.025em; }
+h5 { font-size: 1.25rem; line-height: 1.2; letter-spacing: -0.02em; }
+h6 { font-size: 1.125rem; line-height: 1.24; letter-spacing: -0.018em; }
 
 label {
-  font-size: 0.8125rem;
-  font-weight: var(--font-weight-normal);
-  letter-spacing: 0.05em;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 small,
 caption {
-  font-weight: var(--font-weight-light);
+  font-weight: var(--font-weight-normal);
 }
 
 button,
 input,
 select,
 textarea {
-  font: inherit;
+  font-family: var(--font-body);
+  font-size: inherit;
+  line-height: inherit;
+}
+
+button {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.012em;
+}
+
+input,
+select,
+textarea {
+  font-weight: var(--font-weight-normal);
+  letter-spacing: -0.012em;
 }
 
 #root {
@@ -445,7 +463,7 @@ body.sidebar-open {
 .glass-card {
   background: var(--glass-card-gradient);
   border: 1px solid var(--color-border-default);
-  border-radius: 16px;
+  border-radius: 20px;
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(18px) saturate(120%);
@@ -525,6 +543,14 @@ body.sidebar-open {
   -webkit-backdrop-filter: blur(16px) saturate(115%);
 }
 
+.surface-panel,
+.surface-panel-strong,
+.surface-chip,
+.sidebar-panel,
+.sidebar-action-surface {
+  border-radius: 20px;
+}
+
 .surface-panel {
   background: var(--surface-panel-background, var(--surface-panel-gradient));
   border: 1px solid var(--surface-panel-border-color, var(--surface-panel-border));
@@ -593,6 +619,13 @@ body.sidebar-open {
 .readable-copy {
   color: var(--color-text-secondary);
   text-wrap: pretty;
+}
+
+.surface-chip,
+.sidebar-action-surface,
+.sidebar-panel,
+.sidebar-tooltip {
+  letter-spacing: -0.01em;
 }
 
 .focus-ring-control:focus-visible {
@@ -674,6 +707,15 @@ body.sidebar-open {
 .scroll-progress {
   background: var(--scroll-progress-gradient);
   box-shadow: var(--scroll-progress-shadow);
+}
+
+.recharts-wrapper,
+.recharts-wrapper svg,
+.recharts-wrapper text,
+.recharts-legend-wrapper,
+.recharts-tooltip-wrapper,
+.recharts-default-tooltip {
+  font-family: var(--font-body);
 }
 
 /* Smooth Scrollbar */

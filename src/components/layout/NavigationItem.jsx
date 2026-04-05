@@ -33,7 +33,7 @@ export default function NavigationItem({ item, isActive, isExpanded, onClick, bu
       aria-label={item.label}
       aria-disabled={item.disabled || undefined}
       aria-current={isActive ? 'page' : undefined}
-      className={`btn-ripple focus-ring-control group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border-l-[3px] px-3 py-3 text-left transition-all duration-200 ${
+      className={`btn-ripple focus-ring-control group relative flex w-full items-center gap-3.5 overflow-hidden rounded-[20px] border-l-[3px] px-3.5 py-3.5 text-left transition-all duration-200 ${
         isExpanded ? 'justify-start' : 'justify-center'
       } ${
         isActive
@@ -71,12 +71,12 @@ export default function NavigationItem({ item, isActive, isExpanded, onClick, bu
             className="flex min-w-0 flex-1 items-center justify-between gap-3"
           >
             <div className="min-w-0">
-              <p className={`truncate text-sm tracking-[-0.01em] ${isActive ? 'font-medium' : 'font-normal'}`}>
+              <p className={`truncate text-[0.95rem] leading-5 tracking-[-0.014em] ${isActive ? 'font-medium' : 'font-normal'}`}>
                 {item.shortLabel || item.label}
               </p>
             </div>
             {item.badge && (
-              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-normal uppercase tracking-[0.04em] ${badgeClass}`}>
+              <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[0.64rem] font-medium uppercase tracking-[0.12em] ${badgeClass}`}>
                 {item.badge.text}
               </span>
             )}
