@@ -8,9 +8,21 @@
  */
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+// Fast/free: Qwen 3 235B — used when TinyFish already supplied web context (AI just structures
+// the data) and for simple generation tasks (quotes, compliance lists, chat, receipt scanning).
 const PRIMARY_MODEL = 'google/gemini-2.0-flash-001';
-const FALLBACK_MODEL = 'google/gemini-2.0-flash-001';
-const VISION_MODEL = 'google/gemini-2.0-flash-001'; // Gemini handles vision natively
+
+// Accurate: Gemini 2.5 Flash — used for complex analysis (taxes, contracts, business advisor)
+// and for any scan endpoint that gets NO TinyFish context and must reason independently.
+const ACCURATE_MODEL = 'google/gemini-2.0-flash-001';
+
+// Vision: Gemini Flash handles multimodal inputs natively.
+const VISION_MODEL = 'google/gemini-2.0-flash-001';
+
+// Exported so route files can pick the right tier at the call-site.
+export const FAST_MODEL_ID = PRIMARY_MODEL;
+export const ACCURATE_MODEL_ID = ACCURATE_MODEL;
 
 /**
  * Core identity and behavioral guidelines for all AI calls in Launchpad.
@@ -31,10 +43,18 @@ TONE AND COMMUNICATION RULES:
 - Use dollar amounts and concrete numbers whenever possible — not vague ranges
 - Avoid hedging language like "you may want to consider" or "it might be advisable" — give a clear recommendation
 - Never use jargon without explanation
+- Never use jargon without explanation
 - Keep explanations short. One clear sentence beats three vague ones
+- When something is urgent or risky, say so plainly
 - When something is urgent or risky, say so plainly
 
 ACCURACY AND HONESTY RULES:
+- Only cite real laws, real agencies, real programs, and real URLs — never fabricate
+- If uncertain about a specific threshold or deadline, say "verify this with your state's website"
+- Distinguish clearly between federal and state/local requirements
+- For tax estimates, use conservative assumptions and note they are estimates
+- For funding, only include real and currently active programs
+- For contracts, flag genuine risks honestly
 - Only cite real laws, real agencies, real programs, and real URLs — never fabricate
 - If uncertain about a specific threshold or deadline, say "verify this with your state's website"
 - Distinguish clearly between federal and state/local requirements
@@ -45,8 +65,12 @@ ACCURACY AND HONESTY RULES:
 OUTPUT FORMAT:
 - Always return valid JSON matching the exact schema requested — no markdown, no extra text
 - Use null for unknown fields, never omit required fields
+- Use null for unknown fields, never omit required fields
 - Dollar amounts as numbers, not strings
 - Dates as YYYY-MM-DD strings
+- Percentages as integers 0–100, not decimals
+
+IMPORTANT: Do NOT wrap your response in markdown code fences. Do NOT include any thinking or reasoning tags. Return ONLY the raw JSON object.`.trim();
 - Percentages as integers 0–100, not decimals
 
 IMPORTANT: Do NOT wrap your response in markdown code fences. Do NOT include any thinking or reasoning tags. Return ONLY the raw JSON object.`.trim();
@@ -57,9 +81,11 @@ export function isGroqConfigured() {
 
 export function getGroqModel() {
   return process.env.AI_MODEL || PRIMARY_MODEL;
+  return process.env.AI_MODEL || PRIMARY_MODEL;
 }
 
 export function getGroqVisionModel() {
+  return process.env.AI_VISION_MODEL || VISION_MODEL;
   return process.env.AI_VISION_MODEL || VISION_MODEL;
 }
 
@@ -103,7 +129,7 @@ function getApiUrl() {
  * Uses Gemini 2.0 Flash via OpenRouter.
  */
 export async function groqJSON(prompt, options = {}) {
-  const apiKey = process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY is not configured');
 
   const model = options.model || getGroqModel();
@@ -133,7 +159,16 @@ export async function groqJSON(prompt, options = {}) {
     console.error(`AI error (${model}):`, response.status, text);
     throw new Error(`AI API error ${response.status}`);
   }
+  if (!response.ok) {
+    const text = await response.text();
+    console.error(`AI error (${model}):`, response.status, text);
+    throw new Error(`AI API error ${response.status}`);
+  }
 
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content ?? '';
+  const cleaned = cleanJSON(content);
+  return JSON.parse(cleaned);
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content ?? '';
   const cleaned = cleanJSON(content);
@@ -142,6 +177,7 @@ export async function groqJSON(prompt, options = {}) {
 
 /**
  * Generate a JSON response from a prompt + an image.
+ * Uses Gemini 2.0 Flash for vision (handles images natively).
  * Uses Gemini 2.0 Flash for vision (handles images natively).
  */
 export async function groqVisionJSON(prompt, base64Image, mimeType, options = {}) {
@@ -155,7 +191,9 @@ export async function groqVisionJSON(prompt, base64Image, mimeType, options = {}
   const response = await fetch(url, {
     method: 'POST',
     headers,
+    headers,
     body: JSON.stringify({
+      model,
       model,
       temperature: options.temperature ?? 0.1,
       max_tokens: options.maxTokens ?? 3072,
@@ -197,12 +235,15 @@ export async function groqVisionJSON(prompt, base64Image, mimeType, options = {}
     const match = cleaned.match(/\{[\s\S]*\}/);
     if (match) {
       try { return JSON.parse(match[0]); } catch { /* fall through */ }
+      try { return JSON.parse(match[0]); } catch { /* fall through */ }
     }
+    throw new Error(`Vision returned invalid JSON: ${cleaned.slice(0, 300)}`);
     throw new Error(`Vision returned invalid JSON: ${cleaned.slice(0, 300)}`);
   }
 }
 
 /**
+ * Generate plain text from a vision model.
  * Generate plain text from a vision model.
  */
 export async function groqVisionText(prompt, base64Image, mimeType, options = {}) {
@@ -211,12 +252,18 @@ export async function groqVisionText(prompt, base64Image, mimeType, options = {}
 
   const { headers } = getHeaders();
   const url = getApiUrl();
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not configured');
+
+  const headers = getHeaders();
+  const model = options.model || getGroqVisionModel();
 
   const response = await fetch(url, {
     method: 'POST',
     headers,
+    headers,
     body: JSON.stringify({
-      model: options.model || getGroqVisionModel(),
+      model,
       temperature: options.temperature ?? 0.1,
       max_tokens: options.maxTokens ?? 4096,
       messages: [
@@ -243,6 +290,7 @@ export async function groqVisionText(prompt, base64Image, mimeType, options = {}
 
 /**
  * Generate a plain text response.
+ * Generate a plain text response.
  */
 export async function groqText(prompt, options = {}) {
   const apiKey = process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY;
@@ -254,8 +302,9 @@ export async function groqText(prompt, options = {}) {
   const response = await fetch(url, {
     method: 'POST',
     headers,
+    headers,
     body: JSON.stringify({
-      model: options.model || getGroqModel(),
+      model,
       temperature: options.temperature ?? 0.3,
       max_tokens: options.maxTokens ?? 2048,
       messages: [
@@ -267,6 +316,8 @@ export async function groqText(prompt, options = {}) {
 
   if (!response.ok) {
     const text = await response.text();
+    console.error('Text API error:', response.status, text);
+    throw new Error(`Text API error ${response.status}`);
     console.error('Text API error:', response.status, text);
     throw new Error(`Text API error ${response.status}`);
   }

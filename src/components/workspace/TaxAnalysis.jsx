@@ -1,4 +1,5 @@
-﻿import { useContext, useState } from 'react';
+import { useContext, useState } from 'react';
+import { DollarSign, Loader2, ChevronDown, ExternalLink, Sparkles, Search } from 'lucide-react';
 import { DollarSign, Loader2, ChevronDown, ExternalLink, Sparkles, Search } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import { api } from '../../services/apiClient';
@@ -15,14 +16,18 @@ export default function TaxAnalysis() {
   const { businessInfo } = useContext(AppContext);
   const [result, setResult] = useState(null);
   const [webOpps, setWebOpps] = useState([]);
+  const [webOpps, setWebOpps] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState('');
   const [expandedDeduction, setExpandedDeduction] = useState(null);
   const [expandedOpp, setExpandedOpp] = useState(null);
+  const [expandedOpp, setExpandedOpp] = useState(null);
 
   const handleAnalyze = async () => {
     if (!businessInfo?.id) return;
+    setLoading(true); setError('');
     setLoading(true); setError('');
     try {
       const data = await api.analyzeTaxes({ businessId: businessInfo.id });
