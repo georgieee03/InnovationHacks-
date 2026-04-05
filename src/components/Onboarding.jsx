@@ -79,11 +79,15 @@ export default function Onboarding({ previewOnly = false }) {
       const session = await onboard(formData, { markOnboarded: false });
       setSavedSession(session);
     } else {
-      // Save and go straight to dashboard
-      const session = await onboard(formData);
-      setSavedSession(session);
+      // If already saved (business exists), just mark onboarded to go to dashboard
+      if (savedSession) {
+        await onboard(formData);
+      } else {
+        const session = await onboard(formData);
+        setSavedSession(session);
+      }
     }
-  }, [result, onboard]);
+  }, [result, onboard, savedSession]);
 
   const getFormData = useCallback(() => {
     if (derivedFormData) return derivedFormData;
