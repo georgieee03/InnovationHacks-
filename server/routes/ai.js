@@ -13,7 +13,7 @@ const router = Router();
 
 router.post('/ai/business-advisor', async (req, res) => {
   if (!isAIConfigured()) {
-    return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
+    return res.status(503).json({ error: 'OPENROUTER_API_KEY is not configured' });
   }
 
   try {
@@ -105,7 +105,7 @@ const RECEIPT_RULES = `Gas→vehicle_fuel. Restaurant→meals_entertainment,busi
 
 router.post('/ai/analyze-receipt', requireSession, async (req, res) => {
   if (!isAIConfigured()) {
-    return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
+    return res.status(503).json({ error: 'OPENROUTER_API_KEY is not configured' });
   }
 
   try {
@@ -151,7 +151,7 @@ router.post('/ai/analyze-receipt', requireSession, async (req, res) => {
 
 router.post('/ai/analyze-taxes', requireSession, async (req, res) => {
   if (!isAIConfigured()) {
-    return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
+    return res.status(503).json({ error: 'OPENROUTER_API_KEY is not configured' });
   }
 
   try {
@@ -223,7 +223,7 @@ Return ONLY JSON:
 
 router.post('/ai/analyze-contract', requireSession, async (req, res) => {
   if (!isAIConfigured()) {
-    return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
+    return res.status(503).json({ error: 'OPENROUTER_API_KEY is not configured' });
   }
 
   try {
@@ -276,7 +276,7 @@ Return ONLY JSON:
 
 router.post('/ai/generate-quote', requireSession, async (req, res) => {
   if (!isAIConfigured()) {
-    return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
+    return res.status(503).json({ error: 'OPENROUTER_API_KEY is not configured' });
   }
 
   try {
@@ -444,7 +444,7 @@ function assembleContractHtml(params) {
   } = params;
 
   const displayClient = clientCompany ? `${clientName}, on behalf of ${clientCompany}` : clientName;
-  const clientSignLabel = clientCompany ? `${clientCompany}\nBy: ${clientName}` : clientName;
+
 
   // Build numbered section HTML
   let sectionHtml = '';
@@ -722,7 +722,7 @@ ${sectionHtml}
 
 router.post('/ai/generate-contract', requireSession, async (req, res) => {
   if (!isAIConfigured()) {
-    return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
+    return res.status(503).json({ error: 'OPENROUTER_API_KEY is not configured' });
   }
 
   try {
@@ -796,7 +796,7 @@ Example format:
 
 router.post('/ai/generate-compliance', requireSession, async (req, res) => {
   if (!isAIConfigured()) {
-    return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
+    return res.status(503).json({ error: 'OPENROUTER_API_KEY is not configured' });
   }
 
   try {

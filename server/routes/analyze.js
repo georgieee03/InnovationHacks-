@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getDb } from '../db.js';
-import { groqJSON, isGroqConfigured } from '../lib/groq.js';
+import { groqJSON, isGroqConfigured, ACCURATE_MODEL_ID } from '../lib/groq.js';
 
 const router = Router();
 
@@ -45,7 +45,7 @@ router.post('/analyze-policy', async (req, res) => {
   try {
     const parsed = await groqJSON(
       `You are an insurance policy analyzer. Extract structured coverage information from this policy document. Check for all coverage types and mark uncovered ones with "covered": false.\n\nReturn ONLY JSON matching this schema:\n${POLICY_SCHEMA}\n\nPOLICY TEXT:\n${policyText.slice(0, 8000)}`,
-      { maxTokens: 2000 }
+      { maxTokens: 2000, model: ACCURATE_MODEL_ID }
     );
 
     let policyAnalysisId;
