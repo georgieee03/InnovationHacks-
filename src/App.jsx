@@ -1,8 +1,8 @@
 import { useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppProvider, AppContext } from './context/AppContext';
-import AuthGate from './components/auth/AuthGate';
 import Onboarding from './components/Onboarding';
+import LandingPage from './components/landing/LandingPage';
 import FinancialOverview from './components/financial/FinancialOverview';
 import InsuranceAnalyzer from './components/insurance/InsuranceAnalyzer';
 import ActionPlan from './components/actionplan/ActionPlan';
@@ -89,31 +89,11 @@ function Dashboard() {
   }
 
   if (authEnabled && !isAuthenticated) {
-    // Show the landing/onboarding page with the auth modal overlaid
-    return (
-      <div className="relative">
-        <Onboarding previewOnly />
-        <AuthGate loginUrl={loginUrl} />
-      </div>
-    );
+    return <LandingPage loginUrl={loginUrl} />;
   }
 
   if (!isOnboarded) {
     return <Onboarding />;
-  }
-
-  if (!businessInfo || !financialMetrics) {
-    return (
-      <div className="app-background min-h-screen">
-        <div className="animated-bg" />
-        <div className="noise-overlay" />
-        <div className="relative z-10 flex min-h-screen items-center justify-center">
-          <div className="glass-card w-full max-w-xl rounded-[28px] p-8">
-            <LoadingSpinner message="Loading your workspace..." />
-          </div>
-        </div>
-      </div>
-    );
   }
 
   const activePage = pageRegistry[activeTab] || pageRegistry.financial;
