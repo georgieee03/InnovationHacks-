@@ -19,7 +19,7 @@ export function createAuthMiddleware() {
     return null;
   }
 
-  return auth({
+  const middleware = auth({
     issuerBaseURL: `https://${String(process.env.AUTH0_DOMAIN).trim()}`,
     baseURL: normalizeBaseUrl(process.env.AUTH0_BASE_URL),
     clientID: process.env.AUTH0_CLIENT_ID,
@@ -38,6 +38,17 @@ export function createAuthMiddleware() {
       scope: 'openid profile email',
     },
   });
+
+  // Wrap middleware to redirect callback to frontend
+  return (req, res, next) => {
+    middleware(req, res, () => {
+      // After Auth0 callback, redirect to frontend root
+      if (req.path === '/api/callback' && req.oidc?.isAuthenticated?.()) {
+        return res.redirect('/');
+      }
+      next();
+    });
+  };
 }
 
 export function getRequestUser(req) {

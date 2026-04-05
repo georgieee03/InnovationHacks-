@@ -89,7 +89,13 @@ function Dashboard() {
   }
 
   if (authEnabled && !isAuthenticated) {
-    return <AuthGate loginUrl={loginUrl} />;
+    // Show the landing/onboarding page with the auth modal overlaid
+    return (
+      <div className="relative">
+        <Onboarding previewOnly />
+        <AuthGate loginUrl={loginUrl} />
+      </div>
+    );
   }
 
   if (!isOnboarded) {

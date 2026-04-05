@@ -21,13 +21,14 @@ import RippleButton from './shared/RippleButton';
  * Stages: intro → chat → processing → results
  */
 
-export default function Onboarding() {
+export default function Onboarding({ previewOnly = false }) {
   const { onboard, loadPlaidData, loadDemo, authUser } = useContext(AppContext);
   const [stage, setStage] = useState('intro');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [savedSession, setSavedSession] = useState(null);
   const [derivedFormData, setDerivedFormData] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Check for pending Plaid session on mount
   useEffect(() => {
@@ -107,6 +108,11 @@ export default function Onboarding() {
       setStage('intro');
     }
   }, [loadDemo]);
+
+  // In previewOnly mode, lock to intro stage
+  if (previewOnly && stage !== 'intro') {
+    return null;
+  }
 
   if (stage === 'processing') {
     return (
@@ -199,18 +205,31 @@ export default function Onboarding() {
 
           {/* CTA */}
           <div className="text-center">
-            <RippleButton variant="primary" size="lg" className="min-w-[220px]" onClick={() => setStage('chat')}>
+            <RippleButton 
+              variant="primary" 
+              size="lg" 
+              className="min-w-[220px]" 
+              onClick={() => {
+                if (previewOnly) {
+                  setShowAuthModal(true);
+                } else {
+                  setStage('chat');
+                }
+              }}
+            >
               Let&apos;s get started
               <ArrowRight className="ml-2 h-4 w-4" />
             </RippleButton>
             <p className="mt-3 text-sm text-text-secondary/60">Takes about 3 minutes · Just a conversation, no forms</p>
-            <button
-              type="button"
-              onClick={handleDemo}
-              className="mt-4 text-sm text-text-secondary transition-colors hover:text-primary"
-            >
-              or load a demo workspace
-            </button>
+            {!previewOnly && (
+              <button
+                type="button"
+                onClick={handleDemo}
+                className="mt-4 text-sm text-text-secondary transition-colors hover:text-primary"
+              >
+                or load a demo workspace
+              </button>
+            )}
           </div>
         </div>
       </div>
