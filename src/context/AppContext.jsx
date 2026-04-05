@@ -211,6 +211,8 @@ export function AppProvider({ children }) {
   const [policySummary, setPolicySummary] = useState(null);
   const [gapAnalysis, setGapAnalysis] = useState(null);
   const [activeTab, setActiveTab] = useState('financial');
+  const [documentsSubview, setDocumentsSubview] = useState('contracts');
+  const [insuranceSubview, setInsuranceSubview] = useState('analysis');
   const [viewportMode, setViewportMode] = useState(initialViewportMode);
   const [sidebarExpanded, setSidebarExpanded] = useState(initialViewportMode === 'desktop');
   const [sidebarLocked, setSidebarLocked] = useState(false);
@@ -254,6 +256,8 @@ export function AppProvider({ children }) {
     setIsOnboarded(false);
     setPlaidConnected(false);
     setActiveTab('financial');
+    setDocumentsSubview('contracts');
+    setInsuranceSubview('analysis');
   }, []);
 
   const applyLoadedState = useCallback((info, nextAccounts, nextTransactions, nextRiskFactors, options = {}) => {
@@ -545,7 +549,15 @@ export function AppProvider({ children }) {
     setMobileSidebarOpen(false);
   }, []);
 
-  const navigateToTab = useCallback((tabId) => {
+  const navigateToTab = useCallback((tabId, options = {}) => {
+    if (tabId === 'documents' && options.subview) {
+      setDocumentsSubview(options.subview);
+    }
+
+    if (tabId === 'insurance' && options.subview) {
+      setInsuranceSubview(options.subview);
+    }
+
     setActiveTab(tabId);
 
     if (viewportMode === 'mobile') {
@@ -573,6 +585,10 @@ export function AppProvider({ children }) {
       gapAnalysis,
       activeTab,
       setActiveTab,
+      documentsSubview,
+      insuranceSubview,
+      setDocumentsSubview,
+      setInsuranceSubview,
       setPolicySummary,
       setGapAnalysis,
       setPlaidConnected,

@@ -5,7 +5,6 @@ import Onboarding from './components/Onboarding';
 import LandingPage from './components/landing/LandingPage';
 import FinancialOverview from './components/financial/FinancialOverview';
 import InsuranceAnalyzer from './components/insurance/InsuranceAnalyzer';
-import ActionPlan from './components/actionplan/ActionPlan';
 import RiskSimulator from './components/simulator/RiskSimulator';
 import Education from './components/education/Education';
 import AmbientBackground from './components/shared/AmbientBackground';
@@ -27,7 +26,6 @@ const pageRegistry = {
   taxes: { label: 'Tax Analysis', component: TaxAnalysis },
   simulator: { label: 'Risk Simulator', component: RiskSimulator },
   learn: { label: 'Learn', component: Education },
-  actionplan: { label: 'Action Plan', component: ActionPlan },
 };
 
 const viewTransition = {

@@ -64,13 +64,13 @@ function normalizeEnvelope(envelope, fallbackGapAnalysis, financialMetrics) {
   };
 }
 
-export default function ActionPlan() {
+export default function ActionPlan({ embedded = false, onBackToAnalysis = null }) {
   const {
     businessInfo,
     gapAnalysis,
     financialMetrics,
     riskFactors,
-    setActiveTab,
+    navigateToTab,
   } = useContext(AppContext);
   const [envelope, setEnvelope] = useState(null);
   const [planError, setPlanError] = useState('');
@@ -176,19 +176,28 @@ export default function ActionPlan() {
   if (!latestGapAnalysis && !isLoading) {
     return (
       <div className="space-y-6">
-        <div>
-          <h2 className="text-4xl font-heading font-thin tracking-[-0.03em] text-text-primary">Action Plan</h2>
-        </div>
+        {!embedded ? (
+          <div>
+            <h2 className="text-4xl font-heading font-thin tracking-[-0.03em] text-text-primary">Action Plan</h2>
+          </div>
+        ) : null}
         <div className="glass-card rounded-3xl p-10 text-center">
           <p className="text-base font-light text-text-secondary">
             Complete your insurance analysis first to generate a source-backed coverage improvement plan.
           </p>
           <button
             type="button"
-            onClick={() => setActiveTab('insurance')}
+            onClick={() => {
+              if (embedded) {
+                onBackToAnalysis?.();
+                return;
+              }
+
+              navigateToTab('insurance', { subview: 'analysis' });
+            }}
             className="mt-5 rounded-2xl bg-primary px-5 py-3 text-sm font-medium text-white transition-all hover:bg-primary/90"
           >
-            Go to Insurance Analyzer
+            {embedded ? 'Back to Analysis' : 'Go to Insurance Analyzer'}
           </button>
         </div>
       </div>
@@ -197,14 +206,38 @@ export default function ActionPlan() {
 
   return (
     <div className="space-y-6">
-      <MotionDiv {...fadeInUp} transition={{ duration: 0.35 }}>
-        <h2 className="text-4xl font-heading font-thin tracking-[-0.03em] text-text-primary">Action Plan</h2>
-        <p className="mt-1.5 text-sm font-light text-text-secondary">
-          {actionCount > 0
-            ? `${actionCount} researched coverage actions, tied to your latest insurance analysis`
-            : 'Building a source-backed plan from your latest policy and gap analysis'}
-        </p>
-      </MotionDiv>
+      {!embedded ? (
+        <MotionDiv {...fadeInUp} transition={{ duration: 0.35 }}>
+          <h2 className="text-4xl font-heading font-thin tracking-[-0.03em] text-text-primary">Action Plan</h2>
+          <p className="mt-1.5 text-sm font-light text-text-secondary">
+            {actionCount > 0
+              ? `${actionCount} researched coverage actions, tied to your latest insurance analysis`
+              : 'Building a source-backed plan from your latest policy and gap analysis'}
+          </p>
+        </MotionDiv>
+      ) : (
+        <MotionDiv {...fadeInUp} transition={{ duration: 0.35 }}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Coverage action plan</p>
+              <p className="mt-2 text-sm font-light text-text-secondary">
+                {actionCount > 0
+                  ? `${actionCount} researched coverage actions, tied to your latest insurance analysis`
+                  : 'Building a source-backed plan from your latest policy and gap analysis'}
+              </p>
+            </div>
+            {onBackToAnalysis ? (
+              <button
+                type="button"
+                onClick={onBackToAnalysis}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-text-secondary transition-colors hover:border-white/20 hover:text-text-primary"
+              >
+                Back to analysis
+              </button>
+            ) : null}
+          </div>
+        </MotionDiv>
+      )}
 
       {planError ? (
         <div className="rounded-2xl border border-gap/20 bg-gap/5 p-4 text-sm text-gap">

@@ -1,11 +1,10 @@
 import { useContext } from 'react';
-import { BarChart3, Shield, ClipboardCheck, Calculator, AlertTriangle, Trophy, FileText, MessageCircle, GraduationCap } from 'lucide-react';
+import { BarChart3, Shield, Calculator, AlertTriangle, Trophy, FileText, MessageCircle, GraduationCap } from 'lucide-react';
 import { AppContext } from '../context/AppContext';
 
 const TABS = [
   { id: 'financial', label: 'Financial Overview', icon: BarChart3 },
   { id: 'insurance', label: 'Insurance Analyzer', icon: Shield },
-  { id: 'actionplan', label: 'Action Plan', icon: ClipboardCheck },
   { id: 'calculators', label: 'Calculators', icon: Calculator },
   { id: 'simulator', label: 'Risk Simulator', icon: AlertTriangle },
   { id: 'challenges', label: 'Challenges', icon: Trophy },

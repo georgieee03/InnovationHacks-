@@ -1,6 +1,6 @@
 import { useState, useContext, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ClipboardCheck, FileSearch } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import { extractTextFromPDF } from '../../services/pdfParser';
 import { analyzePolicyWithLLM } from '../../services/llmService';
@@ -10,6 +10,7 @@ import localRecommendations from '../../data/coverageRecommendations.json';
 import PolicyUpload from './PolicyUpload';
 import PolicySummary from './PolicySummary';
 import GapAnalysis from './GapAnalysis';
+import ActionPlan from '../actionplan/ActionPlan';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -53,6 +54,8 @@ export default function InsuranceAnalyzer() {
     policySummary, setPolicySummary,
     gapAnalysis, setGapAnalysis,
     ensureBusinessRecord,
+    insuranceSubview,
+    setInsuranceSubview,
   } = useContext(AppContext);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -64,7 +67,8 @@ export default function InsuranceAnalyzer() {
     setAnalysisError('');
     setPolicySummary(null);
     setGapAnalysis(null);
-  }, [setGapAnalysis, setPolicySummary]);
+    setInsuranceSubview('analysis');
+  }, [setGapAnalysis, setInsuranceSubview, setPolicySummary]);
 
   const completeAnalysis = useCallback(async (policyText, options = {}) => {
     const activeBusiness = options.persistedBusiness || businessInfo;
@@ -98,7 +102,8 @@ export default function InsuranceAnalyzer() {
     }
 
     setIsComplete(true);
-  }, [businessInfo, financialMetrics, riskFactors, setGapAnalysis, setPolicySummary]);
+    setInsuranceSubview('analysis');
+  }, [businessInfo, financialMetrics, riskFactors, setGapAnalysis, setInsuranceSubview, setPolicySummary]);
 
   const handleFileSelect = useCallback(async (file) => {
     setIsAnalyzing(true);
@@ -148,6 +153,9 @@ export default function InsuranceAnalyzer() {
     }
   }, [completeAnalysis, resetAnalysis]);
 
+  const hasAnalysis = Boolean(policySummary || (Array.isArray(gapAnalysis) && gapAnalysis.length));
+  const canViewActionPlan = Boolean(Array.isArray(gapAnalysis) && gapAnalysis.length);
+
   return (
     <AnimatePresence mode="wait">
       <div className="space-y-6">
@@ -189,30 +197,109 @@ export default function InsuranceAnalyzer() {
           </MotionDiv>
         )}
 
-        <AnimatePresence>
-          {policySummary && (
-            <MotionDiv
-              key="policy-summary"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <PolicySummary summary={policySummary} />
-            </MotionDiv>
-          )}
-        </AnimatePresence>
+        {hasAnalysis ? (
+          <MotionDiv
+            {...fadeInUp}
+            transition={{ duration: 0.35, delay: 0.15 }}
+            className="glass-card flex flex-col gap-4 rounded-[28px] p-5 lg:flex-row lg:items-center lg:justify-between"
+          >
+            <div>
+              <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Insurance workspace</p>
+              <p className="mt-2 text-sm leading-6 text-text-secondary">
+                Review the full policy analysis, then switch into the source-backed action plan without leaving this tab.
+              </p>
+            </div>
 
-        <AnimatePresence>
-          {gapAnalysis && (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="inline-flex rounded-2xl border border-white/10 bg-white/[0.03] p-1">
+                <button
+                  type="button"
+                  onClick={() => setInsuranceSubview('analysis')}
+                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm transition-colors ${
+                    insuranceSubview === 'analysis'
+                      ? 'bg-white/[0.08] text-text-primary'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  <FileSearch className="h-4 w-4" />
+                  Analysis
+                </button>
+                <button
+                  type="button"
+                  onClick={() => canViewActionPlan && setInsuranceSubview('action-plan')}
+                  disabled={!canViewActionPlan}
+                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm transition-colors ${
+                    insuranceSubview === 'action-plan'
+                      ? 'bg-white/[0.08] text-text-primary'
+                      : 'text-text-secondary hover:text-text-primary disabled:cursor-not-allowed disabled:text-text-secondary/40'
+                  }`}
+                >
+                  <ClipboardCheck className="h-4 w-4" />
+                  Action plan
+                </button>
+              </div>
+
+              {insuranceSubview === 'analysis' ? (
+                <button
+                  type="button"
+                  onClick={() => setInsuranceSubview('action-plan')}
+                  disabled={!canViewActionPlan}
+                  className="rounded-2xl bg-primary px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Run action plan setup
+                </button>
+              ) : null}
+            </div>
+          </MotionDiv>
+        ) : null}
+
+        <AnimatePresence mode="wait">
+          {insuranceSubview === 'action-plan' && canViewActionPlan ? (
             <MotionDiv
-              key="gap-analysis"
-              initial={{ opacity: 0, y: 30 }}
+              key="insurance-action-plan"
+              initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
+              transition={{ duration: 0.35 }}
             >
-              <GapAnalysis gaps={gapAnalysis} />
+              <ActionPlan embedded onBackToAnalysis={() => setInsuranceSubview('analysis')} />
+            </MotionDiv>
+          ) : (
+            <MotionDiv
+              key="insurance-analysis"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.35 }}
+              className="space-y-6"
+            >
+              <AnimatePresence>
+                {policySummary ? (
+                  <MotionDiv
+                    key="policy-summary"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                  >
+                    <PolicySummary summary={policySummary} />
+                  </MotionDiv>
+                ) : null}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {gapAnalysis ? (
+                  <MotionDiv
+                    key="gap-analysis"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                  >
+                    <GapAnalysis gaps={gapAnalysis} />
+                  </MotionDiv>
+                ) : null}
+              </AnimatePresence>
             </MotionDiv>
           )}
         </AnimatePresence>

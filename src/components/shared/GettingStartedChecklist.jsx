@@ -29,6 +29,7 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
       label: 'Upload or generate your first contract',
       description: 'Get a plain-English breakdown of any agreement',
       tab: 'documents',
+      subview: 'contracts',
       done: contracts.length > 0,
       urgent: false,
     },
@@ -37,6 +38,7 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
       label: 'Create a quote',
       description: 'Send professional quotes and track your pipeline',
       tab: 'documents',
+      subview: 'quotes',
       done: quotes.length > 0,
       urgent: false,
     },
@@ -45,6 +47,7 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
       label: 'Scan a receipt',
       description: 'Auto-categorize expenses and flag tax deductions',
       tab: 'documents',
+      subview: 'receipts',
       done: receipts.length > 0,
       urgent: false,
     },
@@ -53,6 +56,7 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
       label: c.title,
       description: c.description,
       tab: 'documents',
+      subview: 'compliance',
       done: c.status === 'complete',
       urgent: true,
     })),
@@ -61,6 +65,7 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
       label: 'Review all compliance obligations',
       description: 'Make sure licenses and permits are on track',
       tab: 'documents',
+      subview: 'compliance',
       done: complianceItems.length > 0 && complianceItems.every(c => c.status !== 'not_started'),
       urgent: false,
     },
@@ -119,7 +124,7 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
                   openPlaid();
                   return;
                 }
-                navigateToTab(item.tab);
+                navigateToTab(item.tab, item.subview ? { subview: item.subview } : {});
               }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left ${item.done ? 'opacity-50' : 'hover:bg-white/5'}`}
             >
