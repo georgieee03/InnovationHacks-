@@ -28,9 +28,9 @@ export function createAuthMiddleware() {
     idpLogout: true,
     authRequired: false,
     routes: {
-      login: '/api/auth/login',
-      logout: '/api/auth/logout',
-      callback: '/api/auth/callback',
+      login: '/auth/login',
+      logout: '/auth/logout',
+      callback: '/auth/callback',
       postLogoutRedirect: '/',
     },
     authorizationParams: {

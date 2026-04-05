@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: false }));
 
 const authMiddleware = createAuthMiddleware();
 if (authMiddleware) {
-  app.use(authMiddleware);
+  app.use('/api', authMiddleware);
 }
 
 app.use(attachSessionUser);
