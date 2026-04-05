@@ -12,6 +12,13 @@ const STEPS = [
     placeholder: 'e.g. I want to start a mobile car detailing business in Tempe, Arizona',
   },
   {
+    id: 'zip',
+    question: 'What ZIP code will this business primarily operate from?',
+    subtext: 'We use this to tailor local compliance, risk factors, and the business record we save for you.',
+    helpTip: 'Use the main ZIP where you serve customers or run operations most often.',
+    placeholder: 'e.g. 02118',
+  },
+  {
     id: 'workStructure',
     question: 'Will you be working alone, or do you plan to have help?',
     subtext: 'This affects how your business is set up legally and what tax forms you\'ll need.',
@@ -107,8 +114,12 @@ export default function OnboardingChat({ onComplete, error }) {
 
   const handleTextSubmit = (e) => {
     e.preventDefault();
-    if (!inputValue.trim()) return;
-    handleAnswer(inputValue.trim());
+    const value = inputValue.trim();
+    if (!value) return;
+    if (currentStep.id === 'zip' && !/^\d{5}$/.test(value)) {
+      return;
+    }
+    handleAnswer(value);
   };
 
   const options = getOptions(currentStep);
@@ -193,17 +204,26 @@ export default function OnboardingChat({ onComplete, error }) {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder={currentStep.placeholder}
+                    inputMode={currentStep.id === 'zip' ? 'numeric' : undefined}
+                    maxLength={currentStep.id === 'zip' ? 5 : undefined}
                     className="control-input flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/50"
                   />
                   <RippleButton
                     type="submit"
                     variant="primary"
                     size="md"
-                    disabled={!inputValue.trim() && currentStep.id !== 'businessName'}
+                    disabled={
+                      (!inputValue.trim() && currentStep.id !== 'businessName')
+                      || (currentStep.id === 'zip' && inputValue.trim() !== '' && !/^\d{5}$/.test(inputValue.trim()))
+                    }
                   >
                     Next
                   </RippleButton>
                 </form>
+              )}
+
+              {currentStep.id === 'zip' && inputValue.trim() && !/^\d{5}$/.test(inputValue.trim()) && (
+                <p className="mt-2 text-xs text-gap">Enter a valid 5-digit ZIP code to continue.</p>
               )}
 
               {!currentStep.options && (currentStep.id === 'businessName' || currentStep.id === 'helpDetails') && (

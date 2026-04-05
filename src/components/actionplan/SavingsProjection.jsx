@@ -1,120 +1,103 @@
 import { motion } from 'framer-motion';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from 'recharts';
 import { formatCurrency } from '../../utils/formatCurrency';
-import useTheme from '../../hooks/useTheme';
-import useScrollAnimation, { scrollFadeInUp } from '../../hooks/useScrollAnimation';
 
 const MotionDiv = motion.div;
 
-export default function SavingsProjection({ metrics }) {
-  const { theme } = useTheme();
-  const { ref, controls, inView, prefersReducedMotion } = useScrollAnimation();
-  const chartColors = theme === 'light'
-    ? {
-        primary: '#00CF31',
-        success: '#059669',
-        grid: 'rgba(15, 23, 42, 0.08)',
-        axisText: '#52525b',
-        tooltipBackground: 'rgba(255, 255, 255, 0.96)',
-        tooltipBorder: 'rgba(15, 23, 42, 0.1)',
-        tooltipText: '#0a0a0b',
-        tooltipShadow: '0 18px 34px rgba(15, 23, 42, 0.12)',
-      }
-    : {
-        primary: '#00CF31',
-        success: '#10b981',
-        grid: 'rgba(255,255,255,0.06)',
-        axisText: '#71717a',
-        tooltipBackground: 'rgba(17, 17, 19, 0.96)',
-        tooltipBorder: 'rgba(255,255,255,0.1)',
-        tooltipText: '#fafafa',
-        tooltipShadow: '0 18px 34px rgba(0, 0, 0, 0.35)',
-      };
+function getAggregateMonthlyCost(items, phase) {
+  return (items || [])
+    .filter((item) => !phase || item.executionPhase === phase)
+    .reduce((sum, item) => sum + Number(item.estimatedMonthlyCost || 0), 0);
+}
 
-  if (!metrics) return null;
+function getBudgetReadiness(metrics, immediateCost) {
+  const monthlyNet = Number(metrics?.averageMonthlyIncome || 0) - Number(metrics?.averageMonthlyExpenses || 0);
+  const runway = Number(metrics?.monthsOfRunway || 0);
 
-  const target = metrics.recommendedEmergencyFund;
-  const current = metrics.currentReserves;
-  const monthlySavings = Math.round(metrics.averageMonthlyIncome - metrics.averageMonthlyExpenses);
-
-  const data = [];
-  for (let index = 0; index <= 12; index += 1) {
-    data.push({
-      month: index === 0 ? 'Now' : `Mo ${index}`,
-      reserves: Math.min(target, Math.round(current + monthlySavings * index)),
-      target,
-    });
+  if (immediateCost <= 0) {
+    return {
+      label: 'Needs quote review',
+      detail: 'SafeGuard can prioritize the work, but some actions still need carrier or agent pricing to judge timing.',
+    };
   }
 
-  const monthsToTarget = monthlySavings > 0
-    ? Math.ceil((target - current) / monthlySavings)
-    : null;
+  if (monthlyNet > immediateCost * 2) {
+    return {
+      label: 'Can absorb now',
+      detail: `Your current monthly margin appears strong enough to carry about ${formatCurrency(immediateCost)}/month in immediate insurance upgrades.`,
+    };
+  }
+
+  if (runway >= 4) {
+    return {
+      label: 'Phase over time',
+      detail: `The business can likely stage these changes, but timing them across the next renewal cycle will protect reserves.`,
+    };
+  }
+
+  return {
+    label: 'Defer until margin improves',
+    detail: `Your reserve position is thin right now, so bind the most critical protection first and phase the rest behind revenue improvement.`,
+  };
+}
+
+export default function SavingsProjection({ metrics, items, projectedScore }) {
+  if (!metrics) {
+    return null;
+  }
+
+  const monthlyNet = Number(metrics.averageMonthlyIncome || 0) - Number(metrics.averageMonthlyExpenses || 0);
+  const immediateCost = getAggregateMonthlyCost(items, 'Now');
+  const renewalCost = getAggregateMonthlyCost(items, 'This renewal cycle');
+  const readiness = getBudgetReadiness(metrics, immediateCost);
 
   return (
     <MotionDiv
-      ref={ref}
-      initial="hidden"
-      animate={controls}
-      variants={scrollFadeInUp}
-      transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
       className="glass-card p-5"
     >
-      <h3 className="mb-1 text-2xl font-heading font-light tracking-[-0.02em] text-text-primary">Reserve Projection</h3>
-      <p className="mb-4 text-sm font-light text-text-secondary">
-        {monthlySavings > 0
-          ? `At ${formatCurrency(monthlySavings)}/mo net savings, you'll reach your emergency fund target in about ${monthsToTarget} months`
-          : 'Increase net savings to build your emergency fund'}
+      <h3 className="text-2xl font-heading font-light tracking-[-0.02em] text-text-primary">
+        Coverage budget readiness
+      </h3>
+      <p className="mt-1 text-sm text-text-secondary">
+        This panel uses your current cashflow and reserve posture to help stage the plan without pretending to be a quote.
       </p>
-      <ResponsiveContainer width="100%" height={240}>
-        <AreaChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-          <defs>
-            <linearGradient id="reservesGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={chartColors.primary} stopOpacity={0.35} />
-              <stop offset="100%" stopColor={chartColors.primary} stopOpacity={0.06} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-          <XAxis dataKey="month" tick={{ fontSize: 12, fill: chartColors.axisText }} axisLine={false} tickLine={false} />
-          <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12, fill: chartColors.axisText }} axisLine={false} tickLine={false} />
-          <Tooltip
-            formatter={(value, name) => [formatCurrency(value), name]}
-            contentStyle={{
-              backgroundColor: chartColors.tooltipBackground,
-              border: `1px solid ${chartColors.tooltipBorder}`,
-              borderRadius: '12px',
-              boxShadow: chartColors.tooltipShadow,
-            }}
-            labelStyle={{ color: chartColors.tooltipText, fontWeight: 400 }}
-            itemStyle={{ color: chartColors.tooltipText }}
-          />
-          <ReferenceLine
-            y={target}
-            stroke={chartColors.success}
-            strokeDasharray="5 5"
-            strokeWidth={2}
-            label={{ value: 'Target', position: 'right', fontSize: 11, fill: chartColors.success }}
-          />
-          <Area
-            type="monotone"
-            dataKey="reserves"
-            stroke={chartColors.primary}
-            fill="url(#reservesGradient)"
-            strokeWidth={3}
-            isAnimationActive={prefersReducedMotion ? false : inView}
-            animationDuration={1200}
-            animationEasing="ease-out"
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="surface-panel rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Monthly margin</p>
+          <p className="mt-2 text-2xl font-heading font-light tracking-[-0.03em] text-text-primary">
+            {formatCurrency(monthlyNet)}
+          </p>
+        </div>
+
+        <div className="surface-panel rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Immediate actions</p>
+          <p className="mt-2 text-2xl font-heading font-light tracking-[-0.03em] text-text-primary">
+            {immediateCost > 0 ? `${formatCurrency(immediateCost)}/mo` : 'Needs review'}
+          </p>
+        </div>
+
+        <div className="surface-panel rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Renewal-cycle actions</p>
+          <p className="mt-2 text-2xl font-heading font-light tracking-[-0.03em] text-text-primary">
+            {renewalCost > 0 ? `${formatCurrency(renewalCost)}/mo` : 'None queued'}
+          </p>
+        </div>
+
+        <div className="surface-panel rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Projected protection</p>
+          <p className="mt-2 text-2xl font-heading font-light tracking-[-0.03em] text-primary">
+            {projectedScore}%
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+        <p className="text-sm font-medium text-text-primary">{readiness.label}</p>
+        <p className="mt-1 text-sm leading-6 text-text-secondary">{readiness.detail}</p>
+      </div>
     </MotionDiv>
   );
 }

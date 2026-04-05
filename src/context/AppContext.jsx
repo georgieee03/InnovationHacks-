@@ -164,6 +164,34 @@ function buildDemoFormData() {
   };
 }
 
+function buildBusinessPayload(formData, fallback = {}) {
+  return {
+    name: formData?.name ?? fallback.name ?? '',
+    type: formData?.type ?? fallback.type ?? 'restaurant',
+    zip: String(formData?.zip ?? fallback.zip ?? ''),
+    city: formData?.city ?? fallback.city ?? '',
+    state: formData?.state ?? fallback.state ?? '',
+    monthlyRevenue: Number(
+      formData?.monthlyRevenue
+      ?? formData?.monthlyRevenueEstimate
+      ?? formData?.monthly_revenue_estimate
+      ?? fallback.monthlyRevenue
+      ?? fallback.monthlyRevenueEstimate
+      ?? fallback.monthly_revenue_estimate
+      ?? 0
+    ),
+    employees: Number(formData?.employees ?? fallback.employees ?? 1),
+  };
+}
+
+function getBusinessPersistenceErrorMessage(error) {
+  if (error?.message && !/failed to fetch/i.test(error.message)) {
+    return error.message;
+  }
+
+  return 'We could not save your business profile. Please try again to continue.';
+}
+
 export function AppProvider({ children }) {
   const initialViewportMode = typeof window === 'undefined' ? 'desktop' : getViewportMode(window.innerWidth);
   const [authReady, setAuthReady] = useState(false);
@@ -215,6 +243,19 @@ export function AppProvider({ children }) {
     return () => window.removeEventListener('resize', syncViewport);
   }, []);
 
+  const clearWorkspaceState = useCallback(() => {
+    setBusinessInfo(null);
+    setTransactions([]);
+    setAccounts([]);
+    setRiskFactors(null);
+    setFinancialMetrics(null);
+    setPolicySummary(null);
+    setGapAnalysis(null);
+    setIsOnboarded(false);
+    setPlaidConnected(false);
+    setActiveTab('financial');
+  }, []);
+
   const applyLoadedState = useCallback((info, nextAccounts, nextTransactions, nextRiskFactors, options = {}) => {
     setBusinessInfo(info);
     setAccounts(nextAccounts);
@@ -239,6 +280,36 @@ export function AppProvider({ children }) {
       setIsOnboarded(options.isOnboarded);
     }
   }, []);
+
+  const ensureBusinessRecord = useCallback(async (candidate = businessInfo, options = {}) => {
+    const {
+      isOnboardedOverride = isOnboarded,
+      plaidConnectedOverride = plaidConnected,
+    } = options;
+
+    const normalizedCandidate = normalizeBusiness(candidate);
+    if (normalizedCandidate?.id) {
+      return normalizedCandidate;
+    }
+
+    const payload = buildBusinessPayload(candidate, businessInfo || {});
+    if (!payload.name || !payload.zip) {
+      throw new Error('Complete onboarding before uploading or analyzing insurance documents.');
+    }
+
+    const createdBusiness = await api.createBusiness(payload);
+    const normalizedBusiness = normalizeBusiness(createdBusiness, normalizedCandidate);
+
+    if (!normalizedBusiness.id) {
+      throw new Error('Business profile did not persist correctly. Please try onboarding again.');
+    }
+
+    setBusinessInfo(normalizedBusiness);
+    setIsOnboarded(isOnboardedOverride);
+    setPlaidConnected(plaidConnectedOverride);
+
+    return normalizedBusiness;
+  }, [businessInfo, isOnboarded, plaidConnected]);
 
   const loadBusinessWorkspace = useCallback(async (businessRecord, options = {}) => {
     const normalizedBusiness = normalizeBusiness(businessRecord);
@@ -306,14 +377,9 @@ export function AppProvider({ children }) {
     });
 
     try {
-      const createdBusiness = await api.createBusiness({
-        name: formData.name,
-        type: formData.type,
-        zip: formData.zip,
-        city: formData.city,
-        state: formData.state,
-        monthlyRevenue: formData.monthlyRevenue,
-        employees: formData.employees,
+      const createdBusiness = await ensureBusinessRecord(buildBusinessPayload(formData), {
+        isOnboardedOverride: markOnboarded,
+        plaidConnectedOverride: false,
       });
 
       await loadBusinessWorkspace(createdBusiness, {
@@ -326,15 +392,13 @@ export function AppProvider({ children }) {
         riskFactors: localSession.riskFactors,
       };
     } catch (error) {
-      console.error('Onboarding API enrichment failed, using local fallback session:', error);
-      return {
-        business: localSession.business,
-        riskFactors: localSession.riskFactors,
-      };
+      console.error('Onboarding business persistence failed:', error);
+      clearWorkspaceState();
+      throw new Error(getBusinessPersistenceErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, [applyLoadedState, loadBusinessWorkspace]);
+  }, [applyLoadedState, clearWorkspaceState, ensureBusinessRecord, loadBusinessWorkspace]);
 
   useEffect(() => {
     let active = true;
@@ -360,12 +424,7 @@ export function AppProvider({ children }) {
         setLogoutUrl(session.logoutUrl || '/api/logout');
 
         if (session.enabled && !session.authenticated) {
-          setBusinessInfo(null);
-          setTransactions([]);
-          setAccounts([]);
-          setRiskFactors(null);
-          setFinancialMetrics(null);
-          setIsOnboarded(false);
+          clearWorkspaceState();
           return;
         }
 
@@ -376,12 +435,7 @@ export function AppProvider({ children }) {
         } catch (error) {
           if (!active) return;
 
-          setBusinessInfo(null);
-          setTransactions([]);
-          setAccounts([]);
-          setRiskFactors(null);
-          setFinancialMetrics(null);
-          setIsOnboarded(false);
+          clearWorkspaceState();
 
           if (error?.message && !/Business not found/i.test(error.message)) {
             console.error('Failed to restore workspace session:', error);
@@ -400,7 +454,7 @@ export function AppProvider({ children }) {
     return () => {
       active = false;
     };
-  }, [loadBusinessWorkspace]);
+  }, [clearWorkspaceState, loadBusinessWorkspace]);
 
   const onboard = useCallback((formData, options = {}) => hydrateBusinessSession(formData, options), [hydrateBusinessSession]);
 
@@ -434,8 +488,13 @@ export function AppProvider({ children }) {
         return false;
       }
 
+      const persistedBusiness = await ensureBusinessRecord(sessionOverride?.business || businessInfo, {
+        isOnboardedOverride: completeOnboarding ? true : isOnboarded,
+        plaidConnectedOverride: true,
+      });
+
       applyLoadedState(
-        sessionOverride?.business || businessInfo,
+        persistedBusiness,
         nextAccounts,
         nextTransactions,
         sessionOverride?.riskFactors || riskFactors,
@@ -452,7 +511,7 @@ export function AppProvider({ children }) {
       console.error('Failed to load Plaid data:', error);
       return false;
     }
-  }, [applyLoadedState, authUser?.auth0Id, businessInfo, isOnboarded, riskFactors]);
+  }, [applyLoadedState, authUser?.auth0Id, businessInfo, ensureBusinessRecord, isOnboarded, riskFactors]);
 
   const toggleSidebar = useCallback(() => {
     if (viewportMode === 'mobile') {
@@ -517,6 +576,7 @@ export function AppProvider({ children }) {
       setPolicySummary,
       setGapAnalysis,
       setPlaidConnected,
+      ensureBusinessRecord,
       loadPlaidData,
       onboard,
       loadDemo,

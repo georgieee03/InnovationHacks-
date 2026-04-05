@@ -26,7 +26,9 @@ export default function Onboarding({ previewOnly = false }) {
   const { onboard, loadPlaidData, loadDemo, authUser } = useContext(AppContext);
   const [stage, setStage] = useState('intro');
   const [result, setResult] = useState(null);
+  const [onboardingAnswers, setOnboardingAnswers] = useState(null);
   const [error, setError] = useState(null);
+  const [saveError, setSaveError] = useState(null);
   const [savedSession, setSavedSession] = useState(null);
   const [derivedFormData, setDerivedFormData] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -37,17 +39,25 @@ export default function Onboarding({ previewOnly = false }) {
     if (pendingFormData) {
       clearPendingPlaidSession();
       // Resume after Plaid OAuth — hydrate and complete
-      onboard(pendingFormData).then((session) => {
-        if (session) {
-          loadPlaidData({ completeOnboarding: true, sessionOverride: session });
-        }
-      });
+      void onboard(pendingFormData)
+        .then((session) => {
+          if (session) {
+            void loadPlaidData({ completeOnboarding: true, sessionOverride: session });
+          }
+        })
+        .catch((resumeError) => {
+          console.error('Failed to resume onboarding after Plaid OAuth:', resumeError);
+          setSaveError(resumeError.message || 'We could not restore your business profile after bank connection.');
+          setStage('intro');
+        });
     }
   }, [onboard, loadPlaidData]);
 
   const handleChatComplete = useCallback(async (answers) => {
     setStage('processing');
     setError(null);
+    setSaveError(null);
+    setOnboardingAnswers(answers);
 
     try {
       const data = await api.businessAdvisor(answers);
@@ -59,47 +69,53 @@ export default function Onboarding({ previewOnly = false }) {
     }
   }, []);
 
-  const handleSave = useCallback(async (skipOnboarding = false) => {
+  const resolveFormData = useCallback(() => {
     if (!result?.businessProfile) return;
 
     const profile = result.businessProfile;
-    const formData = {
+    return {
       name: profile.businessName || 'My Business',
       type: profile.businessType || 'service',
-      zip: profile.businessAddress?.zip || '',
+      zip: onboardingAnswers?.zip || profile.businessAddress?.zip || '',
       city: profile.businessAddress?.city || '',
       state: profile.businessAddress?.state || profile.entityState || '',
       monthlyRevenue: parseRevenueEstimate(result),
       employees: profile.employeeCount || 1,
     };
+  }, [onboardingAnswers?.zip, result]);
+
+  const handleSave = useCallback(async (skipOnboarding = false) => {
+    const formData = resolveFormData();
+    if (!formData) return;
+    setSaveError(null);
 
     setDerivedFormData(formData);
 
     if (skipOnboarding) {
       // Save business but don't complete onboarding — stay on results page for Plaid
-      const session = await onboard(formData, { markOnboarded: false });
-      setSavedSession(session);
+      try {
+        const session = await onboard(formData, { markOnboarded: false });
+        setSavedSession(session);
+      } catch (saveFailure) {
+        setSaveError(saveFailure.message || 'We could not save your business profile.');
+        throw saveFailure;
+      }
     } else {
       // Save and go straight to dashboard
-      const session = await onboard(formData);
-      setSavedSession(session);
+      try {
+        const session = await onboard(formData);
+        setSavedSession(session);
+      } catch (saveFailure) {
+        setSaveError(saveFailure.message || 'We could not save your business profile.');
+        throw saveFailure;
+      }
     }
-  }, [result, onboard]);
+  }, [onboard, resolveFormData]);
 
   const getFormData = useCallback(() => {
     if (derivedFormData) return derivedFormData;
-    if (!result?.businessProfile) return null;
-    const profile = result.businessProfile;
-    return {
-      name: profile.businessName || 'My Business',
-      type: profile.businessType || 'service',
-      zip: profile.businessAddress?.zip || '',
-      city: profile.businessAddress?.city || '',
-      state: profile.businessAddress?.state || profile.entityState || '',
-      monthlyRevenue: parseRevenueEstimate(result),
-      employees: profile.employeeCount || 1,
-    };
-  }, [derivedFormData, result]);
+    return resolveFormData() || null;
+  }, [derivedFormData, resolveFormData]);
 
   const handleDemo = useCallback(async () => {
     setStage('processing');
@@ -150,6 +166,7 @@ export default function Onboarding({ previewOnly = false }) {
         result={result}
         onSave={handleSave}
         formData={getFormData()}
+        error={saveError}
       />
     );
   }

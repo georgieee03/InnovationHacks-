@@ -368,11 +368,14 @@ async function ensureLaunchPadTables(sql) {
     CREATE TABLE IF NOT EXISTS policy_analyses (
       id SERIAL PRIMARY KEY,
       business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
+      uploaded_file_id INTEGER REFERENCES uploaded_files(id) ON DELETE SET NULL,
       raw_text TEXT,
       summary JSONB NOT NULL DEFAULT '{}'::jsonb,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
+
+  await sql`ALTER TABLE policy_analyses ADD COLUMN IF NOT EXISTS uploaded_file_id INTEGER REFERENCES uploaded_files(id) ON DELETE SET NULL`;
 
   // Gap analyses
   await sql`
@@ -386,9 +389,29 @@ async function ensureLaunchPadTables(sql) {
     )
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS coverage_action_plans (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+      gap_analysis_id INTEGER REFERENCES gap_analyses(id) ON DELETE SET NULL,
+      carrier_scope TEXT NOT NULL DEFAULT 'state_farm_v1',
+      current_score INTEGER,
+      projected_score INTEGER,
+      plan_summary TEXT NOT NULL DEFAULT '',
+      plan_items JSONB NOT NULL DEFAULT '[]'::jsonb,
+      source_catalog_version TEXT NOT NULL DEFAULT 'state_farm_v1',
+      input_hash TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
   await sql`CREATE INDEX IF NOT EXISTS bank_transactions_business_id_idx ON bank_transactions(business_id)`;
   await sql`CREATE INDEX IF NOT EXISTS plaid_connections_business_id_idx ON plaid_connections(business_id)`;
   await sql`CREATE INDEX IF NOT EXISTS tax_summaries_business_id_idx ON tax_summaries(business_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS policy_analyses_uploaded_file_id_idx ON policy_analyses(uploaded_file_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS coverage_action_plans_business_id_idx ON coverage_action_plans(business_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS coverage_action_plans_gap_analysis_id_idx ON coverage_action_plans(gap_analysis_id)`;
 }
 
 async function ensureReferenceData(sql) {

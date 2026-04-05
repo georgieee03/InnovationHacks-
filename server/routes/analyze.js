@@ -5,8 +5,11 @@ import { groqJSON, isGroqConfigured } from '../lib/groq.js';
 const router = Router();
 
 router.post('/analyze-policy', async (req, res) => {
-  const { policyText, businessId, allowDemoFallback = false } = req.body || {};
+  const { policyText, businessId, uploadedFileId = null, allowDemoFallback = false } = req.body || {};
   if (!policyText) return res.status(400).json({ error: 'Missing policyText' });
+  if (uploadedFileId && !businessId) {
+    return res.status(400).json({ error: 'uploadedFileId requires a businessId' });
+  }
 
   if (!looksLikeInsurancePolicy(policyText)) {
     return res.status(422).json({
@@ -49,17 +52,33 @@ router.post('/analyze-policy', async (req, res) => {
     );
 
     let policyAnalysisId;
+    const sql = businessId ? getDb() : null;
     if (businessId) {
-      const sql = getDb();
       const saved = await sql`
-        INSERT INTO policy_analyses (business_id, raw_text, summary)
-        VALUES (${businessId}, ${policyText.slice(0, 5000)}, ${JSON.stringify(parsed)})
+        INSERT INTO policy_analyses (business_id, uploaded_file_id, raw_text, summary)
+        VALUES (${businessId}, ${uploadedFileId || null}, ${policyText.slice(0, 5000)}, ${JSON.stringify(parsed)})
         RETURNING id
       `;
       policyAnalysisId = saved[0]?.id;
+
+      if (uploadedFileId && policyAnalysisId) {
+        await updateUploadedFileStatus(sql, businessId, uploadedFileId, {
+          linkedType: 'policy_analysis',
+          linkedId: String(policyAnalysisId),
+          status: 'complete',
+          errorMessage: null,
+        });
+      }
     }
 
     if (!isStructuredPolicySummary(parsed)) {
+      if (sql && uploadedFileId) {
+        await updateUploadedFileStatus(sql, businessId, uploadedFileId, {
+          status: 'error',
+          errorMessage: 'The uploaded document could not be recognized as an insurance policy.',
+        });
+      }
+
       if (allowDemoFallback) {
         return res.json(getDemoFallback());
       }
@@ -67,9 +86,20 @@ router.post('/analyze-policy', async (req, res) => {
       return res.status(422).json({ error: 'The uploaded document could not be recognized as an insurance policy.' });
     }
 
-    return res.json({ ...parsed, policyAnalysisId });
+    return res.json({ ...parsed, policyAnalysisId, uploadedFileId });
   } catch (error) {
     console.error('Policy analysis error:', error);
+    if (businessId && uploadedFileId) {
+      try {
+        await updateUploadedFileStatus(getDb(), businessId, uploadedFileId, {
+          status: 'error',
+          errorMessage: 'Policy analysis failed. Please upload a text-based insurance policy and try again.',
+        });
+      } catch (updateError) {
+        console.warn('Failed to update uploaded insurance file status:', updateError);
+      }
+    }
+
     if (allowDemoFallback) {
       return res.json(getDemoFallback());
     }
@@ -140,6 +170,18 @@ function looksLikeInsurancePolicy(policyText) {
 
   const matches = signalPatterns.filter((pattern) => pattern.test(text)).length;
   return matches >= 3;
+}
+
+async function updateUploadedFileStatus(sql, businessId, uploadedFileId, { linkedType = null, linkedId = null, status, errorMessage = null }) {
+  await sql`
+    UPDATE uploaded_files
+    SET
+      linked_type = COALESCE(${linkedType}, linked_type),
+      linked_id = COALESCE(${linkedId}, linked_id),
+      analysis_status = ${status},
+      analysis_error = ${errorMessage}
+    WHERE id = ${uploadedFileId} AND business_id = ${businessId}
+  `;
 }
 
 function isStructuredPolicySummary(parsed) {
