@@ -168,35 +168,28 @@ export default function OnboardingResults({ result, onSave, formData }) {
             </div>
           )}
 
-          {/* Bank connection */}
+          {/* Bank connection — PRIMARY CTA */}
           {saved ? (
             <OnboardingPlaidConnect />
           ) : (
-            <div className="glass-card rounded-[24px] p-5">
-              <p className="text-sm font-medium text-text-primary">Connect your bank for deeper insights</p>
+            <div className="glass-card rounded-[24px] p-6 border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <p className="text-sm font-medium text-text-primary">Connect your bank for live financial insights</p>
               <p className="mt-2 text-xs leading-relaxed text-text-secondary">
-                Save your plan first, then connect your bank to automatically track income, expenses, and deductions.
+                Automatically track income, expenses, and deductions. Your plan updates in real-time as your business grows.
               </p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <RippleButton variant="primary" size="md" onClick={handleSaveForPlaid} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save & connect bank'}
+              <div className="mt-4 flex flex-col gap-2">
+                <RippleButton variant="primary" size="lg" className="w-full" onClick={handleSaveForPlaid} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save plan & connect bank'}
                 </RippleButton>
-                <RippleButton variant="secondary" size="md" onClick={handleSaveAndGo} disabled={saving}>
-                  {saving ? 'Saving...' : 'Skip — go to dashboard'}
-                </RippleButton>
+                <button
+                  type="button"
+                  onClick={handleSaveAndGo}
+                  disabled={saving}
+                  className="rounded-xl px-4 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary hover:bg-white/5"
+                >
+                  {saving ? 'Saving...' : 'Skip for now'}
+                </button>
               </div>
-            </div>
-          )}
-
-          {/* Main CTA — only show if not yet saved for Plaid */}
-          {!saved && (
-            <div className="pb-8 pt-2">
-              <RippleButton variant="primary" size="lg" className="w-full" onClick={handleSaveAndGo} disabled={saving}>
-                {saving ? 'Saving your plan...' : 'Save my plan and go to dashboard'}
-              </RippleButton>
-              <p className="mt-3 text-center text-xs text-text-secondary/60">
-                Your plan is saved and updated as your business grows.
-              </p>
             </div>
           )}
 

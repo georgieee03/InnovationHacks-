@@ -1,15 +1,19 @@
 /**
- * Groq client — server-side only.
- * Ultra-fast inference via llama-3.3-70b-versatile (text) and llama-3.2 vision models.
+ * AI client — server-side only.
+ * Uses OpenRouter as the inference provider.
+ * Primary model: Qwen 3 235B (free), fallback: Gemini 2.0 Flash.
+ * 
+ * All exports keep the same names (groqJSON, isGroqConfigured, etc.)
+ * so no other files need to change.
  */
 
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const PRIMARY_MODEL = 'google/gemini-2.0-flash-001';
+const FALLBACK_MODEL = 'google/gemini-2.0-flash-001';
+const VISION_MODEL = 'google/gemini-2.0-flash-001'; // Gemini handles vision natively
 
 /**
- * Core identity and behavioral guidelines for all Groq AI calls in Launchpad.
- *
- * Audience: First-time and early-stage small business owners and entrepreneurs
- * who are not accountants, lawyers, or financial experts.
+ * Core identity and behavioral guidelines for all AI calls in Launchpad.
  */
 export const LAUNCHPAD_SYSTEM_PROMPT = `You are Launchpad, an AI business advisor built specifically for first-time small business owners and new entrepreneurs.
 
@@ -26,171 +30,133 @@ TONE AND COMMUNICATION RULES:
 - Lead with what matters most. Put the most important information first
 - Use dollar amounts and concrete numbers whenever possible — not vague ranges
 - Avoid hedging language like "you may want to consider" or "it might be advisable" — give a clear recommendation
-- Never use jargon without explanation: no "indemnification", "force majeure", "nexus", "basis points" without plain-English follow-up
+- Never use jargon without explanation
 - Keep explanations short. One clear sentence beats three vague ones
-- When something is urgent or risky, say so plainly: "This is a red flag", "Act on this before [date]", "This clause puts you at risk"
+- When something is urgent or risky, say so plainly
 
 ACCURACY AND HONESTY RULES:
-- Only cite real laws, real agencies, real programs, and real URLs — never fabricate citations or links
-- If you are not certain about a specific dollar threshold, deadline, or statute, say "verify this with your state's website" rather than guessing
-- Distinguish clearly between federal requirements (apply to everyone) and state/local requirements (vary by location)
-- For tax estimates, use conservative assumptions and always note they are estimates, not guarantees
-- For funding opportunities, only include programs that are real and currently active — do not invent grant programs
-- For contract analysis, flag genuine risks — do not soften findings to avoid alarming the user
-
-TASK-SPECIFIC GUIDELINES:
-
-COMPLIANCE:
-- Prioritize by consequence: what gets you fined or shut down first
-- Always include the specific agency name and a real application URL when known
-- Flag anything with a penalty over $500 or that could result in license revocation
-- Separate one-time setup items from recurring obligations clearly
-- For tax filings, always include the due date and the specific form number
-
-CONTRACTS:
-- Translate every clause into one plain-English sentence
-- Flag these specifically: personal guarantees, auto-renewal clauses, non-compete restrictions, one-sided indemnification, unlimited liability exposure, IP ownership transfers
-- Health score 0–100: 90+ means clean, 70–89 means minor issues, 50–69 means significant concerns, below 50 means serious problems — be honest
-- For missing protections, explain what could go wrong without them in a real scenario
-- Counter-proposals should protect the business owner without being adversarial — aim for fair, not aggressive
-
-RECEIPTS AND EXPENSES:
-- Categorize conservatively — when in doubt between business and personal, flag it for review rather than claiming it
-- For mixed-use items (phone, vehicle, home office), always note the business-use percentage rule
-- Flag any receipt over $2,500 that might qualify for Section 179 immediate expensing
-- Note when documentation is required (meals over $75 need written business purpose)
-- Vehicle expenses: always ask whether actual expense or standard mileage rate is being used
-
-TAX ANALYSIS:
-- Focus on deductions the owner is likely missing, not generic advice they've already heard
-- Prioritize by dollar impact — show highest-value opportunities first
-- For S-Corp election advice, only recommend it when annual profit clearly exceeds $80K
-- Always note quarterly estimated tax deadlines when profit is positive
-- Flag self-employment tax (15.3%) as a separate line item — most first-timers don't know about it
-
-QUOTES AND PRICING:
-- Compare to real market rates for the specific business type and metro area
-- If acceptance rate is above 85%, say directly: "Your prices are likely too low for this market"
-- Factor in supply cost, labor time, and overhead — not just materials
-- Recommend pricing that sustains the business, not just wins the job
-
-FUNDING:
-- Only include programs the business realistically qualifies for based on their profile
-- Be honest about eligibility — a 40% match score means they probably won't get it
-- Prioritize grants over loans, and low-interest loans over high-interest ones
-- Always include the application deadline and estimated time to complete
-- Flag programs that require 1+ year in business or minimum revenue thresholds
-
-BUSINESS FORMATION:
-- Recommend LLC over sole proprietorship whenever there is any client-facing work, physical risk, or personal assets to protect
-- Explain the liability protection in plain terms: "If a client sues you, they can only go after the LLC's assets, not your personal bank account or home"
-- Always include the actual state filing fee and processing time
-- Flag the EIN requirement, quarterly taxes, and annual report filing as the three most commonly missed first-year obligations
+- Only cite real laws, real agencies, real programs, and real URLs — never fabricate
+- If uncertain about a specific threshold or deadline, say "verify this with your state's website"
+- Distinguish clearly between federal and state/local requirements
+- For tax estimates, use conservative assumptions and note they are estimates
+- For funding, only include real and currently active programs
+- For contracts, flag genuine risks honestly
 
 OUTPUT FORMAT:
 - Always return valid JSON matching the exact schema requested — no markdown, no extra text
-- Use null for unknown or not-applicable fields, never omit required fields
+- Use null for unknown fields, never omit required fields
 - Dollar amounts as numbers, not strings
 - Dates as YYYY-MM-DD strings
-- Percentages as integers 0–100, not decimals`.trim();
+- Percentages as integers 0–100, not decimals
+
+IMPORTANT: Do NOT wrap your response in markdown code fences. Do NOT include any thinking or reasoning tags. Return ONLY the raw JSON object.`.trim();
 
 export function isGroqConfigured() {
-  return Boolean(process.env.GROQ_API_KEY);
+  return Boolean(process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY);
 }
 
 export function getGroqModel() {
-  return process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+  return process.env.AI_MODEL || PRIMARY_MODEL;
 }
 
 export function getGroqVisionModel() {
-  return process.env.GROQ_VISION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
+  return process.env.AI_VISION_MODEL || VISION_MODEL;
 }
 
 function cleanJSON(text) {
-  return text.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
+  // Strip markdown fences
+  let cleaned = text.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
+  // Strip <think>...</think> blocks (Qwen thinking mode)
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  // If it still doesn't start with { or [, try to extract JSON
+  if (!cleaned.startsWith('{') && !cleaned.startsWith('[')) {
+    const match = cleaned.match(/[\[{][\s\S]*[\]}]/);
+    if (match) cleaned = match[0];
+  }
+  return cleaned;
 }
+
+function getHeaders() {
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY;
+  const isOpenRouter = Boolean(process.env.OPENROUTER_API_KEY);
+
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${apiKey}`,
+  };
+
+  if (isOpenRouter) {
+    headers['HTTP-Referer'] = process.env.AUTH0_BASE_URL || 'https://safeguard-nu.vercel.app';
+    headers['X-Title'] = 'SafeGuard';
+  }
+
+  return { headers, isOpenRouter };
+}
+
+function getApiUrl() {
+  return process.env.OPENROUTER_API_KEY ? OPENROUTER_URL : 'https://api.groq.com/openai/v1/chat/completions';
+}
+
 
 /**
  * Generate a JSON response from a text-only prompt.
- * Uses llama-3.3-70b-versatile with json_object mode.
- * Falls back to a smaller model on rate limit.
+ * Uses Gemini 2.0 Flash via OpenRouter.
  */
 export async function groqJSON(prompt, options = {}) {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) throw new Error('GROQ_API_KEY is not configured');
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not configured');
 
-  const models = [
-    options.model || getGroqModel(),
-    'llama-3.1-8b-instant', // fallback on rate limit
-  ];
+  const model = options.model || getGroqModel();
+  const { headers } = getHeaders();
+  const url = getApiUrl();
 
-  let lastError;
-  for (const model of models) {
-    try {
-      const response = await fetch(GROQ_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      model,
+      temperature: options.temperature ?? 0.1,
+      max_tokens: options.maxTokens ?? 4096,
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: LAUNCHPAD_SYSTEM_PROMPT + '\n\nYou are a precise JSON API. Always respond with valid JSON only. No markdown, no explanation, no text outside the JSON object.',
         },
-        body: JSON.stringify({
-          model,
-          temperature: options.temperature ?? 0.1,
-          max_tokens: options.maxTokens ?? 4096,
-          response_format: { type: 'json_object' },
-          messages: [
-            {
-              role: 'system',
-              content: LAUNCHPAD_SYSTEM_PROMPT + '\n\nYou are a precise JSON API. Always respond with valid JSON only. No markdown, no explanation, no text outside the JSON object.',
-            },
-            { role: 'user', content: prompt },
-          ],
-        }),
-      });
+        { role: 'user', content: prompt },
+      ],
+    }),
+  });
 
-      if (response.status === 429) {
-        const errBody = await response.text();
-        console.error(`Groq rate limit on ${model}:`, errBody);
-        lastError = new Error(`Rate limited on ${model}`);
-        continue;
-      }
-
-      if (!response.ok) {
-        const text = await response.text();
-        console.error(`Groq API error on ${model}:`, response.status, text);
-        lastError = new Error(`Groq API error ${response.status}`);
-        continue;
-      }
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content ?? '';
-      const cleaned = cleanJSON(content);
-      return JSON.parse(cleaned);
-    } catch (err) {
-      lastError = err;
-      console.error(`Groq ${model} failed:`, err.message);
-    }
+  if (!response.ok) {
+    const text = await response.text();
+    console.error(`AI error (${model}):`, response.status, text);
+    throw new Error(`AI API error ${response.status}`);
   }
 
-  throw lastError || new Error('All Groq models failed');
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content ?? '';
+  const cleaned = cleanJSON(content);
+  return JSON.parse(cleaned);
 }
 
 /**
  * Generate a JSON response from a prompt + an image.
- * Uses a Groq vision model to do OCR and structured analysis in a single API call.
+ * Uses Gemini 2.0 Flash for vision (handles images natively).
  */
 export async function groqVisionJSON(prompt, base64Image, mimeType, options = {}) {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) throw new Error('GROQ_API_KEY is not configured');
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not configured');
 
-  const response = await fetch(GROQ_URL, {
+  const { headers } = getHeaders();
+  const url = getApiUrl();
+  const model = options.model || getGroqVisionModel();
+
+  const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers,
     body: JSON.stringify({
-      model: options.model || getGroqVisionModel(),
+      model,
       temperature: options.temperature ?? 0.1,
       max_tokens: options.maxTokens ?? 3072,
       messages: [
@@ -217,8 +183,8 @@ export async function groqVisionJSON(prompt, base64Image, mimeType, options = {}
 
   if (!response.ok) {
     const text = await response.text();
-    console.error('Groq Vision API error:', response.status, text);
-    throw new Error(`Groq Vision API error ${response.status}`);
+    console.error('Vision API error:', response.status, text);
+    throw new Error(`Vision API error ${response.status}`);
   }
 
   const data = await response.json();
@@ -228,32 +194,27 @@ export async function groqVisionJSON(prompt, base64Image, mimeType, options = {}
   try {
     return JSON.parse(cleaned);
   } catch {
-    // Try to extract JSON substring if model added surrounding text
     const match = cleaned.match(/\{[\s\S]*\}/);
     if (match) {
-      try {
-        return JSON.parse(match[0]);
-      } catch {
-        // fall through
-      }
+      try { return JSON.parse(match[0]); } catch { /* fall through */ }
     }
-    throw new Error(`Groq vision returned invalid JSON: ${cleaned.slice(0, 300)}`);
+    throw new Error(`Vision returned invalid JSON: ${cleaned.slice(0, 300)}`);
   }
 }
 
 /**
- * Generate plain text from Groq (used for OCR from images when you only need raw text).
+ * Generate plain text from a vision model.
  */
 export async function groqVisionText(prompt, base64Image, mimeType, options = {}) {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) throw new Error('GROQ_API_KEY is not configured');
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not configured');
 
-  const response = await fetch(GROQ_URL, {
+  const { headers } = getHeaders();
+  const url = getApiUrl();
+
+  const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers,
     body: JSON.stringify({
       model: options.model || getGroqVisionModel(),
       temperature: options.temperature ?? 0.1,
@@ -262,10 +223,7 @@ export async function groqVisionText(prompt, base64Image, mimeType, options = {}
         {
           role: 'user',
           content: [
-            {
-              type: 'image_url',
-              image_url: { url: `data:${mimeType};base64,${base64Image}` },
-            },
+            { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}` } },
             { type: 'text', text: prompt },
           ],
         },
@@ -275,8 +233,8 @@ export async function groqVisionText(prompt, base64Image, mimeType, options = {}
 
   if (!response.ok) {
     const text = await response.text();
-    console.error('Groq Vision Text API error:', response.status, text);
-    throw new Error(`Groq Vision Text API error ${response.status}`);
+    console.error('Vision Text API error:', response.status, text);
+    throw new Error(`Vision Text API error ${response.status}`);
   }
 
   const data = await response.json();
@@ -284,18 +242,18 @@ export async function groqVisionText(prompt, base64Image, mimeType, options = {}
 }
 
 /**
- * Generate a plain text response from Groq.
+ * Generate a plain text response.
  */
 export async function groqText(prompt, options = {}) {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) throw new Error('GROQ_API_KEY is not configured');
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not configured');
 
-  const response = await fetch(GROQ_URL, {
+  const { headers } = getHeaders();
+  const url = getApiUrl();
+
+  const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers,
     body: JSON.stringify({
       model: options.model || getGroqModel(),
       temperature: options.temperature ?? 0.3,
@@ -309,8 +267,8 @@ export async function groqText(prompt, options = {}) {
 
   if (!response.ok) {
     const text = await response.text();
-    console.error('Groq Text API error:', response.status, text);
-    throw new Error(`Groq Text API error ${response.status}`);
+    console.error('Text API error:', response.status, text);
+    throw new Error(`Text API error ${response.status}`);
   }
 
   const data = await response.json();
