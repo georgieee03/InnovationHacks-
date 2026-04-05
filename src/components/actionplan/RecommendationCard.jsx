@@ -1,85 +1,146 @@
 import { motion } from 'framer-motion';
-import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
-import { formatCurrency } from '../../utils/formatCurrency';
+import { AlertCircle, ArrowUpRight, CircleHelp, ShieldAlert, ShieldCheck } from 'lucide-react';
 
 const MotionDiv = motion.div;
 
 const PRIORITY_CONFIG = {
-  critical: { icon: AlertTriangle, color: 'text-gap', bg: 'bg-gap/5 border-gap/20', label: 'Critical' },
-  recommended: { icon: AlertCircle, color: 'text-underinsured', bg: 'bg-underinsured/5 border-underinsured/20', label: 'Recommended' },
-  conditional: { icon: Info, color: 'text-primary', bg: 'bg-primary/5 border-primary/20', label: 'Optional' },
+  critical: {
+    icon: ShieldAlert,
+    tone: 'text-gap',
+    chip: 'bg-gap/10 text-gap border-gap/20',
+    label: 'Critical',
+  },
+  recommended: {
+    icon: AlertCircle,
+    tone: 'text-warning',
+    chip: 'bg-warning/10 text-warning border-warning/20',
+    label: 'Recommended',
+  },
+  conditional: {
+    icon: CircleHelp,
+    tone: 'text-primary',
+    chip: 'bg-primary/10 text-primary border-primary/20',
+    label: 'Review',
+  },
 };
 
-function getFinancialCrossRef(item, financialMetrics) {
-  if (!financialMetrics) return null;
-
-  if (item.id === 'equipment_breakdown' && financialMetrics.spendingByCategory?.equipment > 0) {
-    return `Your recent equipment spending was ${formatCurrency(financialMetrics.spendingByCategory.equipment)}, indicating active equipment use and repair needs.`;
-  }
-
-  if (item.id === 'business_interruption') {
-    const months = financialMetrics.monthsOfRunway ?? 0;
-    const fixedCosts = financialMetrics.averageMonthlyExpenses ?? 0;
-    return `With only ${months.toFixed(1)} months of reserves and ${formatCurrency(fixedCosts)}/month in fixed costs, a forced closure could be financially devastating.`;
-  }
-
-  return null;
-}
-
-export default function RecommendationCard({ item, financialMetrics, delay = 0 }) {
+export default function RecommendationCard({ item, delay = 0 }) {
   const config = PRIORITY_CONFIG[item.priority] || PRIORITY_CONFIG.recommended;
   const Icon = config.icon;
-  const avgCost = item.estimatedAnnualPremium
-    ? Math.round((item.estimatedAnnualPremium.low + item.estimatedAnnualPremium.high) / 2 / 12)
-    : null;
-
-  const crossRef = getFinancialCrossRef(item, financialMetrics);
-  const isActionable = item.status === 'gap' || item.status === 'underinsured';
+  const hasOfficialSource = Boolean(item.officialSourceUrl);
 
   return (
     <MotionDiv
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay, ease: [0.4, 0, 0.2, 1] }}
-      whileHover={{ scale: 1.02, y: -4 }}
-      className={`glass-card border p-5 ${config.bg.replace('bg-', 'border-')}`}
+      transition={{ duration: 0.45, delay, ease: [0.4, 0, 0.2, 1] }}
+      whileHover={{ y: -4, scale: 1.01 }}
+      className="glass-card p-5"
     >
       <div className="flex items-start gap-3">
-        <Icon className={`mt-0.5 h-5 w-5 ${config.color}`} />
-        <div className="flex-1">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <h4 className="font-heading font-normal tracking-[-0.02em] text-text-primary">{item.name}</h4>
-              {item.locationDependent && (
-                <span className="surface-chip rounded-full px-2 py-0.5 text-xs text-text-secondary">
-                  Location risk
+        <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/5 ${config.tone}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h4 className="font-heading text-xl font-light tracking-[-0.02em] text-text-primary">
+                  {item.title}
+                </h4>
+                <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${config.chip}`}>
+                  {config.label}
                 </span>
-              )}
+              </div>
+              <p className="mt-1 text-sm text-text-secondary">{item.gapName}</p>
             </div>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-normal ${config.color} ${config.bg}`}>
-              {item.statusLabel || config.label}
-            </span>
+
+            <div className="text-right">
+              <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Projected score gain</p>
+              <p className="mt-1 text-lg font-medium text-primary">+{item.scoreDelta}%</p>
+            </div>
           </div>
-          <p className="mt-1 text-sm text-text-secondary">{item.whyItMatters}</p>
 
-          {crossRef && (
-            <p className="surface-panel readable-copy mt-2 rounded-lg px-3 py-2 text-sm text-text-primary">
-              Related financial signal: {crossRef}
+          <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1.4fr)_minmax(240px,0.8fr)]">
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Recommended change</p>
+                <p className="mt-1 text-sm leading-6 text-text-primary">{item.recommendedChange}</p>
+              </div>
+
+              <div>
+                <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Why this matters</p>
+                <p className="mt-1 text-sm leading-6 text-text-secondary">{item.whyThisMatters}</p>
+              </div>
+
+              <div>
+                <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Fit rationale</p>
+                <p className="mt-1 text-sm leading-6 text-text-secondary">{item.fitReason}</p>
+              </div>
+            </div>
+
+            <div className="surface-panel rounded-2xl p-4">
+              <div className="flex items-center gap-2 text-sm text-text-primary">
+                <ShieldCheck className="h-4 w-4 text-primary" />
+                <span>{item.carrierRecommendation}</span>
+              </div>
+
+              {hasOfficialSource ? (
+                <a
+                  href={item.officialSourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1 text-sm text-primary transition-opacity hover:opacity-80"
+                >
+                  Official source
+                  <ArrowUpRight className="h-4 w-4" />
+                </a>
+              ) : (
+                <p className="mt-3 text-sm text-text-secondary">
+                  Carrier-specific fit still needs agent confirmation.
+                </p>
+              )}
+
+              <div className="mt-4">
+                <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Budget impact</p>
+                <p className="mt-1 text-sm font-medium text-text-primary">
+                  {String(item.budgetImpactSignal || 'unknown').replace(/^\w/, (char) => char.toUpperCase())}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-text-secondary">{item.budgetImpactReason}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div>
+              <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Implementation steps</p>
+              <ul className="mt-2 space-y-2">
+                {(item.implementationSteps || []).map((step) => (
+                  <li key={step} className="surface-panel rounded-xl px-3 py-2 text-sm leading-6 text-text-primary">
+                    {step}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-[0.14em] text-text-secondary">Questions to ask your agent</p>
+              <ul className="mt-2 space-y-2">
+                {(item.agentQuestions || []).map((question) => (
+                  <li key={question} className="surface-panel rounded-xl px-3 py-2 text-sm leading-6 text-text-secondary">
+                    {question}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {item.notes ? (
+            <p className="mt-4 text-sm text-text-secondary">
+              Note: {item.notes}
             </p>
-          )}
-
-          {avgCost && (
-            <p className="mt-2 text-sm">
-              <span className="text-text-secondary">Estimated cost: </span>
-              <span className="font-normal text-text-primary">{formatCurrency(avgCost)}/mo</span>
-            </p>
-          )}
-
-          {isActionable && (
-            <button className="focus-ring-brand mt-3 rounded-lg bg-primary px-4 py-1.5 text-sm font-normal text-white shadow-[0_14px_28px_rgba(0,207,49,0.2)] transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_18px_34px_rgba(0,207,49,0.26)]">
-              Get Quote
-            </button>
-          )}
+          ) : null}
         </div>
       </div>
     </MotionDiv>

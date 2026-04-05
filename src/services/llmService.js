@@ -34,6 +34,7 @@ function normalizePolicySummary(data) {
     monthlyPremium: formatCurrency(data.monthlyPremium),
     plainEnglishSummary: data.plainEnglishSummary || '',
     policyAnalysisId: data.policyAnalysisId,
+    uploadedFileId: data.uploadedFileId ?? null,
   };
 }
 

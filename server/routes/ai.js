@@ -6,8 +6,74 @@ import { Router } from 'express';
 import { requireSession } from '../auth.js';
 import { getDb } from '../db.js';
 import { groqJSON, groqVisionJSON, isGroqConfigured } from '../lib/groq.js';
+import {
+  generateCoverageActionPlan,
+  loadCoveragePlanContext,
+  saveCoverageActionPlan,
+} from '../lib/coverageActionPlan.js';
 
 const router = Router();
+
+router.get('/ai/coverage-action-plan', requireSession, async (req, res) => {
+  const { businessId } = req.query || {};
+  if (!businessId) {
+    return res.status(400).json({ error: 'businessId is required' });
+  }
+
+  try {
+    const sql = getDb();
+    const context = await loadCoveragePlanContext(sql, businessId, req.currentUser);
+
+    if (!context.business) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
+    return res.json(context);
+  } catch (error) {
+    console.error('coverage-action-plan get error:', error);
+    return res.status(500).json({ error: 'Failed to load coverage action plan' });
+  }
+});
+
+router.post('/ai/generate-coverage-action-plan', requireSession, async (req, res) => {
+  const { businessId, financialMetrics = null, riskFactors = null } = req.body || {};
+  if (!businessId) {
+    return res.status(400).json({ error: 'businessId is required' });
+  }
+
+  try {
+    const sql = getDb();
+    const context = await loadCoveragePlanContext(sql, businessId, req.currentUser);
+
+    if (!context.business) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
+    if (!context.latestGapAnalysis) {
+      return res.status(422).json({ error: 'Complete insurance analysis before generating an action plan.' });
+    }
+
+    const generatedPlan = await generateCoverageActionPlan({
+      business: context.business,
+      latestGapAnalysis: context.latestGapAnalysis,
+      financialMetrics,
+      riskFactors,
+    });
+
+    const savedPlan = await saveCoverageActionPlan(sql, businessId, context.latestGapAnalysis, generatedPlan);
+
+    return res.json({
+      business: context.business,
+      latestGapAnalysis: context.latestGapAnalysis,
+      latestPlan: savedPlan,
+      currentScore: generatedPlan.currentScore,
+      stale: false,
+    });
+  } catch (error) {
+    console.error('coverage-action-plan generate error:', error);
+    return res.status(500).json({ error: 'Failed to generate coverage action plan' });
+  }
+});
 
 // ─── Business Advisor (onboarding AI) ─────────────────────────────────────────
 
@@ -439,7 +505,6 @@ function assembleContractHtml(params) {
   } = params;
 
   const displayClient = clientCompany ? `${clientName}, on behalf of ${clientCompany}` : clientName;
-  const clientSignLabel = clientCompany ? `${clientCompany}\nBy: ${clientName}` : clientName;
 
   // Build numbered section HTML
   let sectionHtml = '';

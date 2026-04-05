@@ -195,6 +195,17 @@ export function computeProtectionScore(results, financialMetrics) {
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
+export function computeProjectedProtectionScore(results, financialMetrics, resolvedGapIds = []) {
+  const resolved = new Set((resolvedGapIds ?? []).map((id) => String(id)));
+  const projectedResults = (results ?? []).map((result) => (
+    resolved.has(String(result.id))
+      ? { ...result, status: 'covered', statusLabel: 'Resolved in plan' }
+      : result
+  ));
+
+  return computeProtectionScore(projectedResults, financialMetrics);
+}
+
 export function getProtectionGrade(score) {
   if (score >= 90) return { grade: 'A', color: '#10b981', label: 'Excellent' };
   if (score >= 80) return { grade: 'B', color: '#10b981', label: 'Good' };

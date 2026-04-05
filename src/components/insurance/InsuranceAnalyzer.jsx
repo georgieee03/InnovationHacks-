@@ -16,6 +16,7 @@ const fadeInUp = {
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -10 },
 };
+const MotionDiv = motion.div;
 
 const DEMO_POLICY_TEXT = `Named insured: Maria's Bakery LLC
 Policy number: BOP-2024-TX-00847291
@@ -51,6 +52,7 @@ export default function InsuranceAnalyzer() {
     financialMetrics,
     policySummary, setPolicySummary,
     gapAnalysis, setGapAnalysis,
+    ensureBusinessRecord,
   } = useContext(AppContext);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -65,8 +67,9 @@ export default function InsuranceAnalyzer() {
   }, [setGapAnalysis, setPolicySummary]);
 
   const completeAnalysis = useCallback(async (policyText, options = {}) => {
-    const businessType = businessInfo?.type || 'restaurant';
-    const summary = await analyzePolicyWithLLM(policyText, businessInfo, options);
+    const activeBusiness = options.persistedBusiness || businessInfo;
+    const businessType = activeBusiness?.type || 'restaurant';
+    const summary = await analyzePolicyWithLLM(policyText, activeBusiness, options);
     setPolicySummary(summary);
 
     let recommendations;
@@ -80,16 +83,18 @@ export default function InsuranceAnalyzer() {
     const gaps = analyzeGaps(summary, recommendations, riskFactors, financialMetrics);
     setGapAnalysis(gaps);
 
-    if (businessInfo?.id) {
+    if (activeBusiness?.id) {
       const protectionScore = computeProtectionScore(gaps, financialMetrics);
-      void api.saveGapAnalysis({
-        businessId: businessInfo.id,
-        policyAnalysisId: summary.policyAnalysisId ?? null,
-        results: gaps,
-        protectionScore,
-      }).catch((error) => {
+      try {
+        await api.saveGapAnalysis({
+          businessId: activeBusiness.id,
+          policyAnalysisId: summary.policyAnalysisId ?? null,
+          results: gaps,
+          protectionScore,
+        });
+      } catch (error) {
         console.warn('Gap analysis save failed:', error);
-      });
+      }
     }
 
     setIsComplete(true);
@@ -101,7 +106,12 @@ export default function InsuranceAnalyzer() {
 
     try {
       const policyText = await extractTextFromPDF(file);
-      await completeAnalysis(policyText);
+      const persistedBusiness = await ensureBusinessRecord();
+      const uploadedFile = await api.uploadWorkspaceFile('insurance', file);
+      await completeAnalysis(policyText, {
+        uploadedFileId: uploadedFile.id,
+        persistedBusiness,
+      });
     } catch (error) {
       console.error('Analysis failed:', error);
       setAnalysisError(
@@ -110,7 +120,7 @@ export default function InsuranceAnalyzer() {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [completeAnalysis, resetAnalysis]);
+  }, [completeAnalysis, ensureBusinessRecord, resetAnalysis]);
 
   const handleLoadDemo = useCallback(async () => {
     setIsAnalyzing(true);
@@ -141,15 +151,15 @@ export default function InsuranceAnalyzer() {
   return (
     <AnimatePresence mode="wait">
       <div className="space-y-6">
-        <motion.div
+        <MotionDiv
           {...fadeInUp}
           transition={{ duration: 0.4 }}
         >
           <h2 className="text-4xl font-heading font-thin tracking-[-0.03em] text-text-primary">Insurance Analyzer</h2>
           <p className="text-sm font-light text-text-secondary mt-1.5">Upload your policy to find coverage gaps</p>
-        </motion.div>
+        </MotionDiv>
 
-        <motion.div
+        <MotionDiv
           {...fadeInUp}
           transition={{ duration: 0.4, delay: 0.1 }}
           className="flex items-center gap-4"
@@ -163,10 +173,10 @@ export default function InsuranceAnalyzer() {
               Load Demo Policy
             </button>
           )}
-        </motion.div>
+        </MotionDiv>
 
         {analysisError && (
-          <motion.div
+          <MotionDiv
             {...fadeInUp}
             transition={{ duration: 0.3 }}
             className="flex items-start gap-3 rounded-xl border border-gap/20 bg-gap/5 p-4 text-sm text-gap"
@@ -176,12 +186,12 @@ export default function InsuranceAnalyzer() {
               <p className="font-medium">Insurance analysis failed</p>
               <p className="mt-1">{analysisError}</p>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
 
         <AnimatePresence>
           {policySummary && (
-            <motion.div
+            <MotionDiv
               key="policy-summary"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -189,13 +199,13 @@ export default function InsuranceAnalyzer() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <PolicySummary summary={policySummary} />
-            </motion.div>
+            </MotionDiv>
           )}
         </AnimatePresence>
 
         <AnimatePresence>
           {gapAnalysis && (
-            <motion.div
+            <MotionDiv
               key="gap-analysis"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -203,7 +213,7 @@ export default function InsuranceAnalyzer() {
               transition={{ duration: 0.5, delay: 0.4 }}
             >
               <GapAnalysis gaps={gapAnalysis} />
-            </motion.div>
+            </MotionDiv>
           )}
         </AnimatePresence>
       </div>
