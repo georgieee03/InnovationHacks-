@@ -1,32 +1,8 @@
 import { Router } from 'express';
 import { getDb } from '../db.js';
+import { groqJSON, isGroqConfigured } from '../lib/groq.js';
 
 const router = Router();
-
-const SYSTEM_PROMPT = `You are an insurance policy analyzer. You extract structured coverage information from insurance policy documents and return ONLY valid JSON with no additional text, no markdown backticks, and no preamble.
-
-Return JSON in this exact structure:
-{
-  "policyNumber": "string",
-  "insurer": "string",
-  "namedInsured": "string",
-  "effectiveDates": { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" },
-  "coverages": [
-    {
-      "type": "string (one of: general_liability, commercial_property, workers_comp, flood, earthquake, business_interruption, equipment_breakdown, cyber_liability, professional_liability, commercial_auto, inland_marine, umbrella)",
-      "name": "string",
-      "covered": true,
-      "limit": "string or null",
-      "deductible": "string or null",
-      "notes": "string"
-    }
-  ],
-  "totalAnnualPremium": number,
-  "monthlyPremium": number,
-  "plainEnglishSummary": "string"
-}
-
-Check for all listed coverage types and mark uncovered ones with "covered": false.`;
 
 router.post('/analyze-policy', async (req, res) => {
   const { policyText, businessId, allowDemoFallback = false } = req.body || {};
@@ -38,8 +14,7 @@ router.post('/analyze-policy', async (req, res) => {
     });
   }
 
-  const groqApiKey = process.env.GROQ_API_KEY;
-  if (!groqApiKey) {
+  if (!isGroqConfigured()) {
     if (allowDemoFallback) {
       return res.json(getDemoFallback());
     }
@@ -47,37 +22,31 @@ router.post('/analyze-policy', async (req, res) => {
     return res.status(503).json({ error: 'Policy analysis is unavailable right now.' });
   }
 
-  try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${groqApiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        temperature: 0.1,
-        max_tokens: 2000,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: `Analyze this insurance policy and return structured JSON:\n\n${policyText}` },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      console.error('Groq API error:', response.status, await response.text());
-      if (allowDemoFallback) {
-        return res.json(getDemoFallback());
-      }
-
-      return res.status(502).json({ error: 'Policy analysis failed. Please try again.' });
+  const POLICY_SCHEMA = `{
+  "policyNumber": "string",
+  "insurer": "string",
+  "namedInsured": "string",
+  "effectiveDates": { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" },
+  "coverages": [
+    {
+      "type": "general_liability|commercial_property|workers_comp|flood|earthquake|business_interruption|equipment_breakdown|cyber_liability|professional_liability|commercial_auto|inland_marine|umbrella",
+      "name": "string",
+      "covered": true,
+      "limit": "string or null",
+      "deductible": "string or null",
+      "notes": "string"
     }
+  ],
+  "totalAnnualPremium": number,
+  "monthlyPremium": number,
+  "plainEnglishSummary": "string"
+}`;
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
-    const cleaned = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-    const parsed = JSON.parse(cleaned);
+  try {
+    const parsed = await groqJSON(
+      `You are an insurance policy analyzer. Extract structured coverage information from this policy document. Check for all coverage types and mark uncovered ones with "covered": false.\n\nReturn ONLY JSON matching this schema:\n${POLICY_SCHEMA}\n\nPOLICY TEXT:\n${policyText.slice(0, 8000)}`,
+      { maxTokens: 2000 }
+    );
 
     let policyAnalysisId;
     if (businessId) {

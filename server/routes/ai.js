@@ -312,34 +312,474 @@ Generate a professional quote with competitive pricing. Return ONLY JSON:
 
 // ─── Generate Contract ────────────────────────────────────────────────────────
 
+const CONTRACT_TYPE_LABELS = {
+  service_agreement: 'Service Agreement',
+  vendor_agreement: 'Vendor Agreement',
+  nda: 'Non-Disclosure Agreement',
+  independent_contractor: 'Independent Contractor Agreement',
+  subcontractor_agreement: 'Subcontractor Agreement',
+  retainer_agreement: 'Monthly Retainer Agreement',
+  equipment_rental: 'Equipment Rental Agreement',
+  partnership_agreement: 'Partnership Agreement',
+};
+
+/**
+ * Section definitions per contract type.
+ * Each entry is the ordered list of section keys the AI must populate.
+ * The assembler renders them in this exact order with standardized headings.
+ */
+const CONTRACT_SECTIONS = {
+  service_agreement: [
+    'recitals', 'scope_of_services', 'compensation_and_payment', 'change_orders',
+    'term_and_termination', 'independent_contractor_status', 'confidentiality',
+    'intellectual_property', 'representations_and_warranties', 'limitation_of_liability',
+    'indemnification', 'insurance', 'dispute_resolution', 'governing_law',
+    'general_provisions',
+  ],
+  vendor_agreement: [
+    'recitals', 'products_and_services', 'pricing_and_payment', 'delivery_and_acceptance',
+    'term_and_termination', 'confidentiality', 'representations_and_warranties',
+    'limitation_of_liability', 'indemnification', 'dispute_resolution',
+    'governing_law', 'general_provisions',
+  ],
+  nda: [
+    'recitals', 'definition_of_confidential_information', 'obligations_of_receiving_party',
+    'exclusions', 'term', 'return_of_information', 'remedies',
+    'governing_law', 'general_provisions',
+  ],
+  independent_contractor: [
+    'recitals', 'services', 'compensation', 'independent_contractor_status',
+    'work_product_and_ip', 'confidentiality', 'non_solicitation',
+    'term_and_termination', 'representations_and_warranties', 'limitation_of_liability',
+    'indemnification', 'governing_law', 'general_provisions',
+  ],
+  subcontractor_agreement: [
+    'recitals', 'scope_of_work', 'compensation_and_payment', 'independent_contractor_status',
+    'work_product_and_ip', 'confidentiality', 'compliance_with_prime_contract',
+    'term_and_termination', 'limitation_of_liability', 'indemnification',
+    'governing_law', 'general_provisions',
+  ],
+  retainer_agreement: [
+    'recitals', 'scope_of_services', 'retainer_fee_and_billing', 'additional_services',
+    'term_and_termination', 'independent_contractor_status', 'confidentiality',
+    'intellectual_property', 'limitation_of_liability', 'indemnification',
+    'dispute_resolution', 'governing_law', 'general_provisions',
+  ],
+  equipment_rental: [
+    'recitals', 'equipment_description', 'rental_term_and_fees', 'delivery_and_return',
+    'condition_and_maintenance', 'risk_of_loss', 'insurance',
+    'default_and_remedies', 'limitation_of_liability', 'governing_law', 'general_provisions',
+  ],
+  partnership_agreement: [
+    'recitals', 'formation_and_purpose', 'capital_contributions', 'profit_and_loss_allocation',
+    'management_and_voting', 'partner_duties', 'transfer_restrictions',
+    'dissolution_and_winding_up', 'confidentiality', 'dispute_resolution',
+    'governing_law', 'general_provisions',
+  ],
+};
+
+const SECTION_HEADINGS = {
+  recitals: 'Recitals',
+  scope_of_services: 'Scope of Services',
+  scope_of_work: 'Scope of Work',
+  services: 'Services',
+  products_and_services: 'Products and Services',
+  compensation_and_payment: 'Compensation and Payment',
+  compensation: 'Compensation',
+  retainer_fee_and_billing: 'Retainer Fee and Billing',
+  additional_services: 'Additional Services',
+  pricing_and_payment: 'Pricing and Payment',
+  rental_term_and_fees: 'Rental Term and Fees',
+  change_orders: 'Change Orders',
+  delivery_and_acceptance: 'Delivery and Acceptance',
+  delivery_and_return: 'Delivery and Return',
+  equipment_description: 'Equipment Description',
+  condition_and_maintenance: 'Condition and Maintenance',
+  risk_of_loss: 'Risk of Loss',
+  term_and_termination: 'Term and Termination',
+  term: 'Term',
+  default_and_remedies: 'Default and Remedies',
+  independent_contractor_status: 'Independent Contractor Status',
+  confidentiality: 'Confidentiality',
+  definition_of_confidential_information: 'Definition of Confidential Information',
+  obligations_of_receiving_party: 'Obligations of Receiving Party',
+  exclusions: 'Exclusions from Confidential Information',
+  return_of_information: 'Return or Destruction of Information',
+  remedies: 'Remedies',
+  intellectual_property: 'Intellectual Property',
+  work_product_and_ip: 'Work Product and Intellectual Property',
+  non_solicitation: 'Non-Solicitation',
+  compliance_with_prime_contract: 'Compliance with Prime Contract',
+  representations_and_warranties: 'Representations and Warranties',
+  limitation_of_liability: 'Limitation of Liability',
+  indemnification: 'Indemnification',
+  insurance: 'Insurance',
+  dispute_resolution: 'Dispute Resolution',
+  governing_law: 'Governing Law and Jurisdiction',
+  general_provisions: 'General Provisions',
+  formation_and_purpose: 'Formation and Purpose',
+  capital_contributions: 'Capital Contributions',
+  profit_and_loss_allocation: 'Profit and Loss Allocation',
+  management_and_voting: 'Management and Voting',
+  partner_duties: 'Partner Duties and Obligations',
+  transfer_restrictions: 'Transfer Restrictions',
+  dissolution_and_winding_up: 'Dissolution and Winding Up',
+};
+
+/**
+ * Assembles a fully formatted, print-ready HTML contract from structured JSON sections.
+ * All layout, typography, and numbering is controlled here — not by the LLM.
+ */
+function assembleContractHtml(params) {
+  const {
+    typeLabel, contractNumber, effectiveDate,
+    providerName, providerEntity, providerState, providerSignatory,
+    clientName, clientEmail, clientCompany,
+    sections, sectionKeys,
+  } = params;
+
+  const displayClient = clientCompany ? `${clientName}, on behalf of ${clientCompany}` : clientName;
+  const clientSignLabel = clientCompany ? `${clientCompany}\nBy: ${clientName}` : clientName;
+
+  // Build numbered section HTML
+  let sectionHtml = '';
+  let sectionNum = 1;
+  for (const key of sectionKeys) {
+    const heading = SECTION_HEADINGS[key] ?? key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    const content = sections[key] ?? '';
+    if (!content) continue;
+
+    // Convert plain newlines to paragraphs, preserve any sub-items starting with a number or bullet
+    const paragraphs = content
+      .split(/\n{1,}/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        // Sub-numbered items like "1.1" or "(a)" get indented
+        if (/^(\d+\.\d+|\([a-z]\)|\([ivx]+\))/i.test(line)) {
+          return `<p class="sub-clause">${line}</p>`;
+        }
+        return `<p>${line}</p>`;
+      })
+      .join('');
+
+    sectionHtml += `
+      <div class="section">
+        <h2><span class="section-num">${sectionNum}.</span> ${heading}</h2>
+        <div class="section-body">${paragraphs}</div>
+      </div>`;
+    sectionNum++;
+  }
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>${typeLabel} — ${providerName} / ${clientName}</title>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 11pt; }
+  body {
+    font-family: "Times New Roman", Times, serif;
+    color: #111;
+    background: #fff;
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 1in 1.1in;
+    line-height: 1.65;
+  }
+
+  /* ── Cover block ── */
+  .cover {
+    text-align: center;
+    padding-bottom: 36pt;
+    border-bottom: 2px solid #111;
+    margin-bottom: 28pt;
+  }
+  .cover-label {
+    font-size: 8pt;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 10pt;
+  }
+  .cover h1 {
+    font-size: 18pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    line-height: 1.25;
+    margin-bottom: 18pt;
+  }
+  .cover-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6pt 24pt;
+    text-align: left;
+    max-width: 420pt;
+    margin: 0 auto;
+    font-size: 9.5pt;
+  }
+  .cover-meta dt { color: #555; font-style: italic; }
+  .cover-meta dd { font-weight: 600; }
+
+  /* ── Parties block ── */
+  .parties {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12pt 32pt;
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 4pt;
+    padding: 16pt 20pt;
+    margin-bottom: 28pt;
+    font-size: 9.5pt;
+  }
+  .party-label {
+    font-size: 7.5pt;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #777;
+    margin-bottom: 4pt;
+  }
+  .party-name { font-weight: 700; font-size: 11pt; }
+  .party-detail { color: #444; margin-top: 2pt; }
+
+  /* ── Sections ── */
+  .section { margin-bottom: 22pt; }
+  .section h2 {
+    font-size: 10pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4pt;
+    margin-bottom: 8pt;
+    display: flex;
+    gap: 6pt;
+  }
+  .section-num { color: #888; min-width: 18pt; }
+  .section-body p {
+    margin-bottom: 6pt;
+    text-align: justify;
+    hyphens: auto;
+  }
+  .section-body p.sub-clause {
+    padding-left: 18pt;
+    color: #222;
+  }
+
+  /* ── Signature block ── */
+  .sig-block {
+    margin-top: 40pt;
+    padding-top: 20pt;
+    border-top: 2px solid #111;
+  }
+  .sig-block h2 {
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: #555;
+    margin-bottom: 20pt;
+    text-align: center;
+  }
+  .sig-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32pt;
+  }
+  .sig-col { font-size: 9.5pt; }
+  .sig-party-label {
+    font-size: 7.5pt;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #777;
+    margin-bottom: 32pt;
+  }
+  .sig-line {
+    border-top: 1px solid #333;
+    margin-bottom: 6pt;
+  }
+  .sig-field { margin-bottom: 10pt; }
+  .sig-field-label { color: #666; font-size: 8.5pt; }
+  .sig-field-value { font-weight: 600; white-space: pre-line; }
+
+  /* ── Footer ── */
+  .doc-footer {
+    margin-top: 32pt;
+    padding-top: 10pt;
+    border-top: 1px solid #ddd;
+    font-size: 8pt;
+    color: #999;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { padding: .75in .9in; font-size: 10.5pt; }
+    .section { page-break-inside: avoid; }
+    .sig-block { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Cover -->
+<div class="cover">
+  <p class="cover-label">Legal Agreement</p>
+  <h1>${typeLabel}</h1>
+  <dl class="cover-meta">
+    <dt>Contract No.</dt><dd>${contractNumber}</dd>
+    <dt>Effective Date</dt><dd>${effectiveDate}</dd>
+    <dt>Governing Law</dt><dd>State of ${providerState}</dd>
+    <dt>Document Type</dt><dd>${typeLabel}</dd>
+  </dl>
+</div>
+
+<!-- Parties -->
+<div class="parties">
+  <div>
+    <p class="party-label">Provider ("Company")</p>
+    <p class="party-name">${providerName}</p>
+    <p class="party-detail">${providerEntity} · ${providerState}</p>
+    ${providerSignatory ? `<p class="party-detail">Signatory: ${providerSignatory}</p>` : ''}
+  </div>
+  <div>
+    <p class="party-label">Client ("Client")</p>
+    <p class="party-name">${displayClient}</p>
+    ${clientEmail ? `<p class="party-detail">${clientEmail}</p>` : ''}
+  </div>
+</div>
+
+<!-- Body sections -->
+${sectionHtml}
+
+<!-- Signature block -->
+<div class="sig-block">
+  <h2>Signatures</h2>
+  <p style="font-size:9pt;color:#555;text-align:center;margin-bottom:20pt;">
+    By signing below, each party agrees to be bound by the terms of this ${typeLabel}.
+  </p>
+  <div class="sig-grid">
+    <div class="sig-col">
+      <p class="sig-party-label">Provider — ${providerName}</p>
+      <div class="sig-line"></div>
+      <div class="sig-field">
+        <p class="sig-field-label">Authorized Signature</p>
+      </div>
+      <div class="sig-field">
+        <p class="sig-field-label">Printed Name</p>
+        <p class="sig-field-value">${providerSignatory || providerName}</p>
+      </div>
+      <div class="sig-field">
+        <p class="sig-field-label">Title</p>
+        <p class="sig-field-value">Owner / Authorized Representative</p>
+      </div>
+      <div class="sig-field">
+        <p class="sig-field-label">Date</p>
+        <p class="sig-field-value">___________________________</p>
+      </div>
+    </div>
+    <div class="sig-col">
+      <p class="sig-party-label">Client — ${clientCompany || clientName}</p>
+      <div class="sig-line"></div>
+      <div class="sig-field">
+        <p class="sig-field-label">Authorized Signature</p>
+      </div>
+      <div class="sig-field">
+        <p class="sig-field-label">Printed Name</p>
+        <p class="sig-field-value">${clientName}</p>
+      </div>
+      <div class="sig-field">
+        <p class="sig-field-label">Title</p>
+        <p class="sig-field-value">___________________________</p>
+      </div>
+      <div class="sig-field">
+        <p class="sig-field-label">Date</p>
+        <p class="sig-field-value">___________________________</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="doc-footer">
+  <span>${typeLabel} · Contract No. ${contractNumber}</span>
+  <span>Confidential — ${providerName} / ${clientCompany || clientName}</span>
+</div>
+
+</body>
+</html>`;
+}
+
 router.post('/ai/generate-contract', requireSession, async (req, res) => {
   if (!isGroqConfigured()) {
     return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
   }
 
   try {
-    const { businessId, contractType, counterpartyName, terms } = req.body || {};
+    const { businessId, contractType, clientName, clientEmail, customFields } = req.body || {};
+    if (!clientName) return res.status(400).json({ error: 'clientName is required' });
+
     const sql = getDb();
     const bizRows = await sql`SELECT * FROM businesses WHERE id = ${businessId} LIMIT 1`;
     const biz = bizRows[0];
 
-    const prompt = `You are a legal document assistant for ${biz?.name || 'a small business'} in ${biz?.state || 'the US'}.
+    const typeLabel = CONTRACT_TYPE_LABELS[contractType] ?? 'Service Agreement';
+    const sectionKeys = CONTRACT_SECTIONS[contractType] ?? CONTRACT_SECTIONS.service_agreement;
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const contractNumber = `${(contractType ?? 'SVC').slice(0, 3).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
 
-Generate a ${contractType || 'service'} agreement between "${biz?.name || 'Business'}" and "${counterpartyName || 'Client'}".
-${terms ? `Additional terms: ${terms}` : ''}
+    const customFieldsText = customFields
+      ? Object.entries(customFields).map(([k, v]) => `${k}: ${v}`).join('\n')
+      : '';
 
-Return ONLY JSON:
+    // Ask the LLM only for section text — all formatting is handled by assembleContractHtml
+    const prompt = `You are a commercial contracts attorney drafting a ${typeLabel}.
+
+PARTIES:
+- Provider ("Company"): ${biz?.name || 'Company'}, a ${biz?.entity_type || 'LLC'} organized in ${biz?.state || 'the US'}. Signatory: ${biz?.owner_name || 'Owner'}.
+- Client: ${clientName}${clientEmail ? ` (${clientEmail})` : ''}${customFields?.['Client company'] ? `, ${customFields['Client company']}` : ''}
+- Effective Date: ${today}
+
+CONTRACT TERMS:
+${customFieldsText || 'Standard commercial terms apply.'}
+
+Write the body text for each of these sections. Use plain English — no legalese jargon without explanation. Be specific and concrete. Protect the Provider.
+
+Return ONLY a JSON object where each key is a section identifier and the value is the full paragraph text for that section. Use \\n to separate sub-paragraphs within a section. Do not include section headings or numbers in the values.
+
+Required sections (use these exact keys):
+${sectionKeys.map((k) => `"${k}"`).join(', ')}
+
+Example format:
 {
-  "title": "string",
-  "sections": [{"heading":"string","content":"string"}],
-  "effectiveDate": null,
-  "expirationDate": null,
-  "totalValue": null,
-  "keyTerms": ["string"]
+  "recitals": "This ${typeLabel} (the \\"Agreement\\") is entered into as of ${today}, by and between ${biz?.name || 'Company'} (\\"Company\\") and ${clientName} (\\"Client\\"). The parties desire to set forth the terms and conditions under which Company will provide services to Client.",
+  "scope_of_services": "Company shall provide the following services: ...",
+  ...
 }`;
 
-    const result = await groqJSON(prompt, { maxTokens: 4000 });
-    return res.json(result);
+    const sections = await groqJSON(prompt, { maxTokens: 4096 });
+
+    const fullHtml = assembleContractHtml({
+      typeLabel,
+      contractNumber,
+      effectiveDate: today,
+      providerName: biz?.name || 'Company',
+      providerEntity: biz?.entity_type || 'LLC',
+      providerState: biz?.state || 'US',
+      providerSignatory: biz?.owner_name || '',
+      clientName,
+      clientEmail: clientEmail || '',
+      clientCompany: customFields?.['Client company'] || '',
+      sections,
+      sectionKeys,
+    });
+
+    return res.json({ html: fullHtml, contractType, clientName });
   } catch (err) {
     console.error('generate-contract error:', err);
     return res.status(500).json({ error: 'Contract generation failed' });

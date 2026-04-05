@@ -289,18 +289,22 @@ async function ensureLaunchPadTables(sql) {
       tax_year INTEGER NOT NULL,
       quarter INTEGER NOT NULL DEFAULT 0,
       gross_revenue DECIMAL(12,2) DEFAULT 0,
+      returns_and_allowances DECIMAL(12,2) DEFAULT 0,
       net_revenue DECIMAL(12,2) DEFAULT 0,
       total_cogs DECIMAL(12,2) DEFAULT 0,
       gross_profit DECIMAL(12,2) DEFAULT 0,
       total_expenses DECIMAL(12,2) DEFAULT 0,
       mileage_deduction DECIMAL(12,2) DEFAULT 0,
       home_office_deduction DECIMAL(12,2) DEFAULT 0,
+      health_insurance_deduction DECIMAL(12,2) DEFAULT 0,
+      section_199a_deduction DECIMAL(12,2) DEFAULT 0,
       total_deductions DECIMAL(12,2) DEFAULT 0,
       net_taxable_income DECIMAL(12,2) DEFAULT 0,
       estimated_federal_tax DECIMAL(12,2) DEFAULT 0,
       estimated_state_tax DECIMAL(12,2) DEFAULT 0,
       estimated_self_employment_tax DECIMAL(12,2) DEFAULT 0,
       total_estimated_tax DECIMAL(12,2) DEFAULT 0,
+      quarterly_payments JSONB DEFAULT '{}'::jsonb,
       missed_deductions JSONB DEFAULT '[]'::jsonb,
       tax_saving_opportunities JSONB DEFAULT '[]'::jsonb,
       expense_breakdown JSONB DEFAULT '{}'::jsonb,
@@ -344,6 +348,41 @@ async function ensureLaunchPadTables(sql) {
       last_updated TIMESTAMP DEFAULT NOW(),
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  // Add missing columns to tax_summaries (align with Prisma schema)
+  await sql`ALTER TABLE tax_summaries ADD COLUMN IF NOT EXISTS returns_and_allowances DECIMAL(12,2) DEFAULT 0`;
+  await sql`ALTER TABLE tax_summaries ADD COLUMN IF NOT EXISTS health_insurance_deduction DECIMAL(12,2) DEFAULT 0`;
+  await sql`ALTER TABLE tax_summaries ADD COLUMN IF NOT EXISTS section_199a_deduction DECIMAL(12,2) DEFAULT 0`;
+  await sql`ALTER TABLE tax_summaries ADD COLUMN IF NOT EXISTS quarterly_payments JSONB DEFAULT '{}'::jsonb`;
+
+  // Add missing columns to contracts
+  await sql`ALTER TABLE contracts ADD COLUMN IF NOT EXISTS auto_renewal_date TEXT`;
+
+  // Add missing columns to receipts
+  await sql`ALTER TABLE receipts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`;
+
+  // Policy analyses (used by analyze-policy route)
+  await sql`
+    CREATE TABLE IF NOT EXISTS policy_analyses (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
+      raw_text TEXT,
+      summary JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  // Gap analyses
+  await sql`
+    CREATE TABLE IF NOT EXISTS gap_analyses (
+      id SERIAL PRIMARY KEY,
+      business_id INTEGER REFERENCES businesses(id) ON DELETE CASCADE,
+      policy_analysis_id INTEGER REFERENCES policy_analyses(id) ON DELETE SET NULL,
+      results JSONB NOT NULL DEFAULT '{}'::jsonb,
+      protection_score INTEGER,
+      created_at TIMESTAMP DEFAULT NOW()
     )
   `;
 
