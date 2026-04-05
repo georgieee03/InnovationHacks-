@@ -926,4 +926,98 @@ Return ONLY JSON array:
   }
 });
 
+// ─── Scan Tax Opportunities (TinyFish web search + AI analysis) ─────────────
+
+router.post('/ai/scan-tax-opportunities', requireSession, async (req, res) => {
+  if (!isGroqConfigured()) {
+    return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
+  }
+
+  try {
+    const { businessId } = req.body || {};
+    const sql = getDb();
+    const bizRows = await sql`SELECT * FROM businesses WHERE id = ${businessId} LIMIT 1`;
+    const biz = bizRows[0];
+    if (!biz) return res.status(404).json({ error: 'Business not found' });
+
+    const bizType = biz.type || 'service';
+    const bizState = biz.state || '';
+    const entityType = biz.entity_type || 'sole_prop';
+    const hasEmployees = Boolean(biz.has_employees);
+
+    let webResults = [];
+
+    if (process.env.TINYFISH_API_KEY) {
+      const queries = [
+        `${bizType} business tax deductions exemptions ${new Date().getFullYear()}`,
+        `${bizState} state tax credits small business ${entityType}`,
+        `IRS tax loopholes deductions ${bizType} self-employed`,
+        hasEmployees ? `small business payroll tax credits employees ${new Date().getFullYear()}` : `sole proprietor tax deductions ${bizType}`,
+      ];
+
+      for (const query of queries) {
+        try {
+          const tfRes = await fetch('https://api.tinyfish.io/v1/search', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${process.env.TINYFISH_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ query, maxResults: 4, sources: ['irs.gov', 'sba.gov', 'nolo.com', 'taxfoundation.org', 'score.org'] }),
+          });
+          if (tfRes.ok) {
+            const tfData = await tfRes.json();
+            webResults.push(...(tfData.results || []));
+          }
+        } catch { /* continue */ }
+      }
+    }
+
+    const webContext = webResults.length > 0
+      ? `WEB SEARCH RESULTS:\n${webResults.slice(0, 12).map(r => `- ${r.title}: ${r.snippet || r.description || ''} (${r.url || ''})`).join('\n')}`
+      : 'No live web results available — use your training knowledge.';
+
+    const prompt = `You are a CPA specializing in small business tax strategy.
+
+BUSINESS PROFILE:
+- Type: ${bizType}
+- Entity: ${entityType}
+- State: ${bizState}
+- Has employees: ${hasEmployees}
+- Annual revenue estimate: ~$${Math.round(Number(biz.monthly_revenue_estimate || 0) * 12)}
+
+${webContext}
+
+Identify specific tax exemptions, deductions, credits, and loopholes this business may qualify for.
+
+Return ONLY JSON:
+{
+  "opportunities": [
+    {
+      "title": "string",
+      "type": "deduction|credit|exemption|loophole|strategy",
+      "jurisdiction": "federal|state|local",
+      "description": "plain-English explanation",
+      "estimatedSavings": "string",
+      "eligibilityScore": 0-100,
+      "eligibilityNotes": "string",
+      "howToClaim": "string",
+      "deadline": "string|null",
+      "sourceUrl": "string|null"
+    }
+  ]
+}`;
+
+    const result = await groqJSON(prompt, { maxTokens: 4096 });
+    return res.json({
+      opportunities: Array.isArray(result.opportunities) ? result.opportunities : [],
+      source: webResults.length > 0 ? 'tinyfish+ai' : 'ai-only',
+      webResultsCount: webResults.length,
+    });
+  } catch (err) {
+    console.error('scan-tax-opportunities error:', err);
+    return res.status(500).json({ error: 'Tax opportunity scan failed' });
+  }
+});
+
 export default router;
