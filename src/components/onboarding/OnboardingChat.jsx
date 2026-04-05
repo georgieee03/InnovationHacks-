@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Loader2, HelpCircle, ArrowRight } from 'lucide-react';
+import AmbientBackground from '../shared/AmbientBackground';
 import RippleButton from '../shared/RippleButton';
 
 const STEPS = [
@@ -113,9 +114,7 @@ export default function OnboardingChat({ onComplete, error }) {
   const options = getOptions(currentStep);
 
   return (
-    <div className="app-background min-h-screen">
-      <div className="animated-bg" />
-      <div className="noise-overlay" />
+    <AmbientBackground className="min-h-screen">
       <div className="relative z-10 flex min-h-screen flex-col">
         {/* Progress bar */}
         <div className="h-1 bg-white/5">
@@ -226,6 +225,6 @@ export default function OnboardingChat({ onComplete, error }) {
           </div>
         </div>
       </div>
-    </div>
+    </AmbientBackground>
   );
 }

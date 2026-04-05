@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CheckCircle2, ChevronDown, Building2, Search, ListChecks, Lightbulb, AlertTriangle } from 'lucide-react';
+import AmbientBackground from '../shared/AmbientBackground';
 import RippleButton from '../shared/RippleButton';
 import OnboardingPlaidConnect from './OnboardingPlaidConnect';
 
@@ -36,9 +37,7 @@ export default function OnboardingResults({ result, onSave, formData }) {
   };
 
   return (
-    <div className="app-background min-h-screen">
-      <div className="animated-bg" />
-      <div className="noise-overlay" />
+    <AmbientBackground className="min-h-screen">
       <div className="relative z-10">
         {/* Header */}
         <div className="border-b border-white/5 px-4 py-5">
@@ -203,7 +202,7 @@ export default function OnboardingResults({ result, onSave, formData }) {
           )}
         </div>
       </div>
-    </div>
+    </AmbientBackground>
   );
 }
 

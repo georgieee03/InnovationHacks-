@@ -12,6 +12,7 @@ import Challenges from './components/gamification/Challenges';
 import HealthReport from './components/report/HealthReport';
 import ChatBot from './components/chat/ChatBot';
 import Education from './components/education/Education';
+import AmbientBackground from './components/shared/AmbientBackground';
 import CursorSpotlight from './components/shared/CursorSpotlight';
 import LoadingSpinner from './components/shared/LoadingSpinner';
 import ParticleGrid from './components/shared/ParticleGrid';
@@ -76,15 +77,13 @@ function Dashboard() {
 
   if (!authReady) {
     return (
-      <div className="app-background min-h-screen">
-        <div className="animated-bg" />
-        <div className="noise-overlay" />
+      <AmbientBackground className="min-h-screen">
         <div className="relative z-10 flex min-h-screen items-center justify-center">
           <div className="glass-card w-full max-w-xl rounded-[28px] p-8">
             <LoadingSpinner message="Restoring your SafeGuard workspace..." />
           </div>
         </div>
-      </div>
+      </AmbientBackground>
     );
   }
 
