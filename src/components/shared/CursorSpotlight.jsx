@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import useTheme from '../../hooks/useTheme';
 
-const SPOTLIGHT_SIZE = 150;
-const HALF_SPOTLIGHT = SPOTLIGHT_SIZE / 1.25;
+const SPOTLIGHT_SIZE = 200;
+const HALF_SPOTLIGHT = SPOTLIGHT_SIZE / 3;
 
 export default function CursorSpotlight() {
   const { theme } = useTheme();
