@@ -215,6 +215,7 @@ async function ensureReferenceData(sql) {
       icon VARCHAR(32)
     )
   `;
+  await sql`ALTER TABLE business_types ALTER COLUMN icon TYPE VARCHAR(32)`;
 
   for (const [id, label, icon] of businessTypeSeed) {
     await sql`
