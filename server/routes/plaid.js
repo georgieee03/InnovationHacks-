@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { Configuration, PlaidApi, PlaidEnvironments, Products, CountryCode } from 'plaid';
+import { getPlaidUserId } from '../auth.js';
 import { getDb } from '../db.js';
 
 const router = Router();
@@ -35,6 +36,7 @@ function getPlaidClient() {
 router.post('/create-link-token', async (req, res) => {
   try {
     const { user_id, redirect_uri } = req.body;
+    const resolvedUserId = user_id || getPlaidUserId(req);
     const client = getPlaidClient();
     let redirectUri = String(
       process.env.PLAID_REDIRECT_URI
@@ -42,7 +44,7 @@ router.post('/create-link-token', async (req, res) => {
       || (req.get('origin') ? `${req.get('origin').replace(/\/$/, '')}/plaid-oauth.html` : '')
     ).trim();
     const baseRequest = {
-      user: { client_user_id: user_id || 'default-user' },
+      user: { client_user_id: resolvedUserId },
       client_name: 'SafeGuard',
       products: [Products.Transactions],
       country_codes: [CountryCode.Us],
@@ -83,6 +85,7 @@ router.post('/create-link-token', async (req, res) => {
 router.post('/exchange-token', async (req, res) => {
   try {
     const { public_token, user_id, institution_name } = req.body;
+    const resolvedUserId = user_id || getPlaidUserId(req);
 
     if (!public_token) {
       return res.status(400).json({ error: 'Missing public token' });
@@ -96,7 +99,7 @@ router.post('/exchange-token', async (req, res) => {
     await ensurePlaidItemsTable(sql);
     await sql`
       INSERT INTO plaid_items (user_id, access_token, item_id, institution_name)
-      VALUES (${user_id || 'default-user'}, ${access_token}, ${item_id}, ${institution_name || null})
+      VALUES (${resolvedUserId}, ${access_token}, ${item_id}, ${institution_name || null})
     `;
 
     res.json({ success: true, item_id });
@@ -117,10 +120,11 @@ router.post('/exchange-token', async (req, res) => {
 router.get('/accounts', async (req, res) => {
   try {
     const { user_id } = req.query;
+    const resolvedUserId = user_id || getPlaidUserId(req);
     const sql = getDb();
     const items = await sql`
       SELECT access_token, institution_name FROM plaid_items
-      WHERE user_id = ${user_id || 'default-user'}
+      WHERE user_id = ${resolvedUserId}
       ORDER BY created_at DESC
     `;
 
@@ -155,10 +159,11 @@ router.get('/accounts', async (req, res) => {
 router.get('/transactions', async (req, res) => {
   try {
     const { user_id, days = 90 } = req.query;
+    const resolvedUserId = user_id || getPlaidUserId(req);
     const sql = getDb();
     const items = await sql`
       SELECT access_token FROM plaid_items
-      WHERE user_id = ${user_id || 'default-user'}
+      WHERE user_id = ${resolvedUserId}
       ORDER BY created_at DESC
     `;
 

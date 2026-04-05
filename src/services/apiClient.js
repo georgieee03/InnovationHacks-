@@ -51,11 +51,15 @@ function shouldPreserveOriginalError(response) {
 }
 
 async function fetchAPI(endpoint, options = {}) {
+  const isFormDataBody = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const requestOptions = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers: isFormDataBody
+      ? { ...options.headers }
+      : {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+    credentials: 'same-origin',
     ...options,
   };
 
@@ -93,6 +97,7 @@ async function fetchAPI(endpoint, options = {}) {
 }
 
 export const api = {
+  getAuthSession: () => fetchAPI('/auth/session'),
   createBusiness: (data) => fetchAPI('/business', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -115,25 +120,60 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(data),
   }),
-  createPlaidLinkToken: ({ userId = 'default-user', redirectUri = '' } = {}) => fetchAPI('/plaid/create-link-token', {
+  createPlaidLinkToken: ({ userId = '', redirectUri = '' } = {}) => fetchAPI('/plaid/create-link-token', {
     method: 'POST',
     body: JSON.stringify({
-      user_id: userId,
+      user_id: userId || null,
       redirect_uri: redirectUri || null,
     }),
   }),
-  exchangePlaidToken: ({ publicToken, userId = 'default-user', institutionName = null }) => fetchAPI('/plaid/exchange-token', {
+  exchangePlaidToken: ({ publicToken, userId = '', institutionName = null }) => fetchAPI('/plaid/exchange-token', {
     method: 'POST',
     body: JSON.stringify({
       public_token: publicToken,
-      user_id: userId,
+      user_id: userId || null,
       institution_name: institutionName,
     }),
   }),
-  getPlaidAccounts: (userId = 'default-user') => fetchAPI(`/plaid/accounts?user_id=${encodeURIComponent(userId)}`),
-  getPlaidTransactions: (userId = 'default-user', days = 90) => fetchAPI(
-    `/plaid/transactions?user_id=${encodeURIComponent(userId)}&days=${encodeURIComponent(days)}`
+  getPlaidAccounts: (userId = '') => fetchAPI(`/plaid/accounts${userId ? `?user_id=${encodeURIComponent(userId)}` : ''}`),
+  getPlaidTransactions: (userId = '', days = 90) => fetchAPI(
+    `/plaid/transactions${userId ? `?user_id=${encodeURIComponent(userId)}&` : '?'}days=${encodeURIComponent(days)}`
   ),
+  listContracts: () => fetchAPI('/workspace/contracts'),
+  createContract: (data) => fetchAPI('/workspace/contracts', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  listQuotes: () => fetchAPI('/workspace/quotes'),
+  createQuote: (data) => fetchAPI('/workspace/quotes', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  listReceipts: () => fetchAPI('/workspace/receipts'),
+  createReceipt: (data) => fetchAPI('/workspace/receipts', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  listCompliance: () => fetchAPI('/workspace/compliance'),
+  updateCompliance: (id, data) => fetchAPI(`/workspace/compliance/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+  getGrowthWorkspace: () => fetchAPI('/workspace/growth'),
+  refreshGrowthWorkspace: () => fetchAPI('/workspace/growth/refresh', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  }),
+  uploadWorkspaceFile: (folder, file) => {
+    const formData = new FormData();
+    formData.append('folder', folder);
+    formData.append('file', file);
+
+    return fetchAPI('/workspace/files/upload', {
+      method: 'POST',
+      body: formData,
+    });
+  },
 };
 
 export { API_BASE, buildApiUrl };

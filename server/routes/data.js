@@ -127,6 +127,19 @@ router.get('/transactions', async (req, res) => {
   if (!businessId) return res.status(400).json({ error: 'Missing businessId' });
   const sql = getDb();
   try {
+    if (req.currentUser?.auth0Id) {
+      const ownedBusiness = await sql`
+        SELECT id
+        FROM businesses
+        WHERE id = ${businessId} AND auth0_id = ${req.currentUser.auth0Id}
+        LIMIT 1
+      `;
+
+      if (!ownedBusiness[0]) {
+        return res.status(404).json({ error: 'Business not found' });
+      }
+    }
+
     const accounts = await sql`SELECT * FROM accounts WHERE business_id = ${businessId} ORDER BY name ASC`;
     const transactions = await sql`SELECT * FROM transactions WHERE business_id = ${businessId} ORDER BY date DESC, id DESC`;
     res.json({ accounts, transactions });

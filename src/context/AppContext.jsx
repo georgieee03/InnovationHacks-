@@ -20,9 +20,13 @@ function normalizeBusiness(data, fallback = {}) {
     zip: String(data?.zip ?? fallback.zip ?? ''),
     city: data?.city ?? fallback.city ?? '',
     state: data?.state ?? fallback.state ?? '',
+    ownerName: data?.owner_name ?? data?.ownerName ?? fallback.ownerName ?? '',
+    ownerEmail: data?.owner_email ?? data?.ownerEmail ?? fallback.ownerEmail ?? '',
     monthlyRevenue: Number(
       data?.monthlyRevenue
+      ?? data?.monthlyRevenueEstimate
       ?? data?.monthly_revenue_estimate
+      ?? data?.monthly_revenue_avg
       ?? fallback.monthlyRevenue
       ?? fallback.monthlyRevenueEstimate
       ?? 0
@@ -148,19 +152,26 @@ function buildLocalSession(formData) {
   };
 }
 
-function buildDemoFallbackSession() {
-  const business = normalizeBusiness(transactionsData.business);
-
+function buildDemoFormData() {
   return {
-    business,
-    riskFactors: getLocalRiskFactors(business.zip),
-    accounts: getLocalAccounts(),
-    transactions: getLocalTransactions(),
+    name: transactionsData.business.name,
+    type: transactionsData.business.type,
+    zip: transactionsData.business.zip,
+    city: transactionsData.business.city,
+    state: transactionsData.business.state,
+    monthlyRevenue: Number(transactionsData.business.monthlyRevenueEstimate ?? 0),
+    employees: Number(transactionsData.business.employees ?? 1),
   };
 }
 
 export function AppProvider({ children }) {
   const initialViewportMode = typeof window === 'undefined' ? 'desktop' : getViewportMode(window.innerWidth);
+  const [authReady, setAuthReady] = useState(false);
+  const [authEnabled, setAuthEnabled] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
+  const [loginUrl, setLoginUrl] = useState('/api/auth/login');
+  const [logoutUrl, setLogoutUrl] = useState('/api/auth/logout');
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [plaidConnected, setPlaidConnected] = useState(false);
@@ -204,13 +215,7 @@ export function AppProvider({ children }) {
     return () => window.removeEventListener('resize', syncViewport);
   }, []);
 
-  const applyLoadedState = useCallback((
-    info,
-    nextAccounts,
-    nextTransactions,
-    nextRiskFactors,
-    options = {}
-  ) => {
+  const applyLoadedState = useCallback((info, nextAccounts, nextTransactions, nextRiskFactors, options = {}) => {
     setBusinessInfo(info);
     setAccounts(nextAccounts);
     setTransactions(nextTransactions);
@@ -235,21 +240,47 @@ export function AppProvider({ children }) {
     }
   }, []);
 
+  const loadBusinessWorkspace = useCallback(async (businessRecord, options = {}) => {
+    const normalizedBusiness = normalizeBusiness(businessRecord);
+    const localSession = buildLocalSession(normalizedBusiness);
+
+    let remoteRiskFactors = localSession.riskFactors;
+    try {
+      remoteRiskFactors = normalizeRiskFactors(await api.getRiskFactors(normalizedBusiness.zip)) ?? localSession.riskFactors;
+    } catch {
+      remoteRiskFactors = localSession.riskFactors;
+    }
+
+    let remoteBundle = { accounts: [], transactions: [] };
+    try {
+      remoteBundle = await api.getTransactions(normalizedBusiness.id);
+    } catch {
+      remoteBundle = { accounts: [], transactions: [] };
+    }
+
+    const nextAccounts = remoteBundle.accounts?.length
+      ? remoteBundle.accounts.map(normalizeAccount)
+      : localSession.accounts;
+    const nextTransactions = remoteBundle.transactions?.length
+      ? remoteBundle.transactions.map(normalizeTransaction)
+      : localSession.transactions;
+
+    applyLoadedState(normalizedBusiness, nextAccounts, nextTransactions, remoteRiskFactors, {
+      isOnboarded: true,
+      plaidConnected: false,
+      ...options,
+    });
+  }, [applyLoadedState]);
+
   const hydrateBusinessSession = useCallback(async (formData, options = {}) => {
     const { markOnboarded = true } = options;
     setLoading(true);
 
     const localSession = buildLocalSession(formData);
-    applyLoadedState(
-      localSession.business,
-      localSession.accounts,
-      localSession.transactions,
-      localSession.riskFactors,
-      {
-        isOnboarded: markOnboarded,
-        plaidConnected: false,
-      }
-    );
+    applyLoadedState(localSession.business, localSession.accounts, localSession.transactions, localSession.riskFactors, {
+      isOnboarded: markOnboarded,
+      plaidConnected: false,
+    });
 
     try {
       const createdBusiness = await api.createBusiness({
@@ -262,40 +293,14 @@ export function AppProvider({ children }) {
         employees: formData.employees,
       });
 
-      let remoteRiskFactors = localSession.riskFactors;
-      try {
-        remoteRiskFactors = normalizeRiskFactors(await api.getRiskFactors(formData.zip)) ?? localSession.riskFactors;
-      } catch {
-        remoteRiskFactors = localSession.riskFactors;
-      }
-
-      let remoteBundle = { accounts: [], transactions: [] };
-      try {
-        remoteBundle = await api.getTransactions(createdBusiness.id);
-      } catch {
-        remoteBundle = { accounts: [], transactions: [] };
-      }
-
-      const nextAccounts = remoteBundle.accounts?.length
-        ? remoteBundle.accounts.map(normalizeAccount)
-        : localSession.accounts;
-      const nextTransactions = remoteBundle.transactions?.length
-        ? remoteBundle.transactions.map(normalizeTransaction)
-        : localSession.transactions;
-      const nextBusiness = normalizeBusiness(createdBusiness, {
-        ...formData,
-        city: formData.city || remoteRiskFactors?.city || localSession.business.city,
-        state: formData.state || remoteRiskFactors?.state || localSession.business.state,
-      });
-
-      applyLoadedState(nextBusiness, nextAccounts, nextTransactions, remoteRiskFactors, {
+      await loadBusinessWorkspace(createdBusiness, {
         isOnboarded: markOnboarded,
         plaidConnected: false,
       });
 
       return {
-        business: nextBusiness,
-        riskFactors: remoteRiskFactors,
+        business: normalizeBusiness(createdBusiness),
+        riskFactors: localSession.riskFactors,
       };
     } catch (error) {
       console.error('Onboarding API enrichment failed, using local fallback session:', error);
@@ -306,70 +311,83 @@ export function AppProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [applyLoadedState]);
+  }, [applyLoadedState, loadBusinessWorkspace]);
 
-  const onboard = useCallback((formData, options = {}) => {
-    return hydrateBusinessSession(formData, options);
-  }, [hydrateBusinessSession]);
+  useEffect(() => {
+    let active = true;
+
+    const initializeApp = async () => {
+      setLoading(true);
+
+      try {
+        const session = await api.getAuthSession().catch(() => ({
+          enabled: false,
+          authenticated: false,
+          user: null,
+          loginUrl: '/api/auth/login',
+          logoutUrl: '/api/auth/logout',
+        }));
+
+        if (!active) return;
+
+        setAuthEnabled(Boolean(session.enabled));
+        setIsAuthenticated(Boolean(session.authenticated));
+        setAuthUser(session.user || null);
+        setLoginUrl(session.loginUrl || '/api/auth/login');
+        setLogoutUrl(session.logoutUrl || '/api/auth/logout');
+
+        if (session.enabled && !session.authenticated) {
+          setBusinessInfo(null);
+          setTransactions([]);
+          setAccounts([]);
+          setRiskFactors(null);
+          setFinancialMetrics(null);
+          setIsOnboarded(false);
+          return;
+        }
+
+        try {
+          const business = await api.getBusiness();
+          if (!active) return;
+          await loadBusinessWorkspace(business);
+        } catch (error) {
+          if (!active) return;
+
+          setBusinessInfo(null);
+          setTransactions([]);
+          setAccounts([]);
+          setRiskFactors(null);
+          setFinancialMetrics(null);
+          setIsOnboarded(false);
+
+          if (error?.message && !/Business not found/i.test(error.message)) {
+            console.error('Failed to restore workspace session:', error);
+          }
+        }
+      } finally {
+        if (active) {
+          setAuthReady(true);
+          setLoading(false);
+        }
+      }
+    };
+
+    void initializeApp();
+
+    return () => {
+      active = false;
+    };
+  }, [loadBusinessWorkspace]);
+
+  const onboard = useCallback((formData, options = {}) => hydrateBusinessSession(formData, options), [hydrateBusinessSession]);
 
   const preparePlaidOnboarding = useCallback((formData) => {
     return hydrateBusinessSession(formData, { markOnboarded: false });
   }, [hydrateBusinessSession]);
 
   const loadDemo = useCallback(async () => {
-    setLoading(true);
-
-    const fallbackSession = buildDemoFallbackSession();
-    applyLoadedState(
-      fallbackSession.business,
-      fallbackSession.accounts,
-      fallbackSession.transactions,
-      fallbackSession.riskFactors,
-      {
-        isOnboarded: true,
-        plaidConnected: false,
-      }
-    );
-
-    try {
-      const demoBusiness = normalizeBusiness(await api.getBusiness(), transactionsData.business);
-
-      let remoteRiskFactors = fallbackSession.riskFactors;
-      try {
-        remoteRiskFactors = normalizeRiskFactors(await api.getRiskFactors(demoBusiness.zip)) ?? fallbackSession.riskFactors;
-      } catch {
-        remoteRiskFactors = fallbackSession.riskFactors;
-      }
-
-      let remoteBundle = { accounts: [], transactions: [] };
-      try {
-        remoteBundle = await api.getTransactions(demoBusiness.id);
-      } catch {
-        remoteBundle = { accounts: [], transactions: [] };
-      }
-
-      const nextAccounts = remoteBundle.accounts?.length
-        ? remoteBundle.accounts.map(normalizeAccount)
-        : fallbackSession.accounts;
-      const nextTransactions = remoteBundle.transactions?.length
-        ? remoteBundle.transactions.map(normalizeTransaction)
-        : fallbackSession.transactions;
-      const nextBusiness = {
-        ...demoBusiness,
-        city: demoBusiness.city || remoteRiskFactors?.city || fallbackSession.business.city,
-        state: demoBusiness.state || remoteRiskFactors?.state || fallbackSession.business.state,
-      };
-
-      applyLoadedState(nextBusiness, nextAccounts, nextTransactions, remoteRiskFactors, {
-        isOnboarded: true,
-        plaidConnected: false,
-      });
-    } catch (error) {
-      console.error('Demo API enrichment failed, using local fallback session:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [applyLoadedState]);
+    return hydrateBusinessSession(buildDemoFormData(), { markOnboarded: true });
+  }, [hydrateBusinessSession]);
 
   const loadPlaidData = useCallback(async (options = {}) => {
     const {
@@ -377,10 +395,12 @@ export function AppProvider({ children }) {
       sessionOverride = null,
     } = options;
 
+    const plaidUserId = authUser?.auth0Id || 'default-user';
+
     try {
       const [accountsResponse, transactionsResponse] = await Promise.all([
-        api.getPlaidAccounts(),
-        api.getPlaidTransactions(),
+        api.getPlaidAccounts(plaidUserId),
+        api.getPlaidTransactions(plaidUserId),
       ]);
 
       const nextAccounts = (accountsResponse.accounts || []).map(normalizeAccount);
@@ -409,7 +429,7 @@ export function AppProvider({ children }) {
       console.error('Failed to load Plaid data:', error);
       return false;
     }
-  }, [applyLoadedState, businessInfo, isOnboarded, riskFactors]);
+  }, [applyLoadedState, authUser?.auth0Id, businessInfo, isOnboarded, riskFactors]);
 
   const toggleSidebar = useCallback(() => {
     if (viewportMode === 'mobile') {
@@ -453,6 +473,12 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
+      authReady,
+      authEnabled,
+      isAuthenticated,
+      authUser,
+      loginUrl,
+      logoutUrl,
       isOnboarded,
       loading,
       plaidConnected,

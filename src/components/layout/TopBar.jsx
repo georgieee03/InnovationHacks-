@@ -18,6 +18,8 @@ function getInitials(name) {
 export default function TopBar({
   activeLabel,
   businessInfo,
+  authUser,
+  logoutUrl,
   sidebarOffset,
   viewportMode,
   isSidebarExpanded,
@@ -75,14 +77,25 @@ export default function TopBar({
 
           <div className="sidebar-action-surface flex items-center gap-2 rounded-2xl px-3 py-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.045] text-xs font-medium text-primary">
-              {getInitials(businessInfo?.name)}
+              {getInitials(authUser?.name || businessInfo?.name)}
             </div>
             <div className="hidden sm:block">
-              <p className="text-sm font-normal text-text-primary">{businessInfo?.name || 'SafeGuard'}</p>
-              <p className="text-[11px] font-light uppercase tracking-[0.05em] text-text-secondary">Workspace</p>
+              <p className="text-sm font-normal text-text-primary">{authUser?.name || businessInfo?.name || 'SafeGuard'}</p>
+              <p className="text-[11px] font-light uppercase tracking-[0.05em] text-text-secondary">
+                {authUser?.email || 'Workspace'}
+              </p>
             </div>
             <User className="hidden h-4 w-4 text-text-secondary sm:block" />
           </div>
+
+          {logoutUrl && authUser?.auth0Id ? (
+            <a
+              href={logoutUrl}
+              className="sidebar-action-surface hidden rounded-2xl px-3 py-2 text-sm text-text-secondary transition-colors hover:text-text-primary sm:inline-flex"
+            >
+              Logout
+            </a>
+          ) : null}
         </div>
       </div>
     </MotionHeader>
