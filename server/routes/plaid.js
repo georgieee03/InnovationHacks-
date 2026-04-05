@@ -4,6 +4,7 @@ import { getPlaidUserId } from '../auth.js';
 import { getDb } from '../db.js';
 
 const router = Router();
+const LEGACY_PLAID_USER_ID = 'default-user';
 
 async function ensurePlaidItemsTable(sql) {
   await sql`
@@ -32,11 +33,57 @@ function getPlaidClient() {
   );
 }
 
+function resolvePlaidUserId(req, providedUserId) {
+  const sessionUserId = getPlaidUserId(req);
+
+  if (sessionUserId && sessionUserId !== LEGACY_PLAID_USER_ID) {
+    return sessionUserId;
+  }
+
+  return providedUserId || LEGACY_PLAID_USER_ID;
+}
+
+async function findPlaidItems(sql, userId, fields = 'access_token') {
+  return sql.unsafe(
+    `
+      SELECT ${fields}
+      FROM plaid_items
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+    `,
+    [userId]
+  );
+}
+
+async function getPlaidItemsForRequest(sql, req, providedUserId, fields) {
+  const resolvedUserId = resolvePlaidUserId(req, providedUserId);
+  let items = await findPlaidItems(sql, resolvedUserId, fields);
+
+  if (items.length || resolvedUserId === LEGACY_PLAID_USER_ID) {
+    return items;
+  }
+
+  const legacyItems = await findPlaidItems(sql, LEGACY_PLAID_USER_ID, fields);
+
+  if (!legacyItems.length) {
+    return items;
+  }
+
+  await sql`
+    UPDATE plaid_items
+    SET user_id = ${resolvedUserId}
+    WHERE user_id = ${LEGACY_PLAID_USER_ID}
+  `;
+
+  console.warn(`Migrated ${legacyItems.length} legacy Plaid item(s) to ${resolvedUserId}.`);
+  return legacyItems;
+}
+
 // Create link token for Plaid Link UI
 router.post('/create-link-token', async (req, res) => {
   try {
     const { user_id, redirect_uri } = req.body;
-    const resolvedUserId = user_id || getPlaidUserId(req);
+    const resolvedUserId = resolvePlaidUserId(req, user_id);
     const client = getPlaidClient();
     let redirectUri = String(
       process.env.PLAID_REDIRECT_URI
@@ -85,7 +132,7 @@ router.post('/create-link-token', async (req, res) => {
 router.post('/exchange-token', async (req, res) => {
   try {
     const { public_token, user_id, institution_name } = req.body;
-    const resolvedUserId = user_id || getPlaidUserId(req);
+    const resolvedUserId = resolvePlaidUserId(req, user_id);
 
     if (!public_token) {
       return res.status(400).json({ error: 'Missing public token' });
@@ -120,13 +167,8 @@ router.post('/exchange-token', async (req, res) => {
 router.get('/accounts', async (req, res) => {
   try {
     const { user_id } = req.query;
-    const resolvedUserId = user_id || getPlaidUserId(req);
     const sql = getDb();
-    const items = await sql`
-      SELECT access_token, institution_name FROM plaid_items
-      WHERE user_id = ${resolvedUserId}
-      ORDER BY created_at DESC
-    `;
+    const items = await getPlaidItemsForRequest(sql, req, user_id, 'access_token, institution_name');
 
     if (!items.length) {
       return res.json({ accounts: [], connected: false });
@@ -159,13 +201,8 @@ router.get('/accounts', async (req, res) => {
 router.get('/transactions', async (req, res) => {
   try {
     const { user_id, days = 90 } = req.query;
-    const resolvedUserId = user_id || getPlaidUserId(req);
     const sql = getDb();
-    const items = await sql`
-      SELECT access_token FROM plaid_items
-      WHERE user_id = ${resolvedUserId}
-      ORDER BY created_at DESC
-    `;
+    const items = await getPlaidItemsForRequest(sql, req, user_id, 'access_token');
 
     if (!items.length) {
       return res.json({ transactions: [] });

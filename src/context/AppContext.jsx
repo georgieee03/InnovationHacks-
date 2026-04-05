@@ -290,8 +290,8 @@ export function AppProvider({ children }) {
 
     applyLoadedState(normalizedBusiness, nextAccounts, nextTransactions, remoteRiskFactors, {
       isOnboarded: true,
-      plaidConnected: hasPlaid,
       ...options,
+      plaidConnected: hasPlaid,
     });
   }, [applyLoadedState]);
 
@@ -318,7 +318,6 @@ export function AppProvider({ children }) {
 
       await loadBusinessWorkspace(createdBusiness, {
         isOnboarded: markOnboarded,
-        plaidConnected: false,
       });
 
       return {
