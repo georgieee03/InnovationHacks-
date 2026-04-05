@@ -1,115 +1,196 @@
-# SafeGuard — Local Dev Setup
+# SafeGuard
 
-## Quick start
+**AI-powered financial resilience platform for first-time small business owners.**
+
+SafeGuard helps new entrepreneurs — especially those from underserved communities who lack access to accountants, lawyers, or financial advisors — make confident financial decisions from day one. Through a conversational AI onboarding experience, real-time bank integration, insurance gap analysis, and automated compliance tracking, SafeGuard turns overwhelming business finance into a guided, jargon-free experience.
+
+## The Problem
+
+Starting a business is hard. Navigating business finance without professional help is harder. First-time entrepreneurs face:
+
+- **No idea what licenses or permits they need** — and penalties for missing them
+- **No visibility into cash flow** — they don't know their runway or burn rate
+- **Insurance confusion** — they don't know what coverage gaps put their livelihood at risk
+- **Tax surprises** — missed deductions, unexpected quarterly payments, self-employment tax
+- **No access to funding** — they don't know what grants or programs they qualify for
+
+These problems disproportionately affect solo operators, service businesses, and entrepreneurs in communities where financial literacy resources are scarce.
+
+## What SafeGuard Does
+
+### Conversational AI Onboarding
+Instead of forms, SafeGuard walks new users through a natural conversation about their business. The AI advisor (powered by Gemini 2.0 Flash) analyzes their answers and generates:
+- Entity type recommendation (LLC vs sole prop) with filing costs and links
+- Business name availability and trademark risk analysis
+- A step-by-step formation checklist
+- Compliance requirements specific to their state, city, and industry
+- Key insights and urgent warnings
+
+### Live Financial Dashboard
+Connect a bank account through Plaid and get instant visibility into:
+- Total balances, monthly revenue, expenses, and runway
+- Cash flow trends over time
+- Spending breakdown by category
+- Emergency fund status relative to operating costs
+
+For users who aren't ready to connect a bank, SafeGuard provides a demo workspace with realistic data so they can explore every feature before committing.
+
+### Insurance Analysis & Gap Detection
+Upload a business insurance policy (PDF) and SafeGuard:
+- Extracts coverage details using AI-powered document analysis
+- Identifies what's covered and what's missing
+- Calculates a protection score
+- Recommends specific coverage types based on business type and location risk factors
+- Simulates disruption scenarios against current coverage
+
+### Documents Workspace
+A unified hub for contracts, quotes, and receipts:
+- **Contracts**: Upload and store agreements with AI clause analysis, health scoring, obligation tracking, and missing protection alerts
+- **Quotes**: Create and manage client quotes with AI-powered pricing suggestions
+- **Receipts**: Upload receipt images for AI-powered OCR that auto-categorizes expenses, flags tax deductions, and calculates business-use percentages
+
+### Tax Analysis
+AI scans your actual receipts and transactions to find:
+- Missed deductions ranked by dollar impact
+- Under-claimed expenses and mis-categorized items
+- Specific action items with deadlines
+- Entity structure advice (e.g., when S-Corp election makes sense)
+- Estimated annual tax savings
+
+### Growth & Funding Discovery
+- AI-generated growth actions based on your business profile
+- Funding opportunity matching (grants, loans, tax credits)
+- TinyFish web scraping integration for real-time funding search (when configured)
+
+### Compliance Tracking
+Every license, permit, and filing obligation is tracked with:
+- Status management (not started → in progress → complete)
+- Jurisdiction and category tagging
+- Application links and cost estimates
+- AI-powered compliance generation for comprehensive coverage
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, Vite 8, Tailwind CSS v4, Framer Motion, Recharts, Lucide |
+| Backend | Express 5, Node.js (ESM) |
+| Database | PostgreSQL via Neon Serverless |
+| AI | Gemini 2.0 Flash via OpenRouter |
+| Banking | Plaid Link + OAuth |
+| Auth | Auth0 (OpenID Connect) |
+| File Storage | Vercel Blob |
+| Deployment | Vercel (static + serverless functions) |
+| PDF Parsing | pdfjs-dist |
+
+## Architecture
+
+```
+Browser (React SPA)
+    ↓ /api/*
+Vite Proxy (dev) / Vercel Functions (prod)
+    ↓
+Express Server
+    ├── /api/session, /api/login, /api/logout     → Auth0
+    ├── /api/business                              → Business CRUD
+    ├── /api/data/businesses/:id/*                 → Full entity CRUD
+    ├── /api/workspace/*                           → Workspace operations
+    ├── /api/ai/*                                  → AI routes (Gemini)
+    ├── /api/plaid/*                               → Plaid banking
+    ├── /api/analyze-policy                        → Insurance analysis
+    └── /api/health                                → Health check
+    ↓
+PostgreSQL (Neon) — businesses, contracts, quotes, receipts,
+                    compliance, funding, growth, bank transactions,
+                    plaid connections, tax summaries, uploaded files
+```
+
+## Getting Started
+
+### Prerequisites
+- Node.js 20+
+- A Neon PostgreSQL database
+- OpenRouter API key (for Gemini 2.0 Flash)
+- Plaid sandbox credentials
+- Auth0 application (optional — app works without it)
+
+### Setup
 
 ```bash
+cd safeguard
+cp .env.example .env
+# Fill in your API keys in .env
 npm install
+```
+
+### Development
+
+```bash
+# Terminal 1 — Express backend (port 3001)
+npm run server
+
+# Terminal 2 — Vite frontend (port 5173)
 npm run dev
 ```
 
-Opens at **http://localhost:5173** — Vite proxies all `/api` calls to Express on `:3001`.
+Open `http://localhost:5173`
 
----
+### Environment Variables
 
-## Prerequisites
+```env
+# Required
+DATABASE_URL=postgresql://...
+OPENROUTER_API_KEY=sk-or-v1-...
 
-- Node.js 20+
-- All credentials already filled in `.env.local`
+# Banking (Plaid sandbox)
+PLAID_CLIENT_ID=...
+PLAID_SECRET=...
+PLAID_ENV=sandbox
 
----
+# Auth (optional — skip for local dev)
+AUTH0_DOMAIN=...
+AUTH0_CLIENT_ID=...
+AUTH0_CLIENT_SECRET=...
+AUTH0_SECRET=...
+AUTH0_BASE_URL=http://localhost:5173
 
-## What's running
-
-`npm run dev` starts two processes concurrently:
-
-| Process | Port | Command |
-|---------|------|---------|
-| Express API | 3001 | `node --watch server/index.js` |
-| Vite dev server | 5173 | `vite` |
-
-To run them separately:
-
-```bash
-npm run dev:server   # Express only
-npm run dev:client   # Vite only
+# File uploads (optional)
+BLOB_READ_WRITE_TOKEN=...
 ```
 
----
-
-## Environment
-
-`.env.local` is already configured with:
-
-- `DATABASE_URL` — Neon Postgres
-- `GROQ_API_KEY` — Groq LLM (contracts, receipts, tax analysis, compliance)
-- `PLAID_CLIENT_ID` / `PLAID_SECRET` — Plaid sandbox
-- `PLAID_REDIRECT_URI` — `http://localhost:5173/plaid-oauth.html`
-- `BLOB_READ_WRITE_TOKEN` — Vercel Blob (file uploads)
-- `TINYFISH_API_KEY` — TinyFish web search (tax opportunities, funding)
-- `AUTH0_*` — Auth0 (optional — app works without it)
-
-The server loads `.env` then `.env.local` (local overrides win).
-
----
-
-## API surface
-
-### Core
-- `GET /api/health`
-- `POST /api/business` · `GET /api/business`
-
-### Business data graph (`/api/data/businesses/:id/...`)
-- `GET|POST /contracts` · `GET|PATCH|DELETE /contracts/:id`
-- `GET|POST /receipts` · `PATCH|DELETE /receipts/:id`
-- `GET|POST /quotes` · `PATCH|DELETE /quotes/:id`
-- `GET|POST /compliance` · `PATCH|DELETE /compliance/:id`
-- `GET|POST /funding` · `PATCH /funding/:id`
-- `GET /bank-transactions`
-- `GET /plaid-connections`
-- `GET /growth-actions` · `PATCH /growth-actions/:id`
-- `GET /files` · `POST /files/upload`
-
-### Workspace (session-scoped shortcuts)
-- `GET|POST /api/workspace/contracts`
-- `GET|POST /api/workspace/quotes`
-- `GET|POST /api/workspace/receipts`
-- `GET|PATCH /api/workspace/compliance/:id`
-- `GET /api/workspace/growth` · `POST /api/workspace/growth/refresh`
-- `POST /api/workspace/files/upload`
-
-### AI
-- `POST /api/ai/business-advisor`
-- `POST /api/ai/analyze-receipt`
-- `POST /api/ai/analyze-taxes`
-- `POST /api/ai/analyze-contract`
-- `POST /api/ai/generate-contract`
-- `POST /api/ai/generate-quote`
-- `POST /api/ai/generate-compliance`
-- `POST /api/ai/scan-opportunities`
-- `POST /api/ai/scan-funding`
-- `POST /api/ai/scan-tax-opportunities`
-
-### Insurance
-- `POST /api/analyze-policy`
-- `POST /api/save-gap-analysis`
-
-### Plaid
-- `POST /api/plaid/create-link-token`
-- `POST /api/plaid/exchange-token`
-- `GET /api/plaid/accounts`
-- `GET /api/plaid/transactions`
-
-### Reference data
-- `GET /api/zip-lookup?zip=`
-- `GET /api/business-types`
-- `GET /api/risk-factors`
-- `GET /api/recommendations?businessType=`
-
----
-
-## Build
+### Admin Scripts
 
 ```bash
-npm run build    # Vite production build → dist/
-npm run preview  # Serve dist/ (still needs Express on :3001)
+# Clear all data from the database
+node scripts/admin/clear-all.mjs
+
+# Delete a specific user's business
+node scripts/admin/reset-user.mjs user@email.com
 ```
+
+## User Flow
+
+```
+Landing Page → Auth0 Login → AI Onboarding Chat (7 questions)
+    → AI generates business plan, compliance items, entity recommendation
+    → Optional: Connect bank via Plaid
+    → Dashboard with live financial data, documents, insurance, growth tools
+```
+
+## Accessibility
+
+- Keyboard navigation throughout the sidebar and all interactive elements
+- Focus trapping in modals and mobile drawer
+- ARIA labels on navigation, buttons, and form controls
+- Responsive design: mobile (drawer nav), tablet (collapsible), desktop (expanded)
+- Swipe gestures for mobile sidebar
+- High contrast text on dark backgrounds
+- Loading states and error messages for all async operations
+
+## Team
+
+Built at InnovationHacks 2026.
+
+## License
+
+MIT
