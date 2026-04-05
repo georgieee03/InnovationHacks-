@@ -1,8 +1,8 @@
 import { useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppProvider, AppContext } from './context/AppContext';
-import AuthGate from './components/auth/AuthGate';
 import Onboarding from './components/Onboarding';
+import LandingPage from './components/landing/LandingPage';
 import FinancialOverview from './components/financial/FinancialOverview';
 import InsuranceAnalyzer from './components/insurance/InsuranceAnalyzer';
 import ActionPlan from './components/actionplan/ActionPlan';
@@ -89,7 +89,7 @@ function Dashboard() {
   }
 
   if (authEnabled && !isAuthenticated) {
-    return <AuthGate loginUrl={loginUrl} />;
+    return <LandingPage loginUrl={loginUrl} />;
   }
 
   if (!isOnboarded) {
