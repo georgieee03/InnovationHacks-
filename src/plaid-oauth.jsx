@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Loader2, Landmark } from 'lucide-react';
 import { usePlaidLink } from 'react-plaid-link';
 import './index.css';
+import AmbientBackground from './components/shared/AmbientBackground';
 import { api } from './services/apiClient';
 import {
   clearStoredPlaidLinkToken,
@@ -87,10 +88,7 @@ function PlaidOAuthResume() {
   }, [open, ready]);
 
   return (
-    <div className="app-background min-h-screen">
-      <div className="animated-bg" />
-      <div className="noise-overlay" />
-
+    <AmbientBackground className="min-h-screen">
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.96, y: 16 }}
@@ -111,7 +109,7 @@ function PlaidOAuthResume() {
           </div>
         </motion.div>
       </div>
-    </div>
+    </AmbientBackground>
   );
 }
 
