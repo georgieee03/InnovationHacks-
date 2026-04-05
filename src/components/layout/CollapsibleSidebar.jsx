@@ -6,7 +6,6 @@ import {
   FileSignature,
   TrendingUp,
   DollarSign,
-  AlertTriangle,
   GraduationCap,
   Settings,
   ShieldCheck,
@@ -48,7 +47,6 @@ export default function CollapsibleSidebar({
     { id: 'insurance', label: 'Insurance', shortLabel: 'Insurance', icon: Shield, section: 'main', badge: gapCount > 0 ? { text: `${gapCount} gaps`, color: 'danger' } : null },
     { id: 'growth', label: 'Growth', shortLabel: 'Growth', icon: TrendingUp, section: 'main' },
     { id: 'taxes', label: 'Tax Analysis', shortLabel: 'Taxes', icon: DollarSign, section: 'main' },
-    { id: 'simulator', label: 'Risk Simulator', shortLabel: 'Simulator', icon: AlertTriangle, section: 'main' },
     { id: 'learn', label: 'Learn', shortLabel: 'Learn', icon: GraduationCap, section: 'main' },
     { id: 'settings', label: 'Settings', shortLabel: 'Settings', icon: Settings, section: 'footer', disabled: true },
   ]), [gapCount]);

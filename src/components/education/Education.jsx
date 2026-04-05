@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, ChevronDown, ChevronRight, CheckCircle, XCircle, Award, ArrowLeft } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronRight, CheckCircle, XCircle, Award, ArrowLeft, Zap } from 'lucide-react';
+import RiskSimulator from '../simulator/RiskSimulator';
 
 const TRACKS = [
   {
@@ -362,6 +363,7 @@ function TrackDetail({ track, progress, onBack, onUpdate }) {
 export default function Education() {
   const [progress, setProgress] = useState(loadProgress);
   const [selectedTrack, setSelectedTrack] = useState(null);
+  const [showSimulator, setShowSimulator] = useState(false);
 
   useEffect(() => {
     saveProgress(progress);
@@ -370,6 +372,17 @@ export default function Education() {
   const updateTrackProgress = (trackId, trackProgress) => {
     setProgress(prev => ({ ...prev, [trackId]: trackProgress }));
   };
+
+  if (showSimulator) {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <button onClick={() => setShowSimulator(false)} className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary mb-4 transition">
+          <ArrowLeft className="w-4 h-4" /> Back to Learning Center
+        </button>
+        <RiskSimulator />
+      </div>
+    );
+  }
 
   if (selectedTrack) {
     const track = TRACKS.find(t => t.id === selectedTrack);
@@ -410,6 +423,25 @@ export default function Education() {
           />
         ))}
       </div>
+
+      <motion.div
+        whileHover={{ y: -2 }}
+        onClick={() => setShowSimulator(true)}
+        className="mt-6 bg-card rounded-xl p-6 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow"
+      >
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-lg bg-underinsured/10 flex items-center justify-center flex-shrink-0">
+            <Zap className="w-5 h-5 text-underinsured" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-heading font-bold text-text-primary mb-1">Simulated Learning</h3>
+            <p className="text-sm text-text-secondary">
+              See how your finances would react to different risks using your connected account data. Stress-test real disruptions and understand your coverage gaps.
+            </p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-text-secondary mt-1 flex-shrink-0" />
+        </div>
+      </motion.div>
     </div>
   );
 }

@@ -5,7 +5,6 @@ import Onboarding from './components/Onboarding';
 import LandingPage from './components/landing/LandingPage';
 import FinancialOverview from './components/financial/FinancialOverview';
 import InsuranceAnalyzer from './components/insurance/InsuranceAnalyzer';
-import RiskSimulator from './components/simulator/RiskSimulator';
 import Education from './components/education/Education';
 import CursorSpotlight from './components/shared/CursorSpotlight';
 import LoadingSpinner from './components/shared/LoadingSpinner';
@@ -23,7 +22,6 @@ const pageRegistry = {
   insurance: { label: 'Insurance', component: InsuranceAnalyzer },
   growth: { label: 'Growth', component: GrowthWorkspace },
   taxes: { label: 'Tax Analysis', component: TaxAnalysis },
-  simulator: { label: 'Risk Simulator', component: RiskSimulator },
   learn: { label: 'Learn', component: Education },
 };
 
