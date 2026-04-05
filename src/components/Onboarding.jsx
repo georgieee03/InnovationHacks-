@@ -14,6 +14,7 @@ import { api } from '../services/apiClient';
 import { clearPendingPlaidSession, getStoredPlaidFormData } from '../services/plaidSession';
 import OnboardingChat from './onboarding/OnboardingChat';
 import OnboardingResults from './onboarding/OnboardingResults';
+import AmbientBackground from './shared/AmbientBackground';
 import LoadingSpinner from './shared/LoadingSpinner';
 import RippleButton from './shared/RippleButton';
 
@@ -117,9 +118,7 @@ export default function Onboarding({ previewOnly = false }) {
 
   if (stage === 'processing') {
     return (
-      <div className="app-background min-h-screen">
-        <div className="animated-bg" />
-        <div className="noise-overlay" />
+      <AmbientBackground className="min-h-screen">
         <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
           <div className="glass-card w-full max-w-xl rounded-[28px] p-8">
             <LoadingSpinner message="Building your business plan..." />
@@ -138,7 +137,7 @@ export default function Onboarding({ previewOnly = false }) {
             </div>
           </div>
         </div>
-      </div>
+      </AmbientBackground>
     );
   }
 
@@ -167,9 +166,7 @@ export default function Onboarding({ previewOnly = false }) {
   ];
 
   return (
-    <div className="app-background min-h-screen">
-      <div className="animated-bg" />
-      <div className="noise-overlay" />
+    <AmbientBackground className="min-h-screen">
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
         <div className="w-full max-w-2xl">
           {/* Hero */}
@@ -235,7 +232,7 @@ export default function Onboarding({ previewOnly = false }) {
           </div>
         </div>
       </div>
-    </div>
+    </AmbientBackground>
   );
 }
 
