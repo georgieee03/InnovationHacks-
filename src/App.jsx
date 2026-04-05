@@ -102,6 +102,20 @@ function Dashboard() {
     return <Onboarding />;
   }
 
+  if (!businessInfo || !financialMetrics) {
+    return (
+      <div className="app-background min-h-screen">
+        <div className="animated-bg" />
+        <div className="noise-overlay" />
+        <div className="relative z-10 flex min-h-screen items-center justify-center">
+          <div className="glass-card w-full max-w-xl rounded-[28px] p-8">
+            <LoadingSpinner message="Loading your workspace..." />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const activePage = pageRegistry[activeTab] || pageRegistry.financial;
   const ActiveComponent = activePage.component;
   const sidebarOffset = viewportMode === 'mobile' ? 0 : sidebarExpanded ? 280 : 64;

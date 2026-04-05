@@ -13,7 +13,7 @@ import { api } from '../../services/apiClient';
 import RippleButton from '../shared/RippleButton';
 
 export default function OnboardingPlaidConnect() {
-  const { authUser, loadPlaidData } = useContext(AppContext);
+  const { authUser } = useContext(AppContext);
   const [linkToken, setLinkToken] = useState(null);
   const [status, setStatus] = useState('idle'); // idle | fetching | ready | connecting | done | error
   const [error, setError] = useState('');
@@ -44,14 +44,14 @@ export default function OnboardingPlaidConnect() {
         institutionName: metadata?.institution?.name || null,
       });
 
-      // Load the Plaid data into app state
-      await loadPlaidData({ completeOnboarding: false });
+      // Don't load Plaid data here — sandbox takes time to sync.
+      // The dashboard's loadBusinessWorkspace will pick it up on next load.
       setStatus('done');
     } catch (err) {
       setError(err.message || 'Failed to connect bank');
       setStatus('error');
     }
-  }, [authUser?.auth0Id, loadPlaidData]);
+  }, [authUser?.auth0Id]);
 
   const onExit = useCallback((exitError) => {
     if (exitError) {
