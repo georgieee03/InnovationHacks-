@@ -6,11 +6,17 @@ import {
   FileSignature,
   TrendingUp,
   DollarSign,
-  AlertTriangle,
   GraduationCap,
   Settings,
   ShieldCheck,
   ClipboardCheck,
+  ReceiptText,
+  Camera,
+  BadgeCheck,
+  Calculator,
+  Trophy,
+  FileText,
+  MessageCircle,
 } from 'lucide-react';
 import NavigationItem from './NavigationItem';
 import BusinessInfo from './BusinessInfo';
@@ -49,9 +55,7 @@ export default function CollapsibleSidebar({
     { id: 'insurance', label: 'Insurance', shortLabel: 'Insurance', icon: Shield, section: 'main', badge: gapCount > 0 ? { text: `${gapCount} gaps`, color: 'danger' } : null },
     { id: 'growth', label: 'Growth', shortLabel: 'Growth', icon: TrendingUp, section: 'main' },
     { id: 'taxes', label: 'Tax Analysis', shortLabel: 'Taxes', icon: DollarSign, section: 'main' },
-    { id: 'simulator', label: 'Risk Simulator', shortLabel: 'Simulator', icon: AlertTriangle, section: 'main' },
     { id: 'learn', label: 'Learn', shortLabel: 'Learn', icon: GraduationCap, section: 'main' },
-    { id: 'actionplan', label: 'Action Plan', shortLabel: 'Action Plan', icon: ClipboardCheck, section: 'main' },
     { id: 'settings', label: 'Settings', shortLabel: 'Settings', icon: Settings, section: 'footer', disabled: true },
   ]), [gapCount]);
 
@@ -225,7 +229,7 @@ export default function CollapsibleSidebar({
             ))}
 
             <Tooltip
-              content="Theme toggle arrives in Phase 7"
+              content="Theme toggle coming soon"
               side="right"
               delay={300}
               disabled={showExpanded}
@@ -233,9 +237,9 @@ export default function CollapsibleSidebar({
               <button
                 type="button"
                 disabled
-                title="Theme toggle arrives in Phase 7"
-                aria-label="Theme toggle arrives in Phase 7"
-                className={`sidebar-action-surface focus-ring-control mt-1 flex w-full items-center rounded-2xl py-3 text-left text-text-secondary opacity-70 ${
+                title="Theme toggle coming soon"
+                aria-label="Theme toggle coming soon"
+                className={`sidebar-action-surface focus-ring-control mt-1 flex w-full items-center rounded-2xl py-3 text-left text-text-secondary opacity-40 ${
                   showExpanded ? 'gap-3 px-3' : 'justify-center px-2'
                 }`}
               >

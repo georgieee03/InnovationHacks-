@@ -2,15 +2,27 @@
  * AI client — server-side only.
  * Uses OpenRouter as the inference provider.
  * Primary model: Qwen 3 235B (free), fallback: Gemini 2.0 Flash.
- * 
+ *
  * All exports keep the same names (groqJSON, isGroqConfigured, etc.)
  * so no other files need to change.
  */
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+// Fast/free: Qwen 3 235B — used when TinyFish already supplied web context (AI just structures
+// the data) and for simple generation tasks (quotes, compliance lists, chat, receipt scanning).
 const PRIMARY_MODEL = 'google/gemini-2.0-flash-001';
-const FALLBACK_MODEL = 'google/gemini-2.0-flash-001';
-const VISION_MODEL = 'google/gemini-2.0-flash-001'; // Gemini handles vision natively
+
+// Accurate: Gemini 2.5 Flash — used for complex analysis (taxes, contracts, business advisor)
+// and for any scan endpoint that gets NO TinyFish context and must reason independently.
+const ACCURATE_MODEL = 'google/gemini-2.0-flash-001';
+
+// Vision: Gemini Flash handles multimodal inputs natively.
+const VISION_MODEL = 'google/gemini-2.0-flash-001';
+
+// Exported so route files can pick the right tier at the call-site.
+export const FAST_MODEL_ID = PRIMARY_MODEL;
+export const ACCURATE_MODEL_ID = ACCURATE_MODEL;
 
 /**
  * Core identity and behavioral guidelines for all AI calls in Launchpad.
@@ -66,8 +78,8 @@ export function getGroqVisionModel() {
 function cleanJSON(text) {
   // Strip markdown fences
   let cleaned = text.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
-  // Strip <think>...</think> blocks (Qwen thinking mode)
-  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  // Strip <redacted_thinking>...</redacted_thinking> blocks (Qwen thinking mode)
+  cleaned = cleaned.replace(/<redacted_thinking>[\s\S]*?<\/redacted_thinking>/g, '').trim();
   // If it still doesn't start with { or [, try to extract JSON
   if (!cleaned.startsWith('{') && !cleaned.startsWith('[')) {
     const match = cleaned.match(/[\[{][\s\S]*[\]}]/);
@@ -96,7 +108,6 @@ function getHeaders() {
 function getApiUrl() {
   return process.env.OPENROUTER_API_KEY ? OPENROUTER_URL : 'https://api.groq.com/openai/v1/chat/completions';
 }
-
 
 /**
  * Generate a JSON response from a text-only prompt.
@@ -196,7 +207,11 @@ export async function groqVisionJSON(prompt, base64Image, mimeType, options = {}
   } catch {
     const match = cleaned.match(/\{[\s\S]*\}/);
     if (match) {
-      try { return JSON.parse(match[0]); } catch { /* fall through */ }
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        /* fall through */
+      }
     }
     throw new Error(`Vision returned invalid JSON: ${cleaned.slice(0, 300)}`);
   }
@@ -211,12 +226,13 @@ export async function groqVisionText(prompt, base64Image, mimeType, options = {}
 
   const { headers } = getHeaders();
   const url = getApiUrl();
+  const model = options.model || getGroqVisionModel();
 
   const response = await fetch(url, {
     method: 'POST',
     headers,
     body: JSON.stringify({
-      model: options.model || getGroqVisionModel(),
+      model,
       temperature: options.temperature ?? 0.1,
       max_tokens: options.maxTokens ?? 4096,
       messages: [
@@ -248,6 +264,7 @@ export async function groqText(prompt, options = {}) {
   const apiKey = process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY is not configured');
 
+  const model = options.model || getGroqModel();
   const { headers } = getHeaders();
   const url = getApiUrl();
 
@@ -255,7 +272,7 @@ export async function groqText(prompt, options = {}) {
     method: 'POST',
     headers,
     body: JSON.stringify({
-      model: options.model || getGroqModel(),
+      model,
       temperature: options.temperature ?? 0.3,
       max_tokens: options.maxTokens ?? 2048,
       messages: [

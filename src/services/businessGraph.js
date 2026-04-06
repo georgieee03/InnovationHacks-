@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Business Intelligence Graph ΓÇö client-side service layer.
  * Mirrors business.graph.ts from the Next.js version.
  * All calls go through /api/data/businesses/:businessId/...

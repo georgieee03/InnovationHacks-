@@ -5,10 +5,7 @@ import Onboarding from './components/Onboarding';
 import LandingPage from './components/landing/LandingPage';
 import FinancialOverview from './components/financial/FinancialOverview';
 import InsuranceAnalyzer from './components/insurance/InsuranceAnalyzer';
-import ActionPlan from './components/actionplan/ActionPlan';
-import RiskSimulator from './components/simulator/RiskSimulator';
 import Education from './components/education/Education';
-import AmbientBackground from './components/shared/AmbientBackground';
 import CursorSpotlight from './components/shared/CursorSpotlight';
 import LoadingSpinner from './components/shared/LoadingSpinner';
 import ParticleGrid from './components/shared/ParticleGrid';
@@ -21,13 +18,16 @@ import TaxAnalysis from './components/workspace/TaxAnalysis';
 
 const pageRegistry = {
   financial: { label: 'Dashboard', component: FinancialOverview },
+  // Workspace sub-tabs all render DocumentsWorkspace (which has its own tab bar)
   documents: { label: 'Documents', component: DocumentsWorkspace },
+  contracts: { label: 'Contracts', component: DocumentsWorkspace },
+  quotes: { label: 'Quotes', component: DocumentsWorkspace },
+  receipts: { label: 'Receipts', component: DocumentsWorkspace },
+  compliance: { label: 'Compliance', component: DocumentsWorkspace },
   insurance: { label: 'Insurance', component: InsuranceAnalyzer },
   growth: { label: 'Growth', component: GrowthWorkspace },
   taxes: { label: 'Tax Analysis', component: TaxAnalysis },
-  simulator: { label: 'Risk Simulator', component: RiskSimulator },
   learn: { label: 'Learn', component: Education },
-  actionplan: { label: 'Action Plan', component: ActionPlan },
 };
 
 const viewTransition = {
@@ -63,13 +63,15 @@ function Dashboard() {
 
   if (!authReady) {
     return (
-      <AmbientBackground className="min-h-screen">
+      <div className="app-background min-h-screen">
+        <div className="animated-bg" />
+        <div className="noise-overlay" />
         <div className="relative z-10 flex min-h-screen items-center justify-center">
           <div className="glass-card w-full max-w-xl rounded-[28px] p-8">
             <LoadingSpinner message="Restoring your SafeGuard workspace..." />
           </div>
         </div>
-      </AmbientBackground>
+      </div>
     );
   }
 

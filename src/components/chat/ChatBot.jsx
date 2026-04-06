@@ -130,38 +130,6 @@ function getSmartFallback(question, context) {
   return `I can help with insurance, coverage gaps, reserve planning, and scenario analysis for ${name}. Ask about what is missing, what to prioritize next, or how much cash buffer you need.`;
 }
 
-async function callClaudeAPI(messages, systemPrompt) {
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-  if (!apiKey) return null;
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: messages.map((message) => ({
-          role: message.role === 'user' ? 'user' : 'assistant',
-          content: message.text,
-        })),
-      }),
-    });
-
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    return data.content?.[0]?.text || null;
-  } catch {
-    return null;
-  }
-}
 
 function TypingIndicator() {
   return (
@@ -198,27 +166,6 @@ export default function ChatBot() {
     return id;
   }
 
-  function buildSystemPrompt() {
-    let prompt = 'You are SafeGuard AI, a concise business insurance and resilience advisor. Give practical, readable answers with short paragraphs and bullet lists when useful.';
-
-    if (businessInfo) {
-      prompt += `\nBusiness: ${businessInfo.name}, type ${businessInfo.type}, location ${businessInfo.city}, ${businessInfo.state} ${businessInfo.zip}, employees ${businessInfo.employees}, monthly revenue ${businessInfo.monthlyRevenue}.`;
-    }
-
-    if (riskFactors) {
-      prompt += `\nLocation risk factors: ${JSON.stringify(riskFactors)}.`;
-    }
-
-    if (gapAnalysis) {
-      prompt += `\nGap analysis: ${JSON.stringify(gapAnalysis)}.`;
-    }
-
-    if (financialMetrics) {
-      prompt += `\nFinancial metrics: ${JSON.stringify(financialMetrics)}.`;
-    }
-
-    return prompt;
-  }
 
   async function sendMessage(text) {
     const trimmed = text.trim();
@@ -235,11 +182,7 @@ export default function ChatBot() {
     setInput('');
     setIsTyping(true);
 
-    let response = await callClaudeAPI(newMessages.slice(1), buildSystemPrompt());
-
-    if (!response) {
-      response = getSmartFallback(trimmed, { businessInfo, financialMetrics, gapAnalysis, riskFactors });
-    }
+    const response = getSmartFallback(trimmed, { businessInfo, financialMetrics, gapAnalysis, riskFactors });
 
     await new Promise((resolve) => setTimeout(resolve, 250));
 
