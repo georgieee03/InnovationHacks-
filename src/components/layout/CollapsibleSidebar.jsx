@@ -11,6 +11,13 @@ import {
   Settings,
   ShieldCheck,
   ClipboardCheck,
+  ReceiptText,
+  Camera,
+  BadgeCheck,
+  Calculator,
+  Trophy,
+  FileText,
+  MessageCircle,
 } from 'lucide-react';
 import NavigationItem from './NavigationItem';
 import BusinessInfo from './BusinessInfo';

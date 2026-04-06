@@ -1,10 +1,13 @@
 import { useContext, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { jsPDF } from 'jspdf';
 import {
   TrendingUp, TrendingDown, Minus,
   Landmark, Database, RefreshCw,
   DollarSign, ArrowUpRight, ArrowDownRight,
   Wallet, Activity,
+  FileText, Download, AlertTriangle, CheckCircle, Lightbulb,
+  Share2, Check, Copy, ShieldCheck, Clock,
 } from 'lucide-react';
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip,

@@ -20,7 +20,12 @@ import TaxAnalysis from './components/workspace/TaxAnalysis';
 
 const pageRegistry = {
   financial: { label: 'Dashboard', component: FinancialOverview },
+  // Workspace sub-tabs all render DocumentsWorkspace (which has its own tab bar)
   documents: { label: 'Documents', component: DocumentsWorkspace },
+  contracts: { label: 'Contracts', component: DocumentsWorkspace },
+  quotes: { label: 'Quotes', component: DocumentsWorkspace },
+  receipts: { label: 'Receipts', component: DocumentsWorkspace },
+  compliance: { label: 'Compliance', component: DocumentsWorkspace },
   insurance: { label: 'Insurance', component: InsuranceAnalyzer },
   growth: { label: 'Growth', component: GrowthWorkspace },
   taxes: { label: 'Tax Analysis', component: TaxAnalysis },
