@@ -4,12 +4,8 @@ const STORAGE_KEY = 'safeguard-theme';
 
 export const ThemeContext = createContext(null);
 
-function getSystemTheme() {
-  if (typeof window === 'undefined') {
-    return 'dark';
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+function getDefaultTheme() {
+  return 'dark';
 }
 
 function readStoredTheme() {
@@ -33,7 +29,7 @@ function getInitialTheme() {
     }
   }
 
-  return readStoredTheme() ?? getSystemTheme();
+  return readStoredTheme() ?? getDefaultTheme();
 }
 
 export function ThemeProvider({ children }) {
@@ -74,27 +70,6 @@ export function ThemeProvider({ children }) {
     }
 
     return undefined;
-  }, [userPreference]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || userPreference) {
-      return undefined;
-    }
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleThemeChange = (event) => {
-      setTheme(event.matches ? 'dark' : 'light');
-    };
-
-    handleThemeChange(mediaQuery);
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handleThemeChange);
-      return () => mediaQuery.removeEventListener('change', handleThemeChange);
-    }
-
-    mediaQuery.addListener(handleThemeChange);
-    return () => mediaQuery.removeListener(handleThemeChange);
   }, [userPreference]);
 
   useEffect(() => () => {

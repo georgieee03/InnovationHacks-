@@ -1,5 +1,5 @@
 /**
- * Business Intelligence Graph — client-side service layer.
+ * Business Intelligence Graph ΓÇö client-side service layer.
  * Mirrors business.graph.ts from the Next.js version.
  * All calls go through /api/data/businesses/:businessId/...
  */
@@ -23,7 +23,7 @@ async function apiFetch(path, options = {}) {
 
 const base = (businessId) => `/data/businesses/${encodeURIComponent(businessId)}`;
 
-// ─── Business ─────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Business ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 export const createBusiness = (userId, data) =>
   apiFetch('/data/businesses', { method: 'POST', body: JSON.stringify({ userId, ...data }) })
@@ -38,7 +38,7 @@ export const updateBusiness = (businessId, data) =>
 export const getBusinessByUserId = (userId) =>
   apiFetch(`/data/businesses?userId=${encodeURIComponent(userId)}`);
 
-// ─── Contracts ────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Contracts ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 export const getContracts = (businessId) =>
   apiFetch(`${base(businessId)}/contracts`);
@@ -59,7 +59,7 @@ export const updateContractObligations = (businessId, contractId, obligations) =
 export const deleteContract = (businessId, contractId) =>
   apiFetch(`${base(businessId)}/contracts/${contractId}`, { method: 'DELETE' });
 
-// ─── Receipts ─────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Receipts ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 export const getReceipts = (businessId, filters = {}) => {
   const params = new URLSearchParams();
@@ -80,7 +80,7 @@ export const updateReceipt = (businessId, receiptId, data) =>
 export const deleteReceipt = (businessId, receiptId) =>
   apiFetch(`${base(businessId)}/receipts/${receiptId}`, { method: 'DELETE' });
 
-// ─── Quotes ───────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Quotes ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 export const getQuotes = (businessId, statusFilter) => {
   const qs = statusFilter ? `?status=${statusFilter}` : '';
@@ -97,7 +97,7 @@ export const updateQuote = (businessId, quoteId, data) =>
 export const deleteQuote = (businessId, quoteId) =>
   apiFetch(`${base(businessId)}/quotes/${quoteId}`, { method: 'DELETE' });
 
-// ─── Compliance ───────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Compliance ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 export const getComplianceItems = (businessId) =>
   apiFetch(`${base(businessId)}/compliance`);
@@ -112,7 +112,7 @@ export const updateComplianceItem = (businessId, itemId, data) =>
 export const deleteComplianceItem = (businessId, itemId) =>
   apiFetch(`${base(businessId)}/compliance/${itemId}`, { method: 'DELETE' });
 
-// ─── Funding ──────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Funding ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 export const getFundingOpportunities = (businessId) =>
   apiFetch(`${base(businessId)}/funding`);
@@ -124,7 +124,7 @@ export const addFundingOpportunity = (businessId, opportunity) =>
 export const updateFundingOpportunity = (businessId, opportunityId, data) =>
   apiFetch(`${base(businessId)}/funding/${opportunityId}`, { method: 'PATCH', body: JSON.stringify(data) });
 
-// ─── Bank / Plaid ─────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Bank / Plaid ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 export const getBankTransactions = (businessId, filters = {}) => {
   const params = new URLSearchParams();
@@ -137,7 +137,7 @@ export const getBankTransactions = (businessId, filters = {}) => {
 export const getPlaidConnections = (businessId) =>
   apiFetch(`${base(businessId)}/plaid-connections`);
 
-// ─── Growth Actions ───────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Growth Actions ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 export const getGrowthActions = (businessId) =>
   apiFetch(`${base(businessId)}/growth-actions`);
@@ -148,7 +148,7 @@ export const dismissGrowthAction = (businessId, actionId) =>
     body: JSON.stringify({ dismissed: true }),
   });
 
-// ─── Files ────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Files ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 export const getUploadedFiles = (businessId) =>
   apiFetch(`${base(businessId)}/files`);

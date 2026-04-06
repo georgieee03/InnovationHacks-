@@ -1,7 +1,9 @@
 import { useContext, useState } from 'react';
-import { Landmark, Loader2, CheckCircle2, ShieldCheck, ArrowRight, X } from 'lucide-react';
+import { Landmark, Loader2, ShieldCheck, ArrowRight, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AppContext } from '../../context/AppContext';
+
+const MotionDiv = motion.div;
 import { api } from '../../services/apiClient';
 import { usePlaidLink } from 'react-plaid-link';
 import { getPlaidRedirectUri } from '../../services/plaidSession';
@@ -11,13 +13,12 @@ import { getPlaidRedirectUri } from '../../services/plaidSession';
  * Includes compliance tasks from onboarding plan and inline Plaid popup.
  */
 export default function GettingStartedChecklist({ contracts, receipts, quotes, complianceItems }) {
-  const { navigateToTab, plaidConnected, loadPlaidData, setPlaidConnected } = useContext(AppContext);
+  const { navigateToTab, plaidConnected, loadPlaidData } = useContext(AppContext);
   const [plaidOpen, setPlaidOpen] = useState(false);
   const [linkToken, setLinkToken] = useState(null);
   const [plaidPreparing, setPlaidPreparing] = useState(false);
   const [plaidError, setPlaidError] = useState('');
 
-  // Critical compliance items from onboarding (required + not started)
   const criticalCompliance = complianceItems
     .filter(c => c.is_required && c.status === 'not_started')
     .slice(0, 3);
@@ -28,6 +29,7 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
       label: 'Upload or generate your first contract',
       description: 'Get a plain-English breakdown of any agreement',
       tab: 'documents',
+      subview: 'contracts',
       done: contracts.length > 0,
       urgent: false,
     },
@@ -36,6 +38,7 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
       label: 'Create a quote',
       description: 'Send professional quotes and track your pipeline',
       tab: 'documents',
+      subview: 'quotes',
       done: quotes.length > 0,
       urgent: false,
     },
@@ -44,15 +47,16 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
       label: 'Scan a receipt',
       description: 'Auto-categorize expenses and flag tax deductions',
       tab: 'documents',
+      subview: 'receipts',
       done: receipts.length > 0,
       urgent: false,
     },
-    // Inject critical compliance tasks
     ...criticalCompliance.map(c => ({
       id: `compliance-${c.id}`,
       label: c.title,
       description: c.description,
       tab: 'documents',
+      subview: 'compliance',
       done: c.status === 'complete',
       urgent: true,
     })),
@@ -61,6 +65,7 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
       label: 'Review all compliance obligations',
       description: 'Make sure licenses and permits are on track',
       tab: 'documents',
+      subview: 'compliance',
       done: complianceItems.length > 0 && complianceItems.every(c => c.status !== 'not_started'),
       urgent: false,
     },
@@ -68,7 +73,8 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
       id: 'bank',
       label: 'Connect your bank account',
       description: 'Unlock cash flow tracking and smarter tax insights',
-      tab: null, // handled by inline Plaid popup
+      tab: null,
+      subview: null,
       done: plaidConnected,
       urgent: false,
     },
@@ -115,8 +121,11 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
               type="button"
               onClick={() => {
                 if (item.done) return;
-                if (item.id === 'bank') { openPlaid(); return; }
-                navigateToTab(item.tab);
+                if (item.id === 'bank') {
+                  openPlaid();
+                  return;
+                }
+                navigateToTab(item.tab, { subview: item.subview });
               }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left ${item.done ? 'opacity-50' : 'hover:bg-white/5'}`}
             >
@@ -146,7 +155,6 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
         </div>
       </div>
 
-      {/* Inline Plaid popup */}
       <PlaidInlineModal
         open={plaidOpen}
         linkToken={linkToken}
@@ -172,7 +180,7 @@ export default function GettingStartedChecklist({ contracts, receipts, quotes, c
 }
 
 function PlaidInlineModal({ open, linkToken, preparing, error, onClose, onSuccess, onExit }) {
-  const { open: openPlaid, ready } = usePlaidLink({
+  const { open: openPlaidLink, ready } = usePlaidLink({
     token: linkToken || '',
     onSuccess,
     onExit,
@@ -181,13 +189,13 @@ function PlaidInlineModal({ open, linkToken, preparing, error, onClose, onSucces
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
         >
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, scale: 0.96, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.98, y: 10 }}
@@ -227,7 +235,9 @@ function PlaidInlineModal({ open, linkToken, preparing, error, onClose, onSucces
               <button type="button" onClick={onClose} className="flex-1 py-2.5 text-sm text-text-secondary border border-white/10 rounded-xl hover:bg-white/5 transition-colors">Not now</button>
               <button
                 type="button"
-                onClick={() => { if (ready && linkToken) openPlaid(); }}
+                onClick={() => {
+                  if (ready && linkToken) openPlaidLink();
+                }}
                 disabled={!ready || preparing || !linkToken}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm text-white bg-primary rounded-xl hover:bg-primary/80 transition-colors disabled:opacity-50"
               >
@@ -235,8 +245,8 @@ function PlaidInlineModal({ open, linkToken, preparing, error, onClose, onSucces
                 {preparing ? 'Preparing...' : 'Open Plaid'}
               </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </MotionDiv>
+        </MotionDiv>
       )}
     </AnimatePresence>
   );

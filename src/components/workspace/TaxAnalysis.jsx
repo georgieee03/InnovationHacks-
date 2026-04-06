@@ -24,6 +24,7 @@ export default function TaxAnalysis() {
   const handleAnalyze = async () => {
     if (!businessInfo?.id) return;
     setLoading(true); setError('');
+    setLoading(true); setError('');
     try {
       const data = await api.analyzeTaxes({ businessId: businessInfo.id });
       setResult(data);

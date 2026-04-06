@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CheckCircle2, ChevronDown, Building2, Search, ListChecks, Lightbulb, AlertTriangle } from 'lucide-react';
+import AmbientBackground from '../shared/AmbientBackground';
 import RippleButton from '../shared/RippleButton';
 import OnboardingPlaidConnect from './OnboardingPlaidConnect';
 
@@ -9,7 +10,7 @@ const riskColor = {
   high: 'text-gap border-gap/30 bg-gap/10',
 };
 
-export default function OnboardingResults({ result, onSave, formData }) {
+export default function OnboardingResults({ result, onSave, formData, error }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [expanded, setExpanded] = useState('entity');
@@ -36,9 +37,7 @@ export default function OnboardingResults({ result, onSave, formData }) {
   };
 
   return (
-    <div className="app-background min-h-screen">
-      <div className="animated-bg" />
-      <div className="noise-overlay" />
+    <AmbientBackground className="min-h-screen">
       <div className="relative z-10">
         {/* Header */}
         <div className="border-b border-white/5 px-4 py-5">
@@ -58,6 +57,13 @@ export default function OnboardingResults({ result, onSave, formData }) {
         </div>
 
         <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
+          {error && (
+            <div className="rounded-[20px] border border-gap/20 bg-gap/5 p-4">
+              <p className="text-sm font-medium text-gap">We couldn&apos;t save your business yet</p>
+              <p className="mt-1 text-sm text-gap/80">{error}</p>
+            </div>
+          )}
+
           {/* Urgent warnings */}
           {result.urgentWarnings?.length > 0 && (
             <div className="rounded-[20px] border border-warning/20 bg-warning/5 p-4">
@@ -203,7 +209,7 @@ export default function OnboardingResults({ result, onSave, formData }) {
           )}
         </div>
       </div>
-    </div>
+    </AmbientBackground>
   );
 }
 

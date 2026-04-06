@@ -6,8 +6,74 @@ import { TinyFish } from '@tiny-fish/sdk';
 import { requireSession } from '../auth.js';
 import { getDb } from '../db.js';
 import { aiJSON, aiVisionJSON, isAIConfigured, FAST_MODEL_ID, ACCURATE_MODEL_ID } from '../lib/openrouter.js';
+import {
+  generateCoverageActionPlan,
+  loadCoveragePlanContext,
+  saveCoverageActionPlan,
+} from '../lib/coverageActionPlan.js';
 
 const router = Router();
+
+router.get('/ai/coverage-action-plan', requireSession, async (req, res) => {
+  const { businessId } = req.query || {};
+  if (!businessId) {
+    return res.status(400).json({ error: 'businessId is required' });
+  }
+
+  try {
+    const sql = getDb();
+    const context = await loadCoveragePlanContext(sql, businessId, req.currentUser);
+
+    if (!context.business) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
+    return res.json(context);
+  } catch (error) {
+    console.error('coverage-action-plan get error:', error);
+    return res.status(500).json({ error: 'Failed to load coverage action plan' });
+  }
+});
+
+router.post('/ai/generate-coverage-action-plan', requireSession, async (req, res) => {
+  const { businessId, financialMetrics = null, riskFactors = null } = req.body || {};
+  if (!businessId) {
+    return res.status(400).json({ error: 'businessId is required' });
+  }
+
+  try {
+    const sql = getDb();
+    const context = await loadCoveragePlanContext(sql, businessId, req.currentUser);
+
+    if (!context.business) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
+    if (!context.latestGapAnalysis) {
+      return res.status(422).json({ error: 'Complete insurance analysis before generating an action plan.' });
+    }
+
+    const generatedPlan = await generateCoverageActionPlan({
+      business: context.business,
+      latestGapAnalysis: context.latestGapAnalysis,
+      financialMetrics,
+      riskFactors,
+    });
+
+    const savedPlan = await saveCoverageActionPlan(sql, businessId, context.latestGapAnalysis, generatedPlan);
+
+    return res.json({
+      business: context.business,
+      latestGapAnalysis: context.latestGapAnalysis,
+      latestPlan: savedPlan,
+      currentScore: generatedPlan.currentScore,
+      stale: false,
+    });
+  } catch (error) {
+    console.error('coverage-action-plan generate error:', error);
+    return res.status(500).json({ error: 'Failed to generate coverage action plan' });
+  }
+});
 
 // ─── Business Advisor (onboarding AI) ─────────────────────────────────────────
 
@@ -444,7 +510,6 @@ function assembleContractHtml(params) {
   } = params;
 
   const displayClient = clientCompany ? `${clientName}, on behalf of ${clientCompany}` : clientName;
-
 
   // Build numbered section HTML
   let sectionHtml = '';
@@ -957,6 +1022,100 @@ Return ONLY JSON array:
   } catch (err) {
     console.error('scan-funding error:', err);
     return res.status(500).json({ error: 'Funding scan failed' });
+  }
+});
+
+// ─── Scan Tax Opportunities (TinyFish web search + AI analysis) ─────────────
+
+router.post('/ai/scan-tax-opportunities', requireSession, async (req, res) => {
+  if (!isGroqConfigured()) {
+    return res.status(503).json({ error: 'GROQ_API_KEY is not configured' });
+  }
+
+  try {
+    const { businessId } = req.body || {};
+    const sql = getDb();
+    const bizRows = await sql`SELECT * FROM businesses WHERE id = ${businessId} LIMIT 1`;
+    const biz = bizRows[0];
+    if (!biz) return res.status(404).json({ error: 'Business not found' });
+
+    const bizType = biz.type || 'service';
+    const bizState = biz.state || '';
+    const entityType = biz.entity_type || 'sole_prop';
+    const hasEmployees = Boolean(biz.has_employees);
+
+    let webResults = [];
+
+    if (process.env.TINYFISH_API_KEY) {
+      const queries = [
+        `${bizType} business tax deductions exemptions ${new Date().getFullYear()}`,
+        `${bizState} state tax credits small business ${entityType}`,
+        `IRS tax loopholes deductions ${bizType} self-employed`,
+        hasEmployees ? `small business payroll tax credits employees ${new Date().getFullYear()}` : `sole proprietor tax deductions ${bizType}`,
+      ];
+
+      for (const query of queries) {
+        try {
+          const tfRes = await fetch('https://api.tinyfish.io/v1/search', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${process.env.TINYFISH_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ query, maxResults: 4, sources: ['irs.gov', 'sba.gov', 'nolo.com', 'taxfoundation.org', 'score.org'] }),
+          });
+          if (tfRes.ok) {
+            const tfData = await tfRes.json();
+            webResults.push(...(tfData.results || []));
+          }
+        } catch { /* continue */ }
+      }
+    }
+
+    const webContext = webResults.length > 0
+      ? `WEB SEARCH RESULTS:\n${webResults.slice(0, 12).map(r => `- ${r.title}: ${r.snippet || r.description || ''} (${r.url || ''})`).join('\n')}`
+      : 'No live web results available — use your training knowledge.';
+
+    const prompt = `You are a CPA specializing in small business tax strategy.
+
+BUSINESS PROFILE:
+- Type: ${bizType}
+- Entity: ${entityType}
+- State: ${bizState}
+- Has employees: ${hasEmployees}
+- Annual revenue estimate: ~$${Math.round(Number(biz.monthly_revenue_estimate || 0) * 12)}
+
+${webContext}
+
+Identify specific tax exemptions, deductions, credits, and loopholes this business may qualify for.
+
+Return ONLY JSON:
+{
+  "opportunities": [
+    {
+      "title": "string",
+      "type": "deduction|credit|exemption|loophole|strategy",
+      "jurisdiction": "federal|state|local",
+      "description": "plain-English explanation",
+      "estimatedSavings": "string",
+      "eligibilityScore": 0-100,
+      "eligibilityNotes": "string",
+      "howToClaim": "string",
+      "deadline": "string|null",
+      "sourceUrl": "string|null"
+    }
+  ]
+}`;
+
+    const result = await groqJSON(prompt, { maxTokens: 4096 });
+    return res.json({
+      opportunities: Array.isArray(result.opportunities) ? result.opportunities : [],
+      source: webResults.length > 0 ? 'tinyfish+ai' : 'ai-only',
+      webResultsCount: webResults.length,
+    });
+  } catch (err) {
+    console.error('scan-tax-opportunities error:', err);
+    return res.status(500).json({ error: 'Tax opportunity scan failed' });
   }
 });
 

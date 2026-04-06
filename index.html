@@ -11,8 +11,7 @@
 
         try {
           const storedTheme = localStorage.getItem(storageKey);
-          const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          const theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : systemTheme;
+          const theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
           root.setAttribute('data-theme', theme);
           root.style.colorScheme = theme;
         } catch {

@@ -113,10 +113,16 @@ export const api = {
     body: JSON.stringify({
       policyText,
       businessId,
+      uploadedFileId: options.uploadedFileId ?? null,
       allowDemoFallback: Boolean(options.allowDemoFallback),
     }),
   }),
   saveGapAnalysis: (data) => fetchAPI('/save-gap-analysis', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  getCoverageActionPlan: (businessId) => fetchAPI(`/ai/coverage-action-plan?businessId=${encodeURIComponent(businessId)}`),
+  generateCoverageActionPlan: (data) => fetchAPI('/ai/generate-coverage-action-plan', {
     method: 'POST',
     body: JSON.stringify(data),
   }),

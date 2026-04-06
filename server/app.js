@@ -1,7 +1,11 @@
 import { config } from 'dotenv';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 // Load .env first, then .env.local overrides (mirrors Vite's convention)
-config();
-config({ path: '.env.local', override: true });
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const projectRoot = resolve(__dirname, '..');
+config({ path: resolve(projectRoot, '.env') });
+config({ path: resolve(projectRoot, '.env.local'), override: true });
 import cors from 'cors';
 import express from 'express';
 import { attachSessionUser, createAuthMiddleware } from './auth.js';

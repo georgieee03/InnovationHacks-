@@ -6,7 +6,6 @@ import {
   FileSignature,
   TrendingUp,
   DollarSign,
-  AlertTriangle,
   GraduationCap,
   Settings,
   ShieldCheck,
@@ -51,20 +50,11 @@ export default function CollapsibleSidebar({
     : 0;
 
   const navigationItems = useMemo(() => ([
-    { id: 'financial', label: 'Financial Overview', shortLabel: 'Financial', icon: BarChart3, section: 'main' },
-    { id: 'insurance', label: 'Insurance Analyzer', shortLabel: 'Insurance', icon: Shield, section: 'main', badge: gapCount > 0 ? { text: `${gapCount} gaps`, color: 'danger' } : null },
-    { id: 'actionplan', label: 'Action Plan', shortLabel: 'Action Plan', icon: ClipboardCheck, section: 'main' },
-    { id: 'contracts', label: 'Contracts', shortLabel: 'Contracts', icon: FileSignature, section: 'workspace' },
-    { id: 'quotes', label: 'Quotes', shortLabel: 'Quotes', icon: ReceiptText, section: 'workspace' },
-    { id: 'receipts', label: 'Receipts', shortLabel: 'Receipts', icon: Camera, section: 'workspace' },
-    { id: 'compliance', label: 'Compliance', shortLabel: 'Compliance', icon: BadgeCheck, section: 'workspace' },
-    { id: 'growth', label: 'Growth', shortLabel: 'Growth', icon: TrendingUp, section: 'workspace' },
-    { id: 'taxes', label: 'Tax Analysis', shortLabel: 'Taxes', icon: DollarSign, section: 'workspace' },
-    { id: 'calculators', label: 'Calculators', shortLabel: 'Calculators', icon: Calculator, section: 'main' },
-    { id: 'simulator', label: 'Risk Simulator', shortLabel: 'Simulator', icon: AlertTriangle, section: 'main' },
-    { id: 'challenges', label: 'Challenges', shortLabel: 'Challenges', icon: Trophy, section: 'main' },
-    { id: 'report', label: 'Health Report', shortLabel: 'Health Report', icon: FileText, section: 'main' },
-    { id: 'chat', label: 'Chat', shortLabel: 'Chat', icon: MessageCircle, section: 'main' },
+    { id: 'financial', label: 'Dashboard', shortLabel: 'Dashboard', icon: BarChart3, section: 'main' },
+    { id: 'documents', label: 'Documents', shortLabel: 'Documents', icon: FileSignature, section: 'main' },
+    { id: 'insurance', label: 'Insurance', shortLabel: 'Insurance', icon: Shield, section: 'main', badge: gapCount > 0 ? { text: `${gapCount} gaps`, color: 'danger' } : null },
+    { id: 'growth', label: 'Growth', shortLabel: 'Growth', icon: TrendingUp, section: 'main' },
+    { id: 'taxes', label: 'Tax Analysis', shortLabel: 'Taxes', icon: DollarSign, section: 'main' },
     { id: 'learn', label: 'Learn', shortLabel: 'Learn', icon: GraduationCap, section: 'main' },
     { id: 'settings', label: 'Settings', shortLabel: 'Settings', icon: Settings, section: 'footer', disabled: true },
   ]), [gapCount]);
@@ -72,7 +62,6 @@ export default function CollapsibleSidebar({
   const showExpanded = viewportMode === 'mobile' ? true : isExpanded;
   const sidebarWidth = showExpanded ? 280 : 64;
   const mainItems = navigationItems.filter((item) => item.section === 'main');
-  const workspaceItems = navigationItems.filter((item) => item.section === 'workspace');
   const footerItems = navigationItems.filter((item) => item.section === 'footer');
   const focusIndexById = useMemo(
     () => new Map(
@@ -219,32 +208,6 @@ export default function CollapsibleSidebar({
             ))}
           </div>
 
-          {/* Workspace section */}
-          {workspaceItems.length > 0 && (
-            <div className="mt-6 space-y-2">
-              {showExpanded && (
-                <p className="px-2 text-[11px] uppercase tracking-[0.08em] text-text-secondary/60">Documents & Tools</p>
-              )}
-              <div className="space-y-1">
-                {workspaceItems.map((item, index) => (
-                  <MotionDiv
-                    key={item.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: (mainItems.length + index) * 0.05 }}
-                  >
-                    <NavigationItem
-                      item={item}
-                      isActive={activeTab === item.id}
-                      isExpanded={showExpanded}
-                      buttonRef={setItemRef(focusIndexById.get(item.id))}
-                      onClick={() => onNavigate?.(item.id)}
-                    />
-                  </MotionDiv>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className={`border-t border-white/8 py-4 ${showExpanded ? 'px-3' : 'px-2'}`}>
